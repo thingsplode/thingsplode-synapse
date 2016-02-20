@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsplode.synapse.services;
+package com.acme.synapse.testdata.services;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 import org.thingsplode.synapse.core.annotations.PathVariable;
@@ -22,8 +22,8 @@ import org.thingsplode.synapse.core.annotations.RequestMapping;
 import org.thingsplode.synapse.core.annotations.Service;
 import org.thingsplode.synapse.core.domain.Request;
 import org.thingsplode.synapse.core.domain.Response;
-import org.thingsplode.synapse.services.domain.Address;
-import org.thingsplode.synapse.services.domain.Tuple;
+import com.acme.synapse.testdata.services.core.Address;
+import com.acme.synapse.testdata.services.core.Tuple;
 
 /**
  *
@@ -38,6 +38,7 @@ public class TestSecondEndpointService {
         return new Response<>(new Response.ResponseHeader(HttpResponseStatus.OK), res);
     }
     
+    @RequestMapping({"multiply"})
     public Response<Integer> multiply(Request<Tuple<Integer, Integer>> req){
         Integer res = req.getBody().x * req.getBody().y;
         return new Response<>(new Response.ResponseHeader(HttpResponseStatus.OK), res);
@@ -48,6 +49,7 @@ public class TestSecondEndpointService {
         System.out.println("Cleared");
     }
     
+   @RequestMapping({"check_address"})
    public boolean verifyAddress(@RequestBody Address address){
        System.out.println("Address received");
        return true;

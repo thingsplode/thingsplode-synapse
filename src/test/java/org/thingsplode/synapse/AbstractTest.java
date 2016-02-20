@@ -20,10 +20,10 @@ import java.net.InetSocketAddress;
 import org.apache.log4j.BasicConfigurator;
 import org.junit.Rule;
 import org.junit.rules.ExternalResource;
-import org.thingsplode.synapse.core.TestEndpoint;
+import com.acme.synapse.testdata.services.TestEndpoint;
 import org.thingsplode.synapse.endpoint.Endpoint;
 import org.thingsplode.synapse.endpoint.Endpoint.Connections;
-import org.thingsplode.synapse.services.TestEndpointService;
+import com.acme.synapse.testdata.services.TestEndpointService;
 
 /**
  *

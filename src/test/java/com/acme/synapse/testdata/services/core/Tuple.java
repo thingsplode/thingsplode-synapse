@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsplode.synapse.services.domain;
+package com.acme.synapse.testdata.services.core;
 
 import java.io.Serializable;
 

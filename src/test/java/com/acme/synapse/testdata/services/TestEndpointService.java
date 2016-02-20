@@ -13,13 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsplode.synapse.services;
+package com.acme.synapse.testdata.services;
 
 import java.io.Serializable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.thingsplode.synapse.core.Filter;
-import org.thingsplode.synapse.core.TestEndpoint;
+import com.acme.synapse.testdata.services.core.Filter;
 import org.thingsplode.synapse.core.annotations.RequestMapping;
 import org.thingsplode.synapse.core.annotations.RequestParam;
 import org.thingsplode.synapse.core.annotations.Service;
@@ -50,7 +49,7 @@ public class TestEndpointService implements TestEndpoint {
     }
 
     @Override
-    @RequestMapping(value = "/echo", method = {RequestMethod.GET})
+    @RequestMapping(value = "/info", method = {RequestMethod.GET})
     public Serializable getInfo() {
         return new Filter("some query", 10, 100);
     }
