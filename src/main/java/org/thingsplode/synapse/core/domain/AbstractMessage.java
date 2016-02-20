@@ -44,7 +44,7 @@ public abstract class AbstractMessage<T extends Serializable> implements Seriali
         private final AtomicLong id = new AtomicLong(0);
         private String protocolVersion;
         private InetSocketAddress callerAddress;
-        private Set<MsgParameter> parameters;
+        private Set<Parameter> parameters;
 
         public MessageHeader() {
         }
@@ -65,11 +65,11 @@ public abstract class AbstractMessage<T extends Serializable> implements Seriali
             this.callerAddress = callerAddress;
         }
 
-        public Set<MsgParameter> getParameters() {
+        public Set<Parameter> getParameters() {
             return parameters;
         }
 
-        public void setParameters(Set<MsgParameter> parameters) {
+        public void setParameters(Set<Parameter> parameters) {
             this.parameters = parameters;
         }
     }
@@ -84,12 +84,12 @@ public abstract class AbstractMessage<T extends Serializable> implements Seriali
 
     public <T> T expectBody(Class<T> type) throws SynapseMarshallerException {
         if (body == null) {
-            throw new SynapseMarshallerException("This message has not extension.", HttpResponseStatus.EXPECTATION_FAILED);
+            throw new SynapseMarshallerException("This message has not extension.", HttpStatus.EXPECTATION_FAILED);
         }
         try {
             return type.cast(body);
         } catch (ClassCastException ex) {
-            throw new SynapseMarshallerException("The expected message is not type of " + type.getSimpleName() + ": " + ex.getMessage(), HttpResponseStatus.EXPECTATION_FAILED, ex);
+            throw new SynapseMarshallerException("The expected message is not type of " + type.getSimpleName() + ": " + ex.getMessage(), HttpStatus.EXPECTATION_FAILED, ex);
         }
     }
 

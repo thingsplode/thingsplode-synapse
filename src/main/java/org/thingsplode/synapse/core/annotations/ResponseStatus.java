@@ -13,21 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsplode.synapse.core.handlers;
+package org.thingsplode.synapse.core.annotations;
 
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.handler.codec.http.websocketx.WebSocketFrame;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import org.thingsplode.synapse.core.domain.HttpStatus;
 
 /**
  *
  * @author tamas.csaba@gmail.com
  */
-public class WebsocketHandler extends SimpleChannelInboundHandler<WebSocketFrame> {
-
-    @Override
-    protected void channelRead0(ChannelHandlerContext ctx, WebSocketFrame msg) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-    
+@Target({ElementType.TYPE, ElementType.METHOD})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+public @interface ResponseStatus {
+	HttpStatus value() default HttpStatus.INTERNAL_SERVER_ERROR;	
+	String reason() default "";
 }

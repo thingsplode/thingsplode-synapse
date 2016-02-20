@@ -15,7 +15,7 @@
  */
 package org.thingsplode.synapse.core.exceptions;
 
-import io.netty.handler.codec.http.HttpResponseStatus;
+import org.thingsplode.synapse.core.domain.HttpStatus;
 
 /**
  *
@@ -23,19 +23,19 @@ import io.netty.handler.codec.http.HttpResponseStatus;
  */
 public class SynapseException extends Exception {
 
-    private final HttpResponseStatus responseStatus;
+    private final HttpStatus responseStatus;
 
-    public SynapseException(String msg, HttpResponseStatus status) {
+    public SynapseException(String msg, HttpStatus status) {
         super(msg);
         this.responseStatus = status;
     }
 
-    public SynapseException(String message, HttpResponseStatus status, Throwable throwable) {
+    public SynapseException(String message, HttpStatus status, Throwable throwable) {
         super(message, throwable);
         this.responseStatus = status;
     }
 
-    public HttpResponseStatus getResponseStatus() {
+    public HttpStatus getResponseStatus() {
         return responseStatus;
     }
 }

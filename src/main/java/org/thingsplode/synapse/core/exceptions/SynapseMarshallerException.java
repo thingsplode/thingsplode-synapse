@@ -15,7 +15,7 @@
  */
 package org.thingsplode.synapse.core.exceptions;
 
-import io.netty.handler.codec.http.HttpResponseStatus;
+import org.thingsplode.synapse.core.domain.HttpStatus;
 
 /**
  *
@@ -23,11 +23,11 @@ import io.netty.handler.codec.http.HttpResponseStatus;
  */
 public class SynapseMarshallerException extends SynapseException {
 
-    public SynapseMarshallerException(String msg, HttpResponseStatus status) {
+    public SynapseMarshallerException(String msg, HttpStatus status) {
         super(msg, status);
     }
 
-    public SynapseMarshallerException(String message, HttpResponseStatus status, Throwable throwable) {
+    public SynapseMarshallerException(String message, HttpStatus status, Throwable throwable) {
         super(message, status, throwable);
     }
 

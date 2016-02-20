@@ -16,13 +16,21 @@
 package org.thingsplode.synapse.endpoint.srvreg;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
+import org.thingsplode.synapse.core.SynapseEndpointServiceMarker;
+import org.thingsplode.synapse.core.Uri;
 import org.thingsplode.synapse.core.annotations.PathVariable;
 import org.thingsplode.synapse.core.annotations.RequestBody;
 import org.thingsplode.synapse.core.annotations.RequestMapping;
@@ -38,26 +46,78 @@ import org.thingsplode.synapse.util.Util;
  */
 class InternalServiceRegistry {
 
-    private Map<String, MethodContext> routes = new HashMap<>();
+    private Routes routes;
+
+    class Routes {
+
+        private Map<String, SortedMap<String, MethodContext>> rootCtxes = new HashMap<>();
+        private Set<String> paths = new HashSet<>();
+
+        synchronized void put(String rootCtx, String methodName, MethodContext mc) {
+            String rootRegexp = rootCtx.replaceAll("\\{.*\\}", ".*");
+            methodName = methodName.startsWith("/") ? methodName.substring(1) : methodName;
+            SortedMap<String, MethodContext> rootCtxMethods = rootCtxes.get(rootRegexp);
+            if (rootCtxMethods != null) {
+                rootCtxMethods.put(methodName, mc);
+            } else {
+                SortedMap<String, MethodContext> map = new TreeMap<>();
+                map.put(methodName, mc);
+                rootCtxes.put(rootRegexp, map);
+            }
+            paths.add(rootCtx + "/" + methodName);
+        }
+    }
+
+    public InternalServiceRegistry() {
+        routes = new Routes();
+    }
 
     public void register(Object serviceInstance) {
         Class<?> srvClass = serviceInstance.getClass();
+        String rootContext;
+        List<Class> markedInterfaces = getMarkedInterfaces(srvClass.getInterfaces());
+        Set<Method> methods = new HashSet<>();
         if (!srvClass.isAnnotationPresent(Service.class)) {
-            throw new IllegalArgumentException("The service instance must be annotated with: " + Service.class.getSimpleName());
+            if ((markedInterfaces == null || markedInterfaces.isEmpty())) {
+                throw new IllegalArgumentException("The service instance must be annotated with: " + Service.class.getSimpleName() + "or the " + SynapseEndpointServiceMarker.class.getSimpleName() + " marker interface must be used.");
+            }
+            //Marked with marker interface
+            rootContext = "/" + srvClass.getCanonicalName().replaceAll("\\.", "/");
+            markedInterfaces.forEach(i -> {
+                methods.addAll(Arrays.asList(i.getMethods()));
+            });
+            methods.addAll(Arrays.asList(srvClass.getDeclaredMethods())
+                    .stream()
+                    .filter(m -> Modifier.isPublic(m.getModifiers()))
+                    .collect(Collectors.toList()));
+        } else {
+            //Annotated with @Service
+            rootContext = srvClass.getAnnotation(Service.class).value();
+            methods.addAll(Arrays.asList(srvClass.getMethods()).stream()
+                    .filter(m -> {
+                        return m.isAnnotationPresent(RequestMapping.class) || containsMessageClass(m.getParameterTypes()) || AbstractMessage.class.isAssignableFrom(m.getReturnType());
+                    })
+                    .collect(Collectors.toList()));
         }
-        String rootContext = srvClass.getAnnotation(Service.class).value();
+
         if (rootContext.endsWith("/")) {
             rootContext = rootContext.substring(0, rootContext.length() - 1);
         }
         if (Util.isEmpty(rootContext)) {
             rootContext = "/";
         }
-        populateMethods(rootContext, srvClass);
-        System.out.println("finish");
+
+        populateMethods(rootContext, methods);
+        System.out.println("sss");
     }
 
-    private void populateMethods(String rootCtx, Class clazz) {
-        for (Method m : clazz.getMethods()) {
+    public MethodContext getMethodContext(Uri uri) {
+        return null;
+    }
+
+    private void populateMethods(String rootCtx, Set<Method> methods) {
+
+        methods.stream().forEach((m) -> {
             MethodContext mc;
             mc = new MethodContext(rootCtx, m);
             mc.parameters.addAll(processParameters(m));
@@ -65,18 +125,14 @@ class InternalServiceRegistry {
             if (m.isAnnotationPresent(RequestMapping.class)) {
                 RequestMapping rm = m.getAnnotation(RequestMapping.class);
                 Arrays.asList(rm.value()).forEach(ru -> {
-                    if (!ru.startsWith("/")) {
-                        ru = "/" + ru;
-                    }
-                    String uri = rootCtx + ru;
                     mc.requestMethods.addAll(Arrays.asList(rm.method()));
-                    routes.put(uri, mc);
+                    routes.put(rootCtx, ru, mc);
+
                 });
-            } else if (containsMessageClass(m.getParameterTypes()) || AbstractMessage.class.isAssignableFrom(m.getReturnType())) {
-                String uri = rootCtx + "/" +  m.getName();
-                routes.put(uri, mc);
+            } else {
+                routes.put(rootCtx, m.getName(), mc);
             }
-        }
+        });
     }
 
     private List<MethodParam> processParameters(Method m) {
@@ -115,6 +171,13 @@ class InternalServiceRegistry {
     private boolean containsMessageClass(Class<?>[] array) {
         Optional<Class<?>> result = Arrays.asList(array).stream().filter(c -> AbstractMessage.class.isAssignableFrom(c)).findFirst();
         return result.isPresent();
+    }
+
+    private List<Class> getMarkedInterfaces(Class<?>[] ifaces) {
+        if (ifaces == null || ifaces.length == 0) {
+            return null;
+        }
+        return Arrays.asList(ifaces).stream().filter(i -> SynapseEndpointServiceMarker.class.isAssignableFrom(i)).collect(Collectors.toList());
     }
 
     private <T> T generateDefaultValue(Class<T> type, String sValue) {

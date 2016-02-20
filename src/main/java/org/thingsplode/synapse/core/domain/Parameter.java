@@ -22,12 +22,12 @@ import java.io.Serializable;
  * @author tamas.csaba@gmail.com
  * @param <T>
  */
-public class MsgParameter<T extends Serializable> {
+public class Parameter<T extends Serializable> {
 
     private final String name;
     private final T value;
 
-    public MsgParameter(String name, T value) {
+    public Parameter(String name, T value) {
         this.name = name;
         this.value = value;
     }

@@ -47,8 +47,8 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.thingsplode.synapse.core.handlers.HttRequestHandler;
-import org.thingsplode.synapse.core.handlers.RequestHandler;
+import org.thingsplode.synapse.endpoint.handlers.HttRequestHandler;
+import org.thingsplode.synapse.endpoint.handlers.RequestHandler;
 import org.thingsplode.synapse.util.NetworkUtil;
 
 /**
