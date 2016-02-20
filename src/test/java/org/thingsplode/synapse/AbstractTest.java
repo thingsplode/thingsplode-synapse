@@ -20,10 +20,10 @@ import java.net.InetSocketAddress;
 import org.apache.log4j.BasicConfigurator;
 import org.junit.Rule;
 import org.junit.rules.ExternalResource;
-import com.acme.synapse.testdata.services.TestEndpoint;
 import org.thingsplode.synapse.endpoint.Endpoint;
 import org.thingsplode.synapse.endpoint.Endpoint.Connections;
-import com.acme.synapse.testdata.services.TestEndpointService;
+import com.acme.synapse.testdata.services.RpcEndpointImpl;
+import com.acme.synapse.testdata.services.RpcEndpoint;
 
 /**
  *
@@ -44,7 +44,7 @@ public abstract class AbstractTest {
             @Override
             protected void before() throws InterruptedException {
                 System.out.println("\n\n BEFORE METHOD CALLED\n\n");
-                TestEndpoint remoteService = new TestEndpointService();
+                RpcEndpoint remoteService = new RpcEndpointImpl();
                 Connections c;
                 BasicConfigurator.configure();
                 this.ep = Endpoint.create("test", new Connections(new InetSocketAddress("0.0.0.0", 8080)))

@@ -15,12 +15,14 @@
  */
 package org.thingsplode.synapse.endpoint.srvreg;
 
+import com.acme.synapse.testdata.services.CrudTestEndpointService;
+import com.acme.synapse.testdata.services.DummyMarkedEndpoint;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import com.acme.synapse.testdata.services.TestEndpointService;
+import com.acme.synapse.testdata.services.RpcEndpointImpl;
 import com.acme.synapse.testdata.services.TestSecondEndpointService;
 
 /**
@@ -28,30 +30,33 @@ import com.acme.synapse.testdata.services.TestSecondEndpointService;
  * @author tamas.csaba@gmail.com
  */
 public class InternalServiceRegistryTest {
-    private InternalServiceRegistry registry = new InternalServiceRegistry();
 
+    private InternalServiceRegistry registry = new InternalServiceRegistry();
+    
     public InternalServiceRegistryTest() {
     }
-
+    
     @BeforeClass
     public static void setUpClass() {
     }
-
+    
     @AfterClass
     public static void tearDownClass() {
     }
-
+    
     @Before
     public void setUp() {
     }
-
+    
     @After
     public void tearDown() {
     }
-
+    
     @Test
     public void testRegistration() {
-        registry.register(new TestEndpointService());
+        registry.register(new RpcEndpointImpl());
+        registry.register(new DummyMarkedEndpoint());
         registry.register(new TestSecondEndpointService());
+        registry.register(new CrudTestEndpointService());
     }
 }
