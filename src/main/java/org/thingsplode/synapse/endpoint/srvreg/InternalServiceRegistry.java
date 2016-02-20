@@ -28,6 +28,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.thingsplode.synapse.core.SynapseEndpointServiceMarker;
 import org.thingsplode.synapse.core.Uri;
@@ -48,28 +50,40 @@ class InternalServiceRegistry {
 
     private Routes routes;
 
-    class Routes {
-
-        private Map<String, SortedMap<String, MethodContext>> rootCtxes = new HashMap<>();
-        private Set<String> paths = new HashSet<>();
-
-        synchronized void put(String rootCtx, String methodName, MethodContext mc) {
-            String rootRegexp = rootCtx.replaceAll("\\{.*\\}", ".*");
-            methodName = methodName.startsWith("/") ? methodName.substring(1) : methodName;
-            SortedMap<String, MethodContext> rootCtxMethods = rootCtxes.get(rootRegexp);
-            if (rootCtxMethods != null) {
-                rootCtxMethods.put(methodName, mc);
-            } else {
-                SortedMap<String, MethodContext> map = new TreeMap<>();
-                map.put(methodName, mc);
-                rootCtxes.put(rootRegexp, map);
-            }
-            paths.add(rootCtx + "/" + methodName);
-        }
-    }
-
     public InternalServiceRegistry() {
         routes = new Routes();
+    }
+
+    public Set<String> getRouteExpressions() {
+        return routes.rootCtxes.keySet();
+    }
+
+    public Set<String> getAllSupportedPaths() {
+        return routes.paths;
+    }
+
+    public Optional<MethodContext> matchUri(Uri uri) {
+
+        String methodName = null;
+        String pattern = null;
+        for (Pattern p : routes.patterns) {
+            Matcher m = p.matcher(uri.getPath());
+            if (m.find()) {
+                methodName = uri.getPath().substring(m.end());
+                if (methodName.startsWith("/")) {
+                    methodName = methodName.substring(1);
+                }
+                pattern = p.pattern();
+                break;
+            }
+        }
+        if (Util.isEmpty(methodName)) {
+            return Optional.empty();
+        }
+
+        SortedMap<String, MethodContext> methods = routes.rootCtxes.get(pattern);
+        return Optional.ofNullable(methods.get(methodName));
+
     }
 
     public void register(Object serviceInstance) {
@@ -108,11 +122,6 @@ class InternalServiceRegistry {
         }
 
         populateMethods(rootContext, methods);
-        System.out.println("sss");
-    }
-
-    public MethodContext getMethodContext(Uri uri) {
-        return null;
     }
 
     private void populateMethods(String rootCtx, Set<Method> methods) {
@@ -225,6 +234,28 @@ class InternalServiceRegistry {
 
         void addRequestMethods(RequestMethod[] rms) {
             addRequestMethods(Arrays.asList(rms));
+        }
+    }
+
+    class Routes {
+
+        Map<String, SortedMap<String, MethodContext>> rootCtxes = new HashMap<>();
+        Set<Pattern> patterns = new HashSet<>();
+        Set<String> paths = new HashSet<>();
+
+        synchronized void put(String rootCtx, String methodName, MethodContext mc) {
+            String rootRegexp = rootCtx.replaceAll("/\\{.*\\}/", "/[^/]+/");
+            methodName = methodName.startsWith("/") ? methodName.substring(1) : methodName;
+            SortedMap<String, MethodContext> rootCtxMethods = rootCtxes.get(rootRegexp);
+            if (rootCtxMethods != null) {
+                rootCtxMethods.put(methodName, mc);
+            } else {
+                patterns.add(Pattern.compile(rootRegexp));
+                SortedMap<String, MethodContext> map = new TreeMap<>();
+                map.put(methodName, mc);
+                rootCtxes.put(rootRegexp, map);
+            }
+            paths.add(rootCtx + "/" + methodName);
         }
     }
 

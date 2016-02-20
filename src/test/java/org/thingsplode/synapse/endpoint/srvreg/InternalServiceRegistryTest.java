@@ -24,6 +24,10 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import com.acme.synapse.testdata.services.RpcEndpointImpl;
 import com.acme.synapse.testdata.services.TestSecondEndpointService;
+import java.io.UnsupportedEncodingException;
+import java.util.Optional;
+import org.junit.Assert;
+import org.thingsplode.synapse.core.Uri;
 
 /**
  *
@@ -32,31 +36,64 @@ import com.acme.synapse.testdata.services.TestSecondEndpointService;
 public class InternalServiceRegistryTest {
 
     private InternalServiceRegistry registry = new InternalServiceRegistry();
-    
+
     public InternalServiceRegistryTest() {
     }
-    
+
     @BeforeClass
     public static void setUpClass() {
     }
-    
+
     @AfterClass
     public static void tearDownClass() {
     }
-    
+
     @Before
     public void setUp() {
     }
-    
+
     @After
     public void tearDown() {
     }
-    
+
     @Test
-    public void testRegistration() {
+    public void testRegistration() throws UnsupportedEncodingException {
         registry.register(new RpcEndpointImpl());
         registry.register(new DummyMarkedEndpoint());
         registry.register(new TestSecondEndpointService());
         registry.register(new CrudTestEndpointService());
+
+        Optional<InternalServiceRegistry.MethodContext> opt = registry.matchUri(new Uri("/test/user.name/messages/calculate"));
+        Assert.assertTrue(opt.isPresent());
+        Assert.assertEquals("/test/{user}/messages", opt.get().rootCtx);
+
+        Optional<InternalServiceRegistry.MethodContext> opt1 = registry.matchUri(new Uri("/test/user.name/messages/add"));
+        Assert.assertTrue(opt1.isPresent());
+        Assert.assertEquals("/test/{user}/messages", opt1.get().rootCtx);
+
+        Optional<InternalServiceRegistry.MethodContext> opt2 = registry.matchUri(new Uri("/test/user.name/messages/clear"));
+        Assert.assertTrue(opt2.isPresent());
+        Assert.assertEquals("/test/{user}/messages", opt2.get().rootCtx);
+
+        Optional<InternalServiceRegistry.MethodContext> opt3 = registry.matchUri(new Uri("/test/user/name/messages/clear"));
+        Assert.assertTrue(!opt3.isPresent());
+
+        Optional<InternalServiceRegistry.MethodContext> opt4 = registry.matchUri(new Uri("/com/acme/synapse/testdata/services/DummyMarkedEndpoint/"));
+        Assert.assertTrue(!opt4.isPresent());
+
+        Optional<InternalServiceRegistry.MethodContext> opt5 = registry.matchUri(new Uri("/com/acme/synapse/testdata/services/DummyMarkedEndpoint/echo"));
+        Assert.assertTrue(opt5.isPresent());
+
+        Optional<InternalServiceRegistry.MethodContext> opt6 = registry.matchUri(new Uri("/com/acme/synapse/testdata/services/RpcEndpoint/ping"));
+        Assert.assertTrue(!opt6.isPresent());
+
+        Optional<InternalServiceRegistry.MethodContext> opt7 = registry.matchUri(new Uri("/com/acme/synapse/testdata/services/RpcEndpointImpl/ping"));
+        Assert.assertTrue(opt7.isPresent());
+
+        Optional<InternalServiceRegistry.MethodContext> opt8 = registry.matchUri(new Uri("/test/user@name/messages/sum"));
+        Assert.assertTrue(opt8.isPresent());
+        
+        Optional<InternalServiceRegistry.MethodContext> opt9 = registry.matchUri(new Uri("/some_user/devices/listAll"));
+        Assert.assertTrue(opt9.isPresent());
     }
 }
