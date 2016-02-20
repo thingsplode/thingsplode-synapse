@@ -13,31 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsplode.synapse.endpoint.srvreg;
-
-import java.lang.reflect.Parameter;
+package org.thingsplode.synapse.endpoint;
 
 /**
  *
  * @author tamas.csaba@gmail.com
  */
-class MethodParam<T> {
-
-    ParameterSource source;
-    String paramId;
-    Parameter parameter;
-    Object defaultValue;
-    Class defaultValueClass;
-    boolean required = true;
-
-    public MethodParam(Parameter param, ParameterSource source, String paramId) {
-        this.source = source;
-        this.paramId = paramId;
-    }
-
-    enum ParameterSource {
-        PATH_VARIABLE,
-        URI_PARAM,
-        BODY
-    }
+public interface UriHandlingCapable {
+    
+    void setServiceRegistry(InternalServiceRegistry registry);
+    
 }

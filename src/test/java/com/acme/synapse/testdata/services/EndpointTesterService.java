@@ -30,7 +30,7 @@ import com.acme.synapse.testdata.services.core.Tuple;
  * @author tamas.csaba@gmail.com
  */
 @Service("/test/{user}/messages/")
-public class TestSecondEndpointService {
+public class EndpointTesterService {
 
     
     public Response<Integer> sum(Request<Tuple<Integer, Integer>> req) {

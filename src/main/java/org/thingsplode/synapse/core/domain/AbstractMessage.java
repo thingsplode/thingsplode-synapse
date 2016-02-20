@@ -15,7 +15,6 @@
  */
 package org.thingsplode.synapse.core.domain;
 
-import io.netty.handler.codec.http.HttpResponseStatus;
 import java.io.Serializable;
 import java.net.InetSocketAddress;
 import java.util.Set;

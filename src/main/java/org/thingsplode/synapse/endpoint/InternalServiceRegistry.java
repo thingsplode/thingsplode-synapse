@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsplode.synapse.endpoint.srvreg;
+package org.thingsplode.synapse.endpoint;
 
+import io.netty.handler.codec.http.HttpMethod;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
@@ -46,7 +47,7 @@ import org.thingsplode.synapse.util.Util;
  *
  * @author tamas.csaba@gmail.com
  */
-class InternalServiceRegistry {
+public class InternalServiceRegistry {
 
     private Routes routes;
 
@@ -62,8 +63,16 @@ class InternalServiceRegistry {
         return routes.paths;
     }
 
-    public Optional<MethodContext> matchUri(Uri uri) {
-
+//    public Optional<Method> matchUri(HttpMethod req, Uri uri) {
+//        Optional<MethodContext> mcOpt = getMethodContext(uri);
+//        if (!mcOpt.isPresent()){
+//            return Optional.empty();
+//        }
+//        MethodContext mc = mcOpt.get();
+//        //mc.
+//        
+//    }
+    Optional<MethodContext> getMethodContext(RequestMethod reqMethod, Uri uri) {
         String methodName = null;
         String pattern = null;
         for (Pattern p : routes.patterns) {
@@ -82,11 +91,15 @@ class InternalServiceRegistry {
         }
 
         SortedMap<String, MethodContext> methods = routes.rootCtxes.get(pattern);
-        return Optional.ofNullable(methods.get(methodName));
+        MethodContext mc = methods.get(methodName);
+        if (mc == null || (!mc.requestMethods.isEmpty() && !mc.requestMethods.contains(reqMethod))) {
+            return Optional.empty();
+        }
 
+        return Optional.of(mc);
     }
 
-    public void register(Object serviceInstance) {
+    void register(Object serviceInstance) {
         Class<?> srvClass = serviceInstance.getClass();
         String rootContext;
         List<Class> markedInterfaces = getMarkedInterfaces(srvClass.getInterfaces());

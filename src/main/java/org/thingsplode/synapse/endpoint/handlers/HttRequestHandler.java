@@ -23,20 +23,24 @@ import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaderNames;
-import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshaker;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory;
 import io.netty.util.CharsetUtil;
+import java.util.Optional;
+import org.thingsplode.synapse.core.Uri;
+import org.thingsplode.synapse.endpoint.InternalServiceRegistry;
+import org.thingsplode.synapse.endpoint.UriHandlingCapable;
 
 /**
  *
  * @author tamas.csaba@gmail.com
  */
-public class HttRequestHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
+public class HttRequestHandler extends SimpleChannelInboundHandler<FullHttpRequest> implements UriHandlingCapable {
 
     private WebSocketServerHandshaker handshaker;
+    private InternalServiceRegistry registry;
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest req) throws Exception {
@@ -62,6 +66,10 @@ public class HttRequestHandler extends SimpleChannelInboundHandler<FullHttpReque
             System.out.println(entry.getKey() + " : " + entry.getValue());
         });
 
+        Uri uri = new Uri(req.uri());
+        //Optional<InternalServiceRegistry.MethodContext> mcOpt = registry.matchUri(req.method(), uri);
+        
+        
         // check for websocket upgrade request
         String upgradeHeader = req.headers().get("Upgrade");
         if (upgradeHeader != null && "websocket".equalsIgnoreCase(upgradeHeader)) {
@@ -92,5 +100,10 @@ public class HttRequestHandler extends SimpleChannelInboundHandler<FullHttpReque
         // Close the connection as soon as the error message is sent.
         ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
 
+    }
+
+    @Override
+    public void setServiceRegistry(InternalServiceRegistry registry) {
+        this.registry = registry;
     }
 }
