@@ -19,39 +19,32 @@ import java.io.Serializable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import com.acme.synapse.testdata.services.core.Filter;
-import org.thingsplode.synapse.core.annotations.RequestMapping;
-import org.thingsplode.synapse.core.annotations.RequestParam;
-import org.thingsplode.synapse.core.annotations.Service;
-import org.thingsplode.synapse.core.domain.RequestMethod;
 
 /**
  *
  * @author tamas.csaba@gmail.com
  */
-@Service("/test/first")
-public class TestEndpointService implements TestEndpoint {
+
+public class RpcEndpointImpl implements RpcEndpoint {
 
     @Override
-    @RequestMapping("/ping")
     public void ping() {
         try {
             Thread.sleep(2000);
             System.out.println("ping executed");
         } catch (InterruptedException ex) {
-            Logger.getLogger(TestEndpointService.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(RpcEndpointImpl.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
     @Override
-    @RequestMapping(value = "/echo", method = {RequestMethod.GET, RequestMethod.POST})
-    public String echo(@RequestParam(value = "message", required = true, defaultValue = "Hello World") String message) {
+    public String echo(String message) {
         return message;
     }
-
+   
     //todo: make and test required false tests
     
     @Override
-    @RequestMapping(value = "/info", method = {RequestMethod.GET})
     public Serializable getInfo() {
         return new Filter("some query", 10, 100);
     }

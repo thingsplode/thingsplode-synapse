@@ -17,12 +17,13 @@ package com.acme.synapse.testdata.services;
 
 import com.acme.synapse.testdata.services.core.Filter;
 import java.io.Serializable;
+import org.thingsplode.synapse.core.SynapseEndpointServiceMarker;
 
 /**
  *
  * @author tamas.csaba@gmail.com
  */
-public interface TestEndpoint {
+public interface RpcEndpoint extends SynapseEndpointServiceMarker {
     
     public void ping();
     public String echo(String message);
