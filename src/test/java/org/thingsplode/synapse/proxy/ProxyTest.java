@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsplode.connect.proxy;
+package org.thingsplode.synapse.proxy;
 
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.thingsplode.connect.AbstractTest;
+import org.thingsplode.synapse.AbstractTest;
 
 /**
  *

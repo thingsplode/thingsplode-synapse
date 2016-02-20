@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsplode.connect.services.domain;
+package org.thingsplode.synapse.core;
 
 import java.io.Serializable;
 
@@ -21,13 +21,11 @@ import java.io.Serializable;
  *
  * @author tamas.csaba@gmail.com
  */
-public class Tuple<X, Y> implements Serializable {
-
-    public final X x;
-    public final Y y;
-
-    public Tuple(X x, Y y) {
-        this.x = x;
-        this.y = y;
-    }
+public interface TestEndpoint {
+    
+    public void ping();
+    public String echo(String message);
+    public Serializable getInfo();
+    public Serializable filter(Filter filter);
+    
 }

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsplode.connect.services;
+package org.thingsplode.synapse.services;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 import org.thingsplode.synapse.core.annotations.PathVariable;
@@ -22,8 +22,8 @@ import org.thingsplode.synapse.core.annotations.RequestMapping;
 import org.thingsplode.synapse.core.annotations.Service;
 import org.thingsplode.synapse.core.domain.Request;
 import org.thingsplode.synapse.core.domain.Response;
-import org.thingsplode.connect.services.domain.Address;
-import org.thingsplode.connect.services.domain.Tuple;
+import org.thingsplode.synapse.services.domain.Address;
+import org.thingsplode.synapse.services.domain.Tuple;
 
 /**
  *

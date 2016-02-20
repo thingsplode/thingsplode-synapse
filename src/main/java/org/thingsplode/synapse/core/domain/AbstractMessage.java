@@ -15,6 +15,7 @@
  */
 package org.thingsplode.synapse.core.domain;
 
+import io.netty.handler.codec.http.HttpResponseStatus;
 import java.io.Serializable;
 import java.net.InetSocketAddress;
 import java.util.Set;
@@ -33,13 +34,10 @@ public abstract class AbstractMessage<T extends Serializable> implements Seriali
     public AbstractMessage() {
     }
 
-    
     public AbstractMessage(T body) {
         this();
         this.body = body;
     }
-    
-    
 
     public class MessageHeader {
 
@@ -85,13 +83,13 @@ public abstract class AbstractMessage<T extends Serializable> implements Seriali
     }
 
     public <T> T expectBody(Class<T> type) throws SynapseMarshallerException {
+        if (body == null) {
+            throw new SynapseMarshallerException("This message has not extension.", HttpResponseStatus.EXPECTATION_FAILED);
+        }
         try {
-            if (body == null) {
-                throw new SynapseMarshallerException("This message has not extension.");
-            }
             return type.cast(body);
         } catch (ClassCastException ex) {
-            throw new SynapseMarshallerException("The expected message is not type of " + type.getSimpleName() + ": " + ex.getMessage(), ex);
+            throw new SynapseMarshallerException("The expected message is not type of " + type.getSimpleName() + ": " + ex.getMessage(), HttpResponseStatus.EXPECTATION_FAILED, ex);
         }
     }
 

@@ -13,37 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsplode.connect;
+package org.thingsplode.synapse.services.domain;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
+import java.io.Serializable;
 
 /**
  *
  * @author tamas.csaba@gmail.com
  */
-@RunWith(Suite.class)
-@Suite.SuiteClasses({})
-public class ClientTestSuite {
+public class Tuple<X, Y> implements Serializable {
 
-    @BeforeClass
-    public static void setUpClass() throws Exception {
-    }
+    public final X x;
+    public final Y y;
 
-    @AfterClass
-    public static void tearDownClass() throws Exception {
+    public Tuple(X x, Y y) {
+        this.x = x;
+        this.y = y;
     }
-
-    @Before
-    public void setUp() throws Exception {
-    }
-
-    @After
-    public void tearDown() throws Exception {
-    }
-    
 }

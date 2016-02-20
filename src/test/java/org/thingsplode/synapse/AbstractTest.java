@@ -13,17 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsplode.connect;
+package org.thingsplode.synapse;
 
 import io.netty.handler.logging.LogLevel;
 import java.net.InetSocketAddress;
 import org.apache.log4j.BasicConfigurator;
 import org.junit.Rule;
 import org.junit.rules.ExternalResource;
-import org.thingsplode.connect.core.TestEndpoint;
+import org.thingsplode.synapse.core.TestEndpoint;
 import org.thingsplode.synapse.endpoint.Endpoint;
 import org.thingsplode.synapse.endpoint.Endpoint.Connections;
-import org.thingsplode.connect.services.TestEndpointService;
+import org.thingsplode.synapse.services.TestEndpointService;
 
 /**
  *

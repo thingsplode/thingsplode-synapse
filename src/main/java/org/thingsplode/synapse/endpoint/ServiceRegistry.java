@@ -16,17 +16,38 @@
 package org.thingsplode.synapse.endpoint;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
+import org.thingsplode.synapse.core.annotations.RequestMapping;
+import org.thingsplode.synapse.core.annotations.Service;
+import org.thingsplode.synapse.core.domain.AbstractMessage;
 
 /**
  *
  * @author tamas.csaba@gmail.com
  */
 class ServiceRegistry {
-    private HashMap<String,Method> routes;
-    
-    public void register(Object serviceinstance){
-        if (serviceinstance == null){
+
+    private HashMap<String, Method> routes;
+
+    public void register(Object serviceInstance) {
+        if (!serviceInstance.getClass().isAnnotationPresent(Service.class)) {
+            throw new IllegalArgumentException("The service instance must be annotated with: " + Service.class.getSimpleName());
+        }
+
+    }
+
+    private List<Method> extractMethods(Class clazz) {
+        ArrayList<Method> methods = new ArrayList<>();
+        for ((Method m :  clazz.getMethods()) {
+            if ((m.isAnnotationPresent(RequestMapping.class))
+                    || (Arrays.asList(m.getParameterTypes()).contains(AbstractMessage.class))
+                    ) {
+                    
+            }
+            }
+            return null;
         }
     }
-}

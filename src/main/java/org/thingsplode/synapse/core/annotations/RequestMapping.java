@@ -27,7 +27,7 @@ import org.thingsplode.synapse.core.domain.RequestMethod;
  * @author tamas.csaba@gmail.com
  */
 @Documented
-@Target({ElementType.METHOD, ElementType.TYPE})
+@Target({ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface RequestMapping {
 

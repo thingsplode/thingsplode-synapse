@@ -13,42 +13,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsplode.connect.services.domain;
+package org.thingsplode.synapse;
 
-import java.io.Serializable;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.runner.RunWith;
+import org.junit.runners.Suite;
 
 /**
  *
  * @author tamas.csaba@gmail.com
  */
-public class Address implements Serializable {
-    private String street;
-    private String country;
-    private Integer postalCode;
+@RunWith(Suite.class)
+@Suite.SuiteClasses({})
+public class ClientTestSuite {
 
-    public String getStreet() {
-        return street;
+    @BeforeClass
+    public static void setUpClass() throws Exception {
     }
 
-    public void setStreet(String street) {
-        this.street = street;
+    @AfterClass
+    public static void tearDownClass() throws Exception {
     }
 
-    public String getCountry() {
-        return country;
+    @Before
+    public void setUp() throws Exception {
     }
 
-    public void setCountry(String country) {
-        this.country = country;
+    @After
+    public void tearDown() throws Exception {
     }
-
-    public Integer getPostalCode() {
-        return postalCode;
-    }
-
-    public void setPostalCode(Integer postalCode) {
-        this.postalCode = postalCode;
-    }
-    
     
 }

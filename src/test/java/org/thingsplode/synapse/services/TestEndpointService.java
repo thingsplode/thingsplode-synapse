@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsplode.connect.services;
+package org.thingsplode.synapse.services;
 
 import java.io.Serializable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.thingsplode.connect.core.Filter;
-import org.thingsplode.connect.core.TestEndpoint;
+import org.thingsplode.synapse.core.Filter;
+import org.thingsplode.synapse.core.TestEndpoint;
 import org.thingsplode.synapse.core.annotations.RequestMapping;
 import org.thingsplode.synapse.core.annotations.RequestParam;
 import org.thingsplode.synapse.core.annotations.Service;

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsplode.connect.core;
+package org.thingsplode.synapse.services.domain;
 
 import java.io.Serializable;
 
@@ -21,11 +21,34 @@ import java.io.Serializable;
  *
  * @author tamas.csaba@gmail.com
  */
-public interface TestEndpoint {
+public class Address implements Serializable {
+    private String street;
+    private String country;
+    private Integer postalCode;
+
+    public String getStreet() {
+        return street;
+    }
+
+    public void setStreet(String street) {
+        this.street = street;
+    }
+
+    public String getCountry() {
+        return country;
+    }
+
+    public void setCountry(String country) {
+        this.country = country;
+    }
+
+    public Integer getPostalCode() {
+        return postalCode;
+    }
+
+    public void setPostalCode(Integer postalCode) {
+        this.postalCode = postalCode;
+    }
     
-    public void ping();
-    public String echo(String message);
-    public Serializable getInfo();
-    public Serializable filter(Filter filter);
     
 }
