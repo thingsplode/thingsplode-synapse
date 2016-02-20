@@ -39,12 +39,12 @@ public abstract class AbstractMessage<T extends Serializable> implements Seriali
         this.body = body;
     }
 
-    public class MessageHeader {
+    public static class MessageHeader {
 
         private final AtomicLong id = new AtomicLong(0);
         private String protocolVersion;
         private InetSocketAddress callerAddress;
-        private Set<Parameter> parameters;
+        private Set<MsgParameter> parameters;
 
         public MessageHeader() {
         }
@@ -65,11 +65,11 @@ public abstract class AbstractMessage<T extends Serializable> implements Seriali
             this.callerAddress = callerAddress;
         }
 
-        public Set<Parameter> getParameters() {
+        public Set<MsgParameter> getParameters() {
             return parameters;
         }
 
-        public void setParameters(Set<Parameter> parameters) {
+        public void setParameters(Set<MsgParameter> parameters) {
             this.parameters = parameters;
         }
     }

@@ -53,6 +53,7 @@ public class Request<T extends Serializable> extends AbstractMessage<T> {
         private HttpMethod method;
 
         public RequestHeader(HttpMethod method) {
+            super();
             this.method = method;
         }
 

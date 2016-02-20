@@ -31,28 +31,34 @@ import com.acme.synapse.testdata.services.core.Tuple;
  */
 @Service("/test/{user}/messages/")
 public class TestSecondEndpointService {
+
     
-    @RequestMapping({"add","calculate"})
-    public Response<Integer> add(Request<Tuple<Integer, Integer>> req){
+    public Response<Integer> sum(Request<Tuple<Integer, Integer>> req) {
         Integer res = req.getBody().x + req.getBody().y;
         return new Response<>(new Response.ResponseHeader(HttpResponseStatus.OK), res);
     }
-    
+
+    @RequestMapping({"add", "calculate"})
+    public Response<Integer> add(Integer a, Integer b) {
+        Integer res = a + b;
+        return new Response<>(new Response.ResponseHeader(HttpResponseStatus.OK), res);
+    }
+
     @RequestMapping({"multiply"})
-    public Response<Integer> multiply(Request<Tuple<Integer, Integer>> req){
+    public Response<Integer> multiply(Request<Tuple<Integer, Integer>> req) {
         Integer res = req.getBody().x * req.getBody().y;
         return new Response<>(new Response.ResponseHeader(HttpResponseStatus.OK), res);
     }
-    
+
     @RequestMapping("/clear")
-    public void clearAll(@PathVariable("user") String user){
+    public void clearAll(@PathVariable("user") String user) {
         System.out.println("Cleared");
     }
-    
-   @RequestMapping({"check_address"})
-   public boolean verifyAddress(@RequestBody Address address){
-       System.out.println("Address received");
-       return true;
-   }
-    
+
+    @RequestMapping({"check_address"})
+    public boolean verifyAddress(@RequestBody Address address) {
+        System.out.println("Address received");
+        return true;
+    }
+
 }

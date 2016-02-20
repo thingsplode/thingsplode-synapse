@@ -48,6 +48,8 @@ public class TestEndpointService implements TestEndpoint {
         return message;
     }
 
+    //todo: make and test required false tests
+    
     @Override
     @RequestMapping(value = "/info", method = {RequestMethod.GET})
     public Serializable getInfo() {
