@@ -30,7 +30,7 @@ import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory;
 import io.netty.util.CharsetUtil;
 import java.util.Optional;
 import org.thingsplode.synapse.core.Uri;
-import org.thingsplode.synapse.endpoint.InternalServiceRegistry;
+import org.thingsplode.synapse.endpoint.ServiceRegistry;
 import org.thingsplode.synapse.endpoint.UriHandlingCapable;
 
 /**
@@ -40,7 +40,7 @@ import org.thingsplode.synapse.endpoint.UriHandlingCapable;
 public class HttRequestHandler extends SimpleChannelInboundHandler<FullHttpRequest> implements UriHandlingCapable {
 
     private WebSocketServerHandshaker handshaker;
-    private InternalServiceRegistry registry;
+    private ServiceRegistry registry;
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest req) throws Exception {
@@ -103,7 +103,7 @@ public class HttRequestHandler extends SimpleChannelInboundHandler<FullHttpReque
     }
 
     @Override
-    public void setServiceRegistry(InternalServiceRegistry registry) {
+    public void setServiceRegistry(ServiceRegistry registry) {
         this.registry = registry;
     }
 }

@@ -15,6 +15,7 @@
  */
 package org.thingsplode.synapse.endpoint;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
@@ -28,6 +29,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -40,6 +43,7 @@ import org.thingsplode.synapse.core.annotations.RequestParam;
 import org.thingsplode.synapse.core.annotations.Service;
 import org.thingsplode.synapse.core.domain.AbstractMessage;
 import org.thingsplode.synapse.core.domain.RequestMethod;
+import org.thingsplode.synapse.core.domain.Response;
 import org.thingsplode.synapse.core.exceptions.SynapseMethodNotFoundException;
 import org.thingsplode.synapse.util.Util;
 
@@ -47,12 +51,12 @@ import org.thingsplode.synapse.util.Util;
  *
  * @author tamas.csaba@gmail.com
  */
-public class InternalServiceRegistry {
+public class ServiceRegistry {
 
     private Routes routes;
     private Pattern urlParamPattern = Pattern.compile("\\{(.*?)\\}", Pattern.CASE_INSENSITIVE);
 
-    public InternalServiceRegistry() {
+    public ServiceRegistry() {
         routes = new Routes();
     }
 
@@ -72,13 +76,18 @@ public class InternalServiceRegistry {
      * @return an {@link Optional<Method>} filled with the method if one was found. Otherwise the mcOpt.isPresent() is false;
      * @throws org.thingsplode.synapse.core.exceptions.SynapseMethodNotFoundException
      */
-    public <R> R invoke(RequestMethod req, Uri uri) throws SynapseMethodNotFoundException {
+    public Response invoke(RequestMethod req, Uri uri) throws SynapseMethodNotFoundException {
         Optional<MethodContext> mcOpt = getMethodContext(req, uri);
         if (!mcOpt.isPresent()) {
             throw new SynapseMethodNotFoundException(req, uri);
         }
         MethodContext mc = mcOpt.get();
-        mc.method.invoke(mc, args);
+        try {
+            Object result = mc.method.invoke(mc.serviceInstance, mc.extractArguments());
+        } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
+            Logger.getLogger(ServiceRegistry.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
     }
 
     Optional<MethodContext> getMethodContext(RequestMethod reqMethod, Uri uri) {
@@ -125,7 +134,7 @@ public class InternalServiceRegistry {
         return Optional.of(mc);
     }
 
-    void register(Object serviceInstance) {
+    public void register(Object serviceInstance) {
         Class<?> srvClass = serviceInstance.getClass();
         String rootContext;
         List<Class> markedInterfaces = getMarkedInterfaces(srvClass.getInterfaces());
@@ -160,14 +169,14 @@ public class InternalServiceRegistry {
             rootContext = "/";
         }
 
-        populateMethods(rootContext, methods);
+        populateMethods(rootContext, serviceInstance, methods);
     }
 
-    private void populateMethods(String rootCtx, Set<Method> methods) {
+    private void populateMethods(String rootCtx, Object serviceInstance, Set<Method> methods) {
 
         methods.stream().forEach((m) -> {
             MethodContext mc;
-            mc = new MethodContext(rootCtx, m);
+            mc = new MethodContext(rootCtx, serviceInstance, m);
             mc.parameters.addAll(processParameters(rootCtx, m));
 
             if (m.isAnnotationPresent(RequestMapping.class)) {
@@ -243,6 +252,7 @@ public class InternalServiceRegistry {
 
         String rootCtx;
         Method method;
+        Object serviceInstance;
         List<RequestMethod> requestMethods = new ArrayList<>();
         List<MethodParam> parameters = new ArrayList<>();
 
@@ -282,15 +292,17 @@ public class InternalServiceRegistry {
             });
         }
 
-        public MethodContext(String rootCtx, Method method) {
+        public MethodContext(String rootCtx, Object service, Method method) {
             this.rootCtx = rootCtx;
+            this.serviceInstance = service;
             this.method = method;
             this.requestMethods = new ArrayList<>();
         }
 
-        public MethodContext(String rootCtx, Method method, List<RequestMethod> requestMethods) {
+        public MethodContext(String rootCtx, Object service, Method method, List<RequestMethod> requestMethods) {
             if (requestMethods != null) {
                 this.rootCtx = rootCtx;
+                this.serviceInstance = service;
                 this.method = method;
                 this.requestMethods.addAll(requestMethods);
             } else {
@@ -309,6 +321,11 @@ public class InternalServiceRegistry {
 
         void addRequestMethods(RequestMethod[] rms) {
             addRequestMethods(Arrays.asList(rms));
+        }
+
+        private Object[] extractArguments() {
+            
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 
     }

@@ -21,6 +21,6 @@ package org.thingsplode.synapse.endpoint;
  */
 public interface UriHandlingCapable {
     
-    void setServiceRegistry(InternalServiceRegistry registry);
+    void setServiceRegistry(ServiceRegistry registry);
     
 }
