@@ -36,7 +36,6 @@ public class CrudTestEndpointService {
         return new Response<>(new Response.ResponseHeader(HttpResponseStatus.OK), new ArrayList());
     }
 
-    
     @RequestMapping(value = "{deviceId}", method = {RequestMethod.GET})
     public Device getDeviceById(@PathVariable("deviceId") long id) {
         return createDevice();
@@ -48,15 +47,25 @@ public class CrudTestEndpointService {
     }
 
     @RequestMapping("owner")
-    public Response<Device> getByOwner(){
+    public Response<Device> getByOwner() {
+        return new Response<>(new Response.ResponseHeader(HttpResponseStatus.OK), createDevice());
+    }
+
+    @RequestMapping("owner")
+    public Response<Device> getByOwner(Long ownerId) {
         return new Response<>(new Response.ResponseHeader(HttpResponseStatus.OK), createDevice());
     }
     
+    @RequestMapping("owner")
+    public Response<Device> getByOwner(Long ownerId, Integer limit) {
+        return new Response<>(new Response.ResponseHeader(HttpResponseStatus.OK), createDevice());
+    }
+
     @RequestMapping("owner/old")
-    public Response<Device> getByOwnerOld(){
+    public Response<Device> getByOwnerOld() {
         return new Response<>(new Response.ResponseHeader(HttpResponseStatus.OK), createDevice());
     }
-    
+
     @RequestMapping(value = "add", method = {RequestMethod.POST, RequestMethod.PUT})
     public Device createDevice() {
         Device d = new Device();

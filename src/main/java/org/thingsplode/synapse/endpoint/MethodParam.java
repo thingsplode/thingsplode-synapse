@@ -28,6 +28,8 @@ class MethodParam<T> {
     Parameter parameter;
     Object defaultValue;
     Class defaultValueClass;
+    String pathVariableMatcher;
+    boolean pathVariableOnRootContext = true;
     boolean required = true;
 
     public MethodParam(Parameter param, ParameterSource source, String paramId) {
@@ -37,7 +39,7 @@ class MethodParam<T> {
 
     enum ParameterSource {
         PATH_VARIABLE,
-        URI_PARAM,
+        QUERY_PARAM,
         BODY
     }
 }

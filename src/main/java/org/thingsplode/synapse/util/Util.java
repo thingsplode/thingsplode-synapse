@@ -15,12 +15,40 @@
  */
 package org.thingsplode.synapse.util;
 
+import java.util.Arrays;
+import java.util.Optional;
+import java.util.regex.Pattern;
+
 /**
  *
  * @author tamas.csaba@gmail.com
  */
 public class Util {
-    public static boolean isEmpty(String string){
+
+    public static boolean isEmpty(String string) {
         return string == null || string.length() == 0;
+    }
+
+    public static boolean containsAnyOfStrings(String regexp, String[] stringArray) {
+        Optional<String> result = Arrays.asList(stringArray).stream().filter(s -> {
+            Pattern p = Pattern.compile(regexp);
+            return p.matcher(s).find();
+        }).findFirst();
+        return result.isPresent();
+    }
+    
+    public static boolean containsAll (String regexp, String[] stringArray) {
+        long matched = Arrays.asList(stringArray).stream().filter(s -> {
+            Pattern p = Pattern.compile(regexp);
+            return p.matcher(s).find();
+        }).count();
+        return stringArray.length == matched;
+    }
+    
+    public static boolean containsAll (Pattern regexPattern, String[] stringArray) {
+        long matched = Arrays.asList(stringArray).stream().filter(s -> {
+            return regexPattern.matcher(s).find();
+        }).count();
+        return stringArray.length == matched;
     }
 }

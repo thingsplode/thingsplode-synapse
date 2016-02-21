@@ -15,7 +15,6 @@
  */
 package org.thingsplode.synapse.endpoint;
 
-import io.netty.handler.codec.http.HttpMethod;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
@@ -50,6 +49,7 @@ import org.thingsplode.synapse.util.Util;
 public class InternalServiceRegistry {
 
     private Routes routes;
+    private Pattern urlParamPattern = Pattern.compile("\\{(.*?)\\}", Pattern.CASE_INSENSITIVE);
 
     public InternalServiceRegistry() {
         routes = new Routes();
@@ -63,35 +63,43 @@ public class InternalServiceRegistry {
         return routes.paths;
     }
 
-//    public Optional<Method> matchUri(HttpMethod req, Uri uri) {
-//        Optional<MethodContext> mcOpt = getMethodContext(uri);
-//        if (!mcOpt.isPresent()){
-//            return Optional.empty();
-//        }
-//        MethodContext mc = mcOpt.get();
-//        //mc.
-//        
-//    }
+    public Optional<Method> matchUri(RequestMethod req, Uri uri) {
+        Optional<MethodContext> mcOpt = getMethodContext(req, uri);
+        if (!mcOpt.isPresent()) {
+            return Optional.empty();
+        }
+        MethodContext mc = mcOpt.get();
+        //mc.
+        return null;
+
+    }
+
     Optional<MethodContext> getMethodContext(RequestMethod reqMethod, Uri uri) {
-        String methodName = null;
+        String methodIdentifierPattern = null;
         String pattern = null;
         for (Pattern p : routes.patterns) {
             Matcher m = p.matcher(uri.getPath());
             if (m.find()) {
-                methodName = uri.getPath().substring(m.end());
-                if (methodName.startsWith("/")) {
-                    methodName = methodName.substring(1);
+                methodIdentifierPattern = uri.getPath().substring(m.end());
+                if (methodIdentifierPattern.startsWith("/")) {
+                    methodIdentifierPattern = methodIdentifierPattern.substring(1);
                 }
                 pattern = p.pattern();
                 break;
             }
         }
-        if (Util.isEmpty(methodName)) {
+        if (Util.isEmpty(methodIdentifierPattern)) {
             return Optional.empty();
         }
 
+//        Matcher urlParamMatcher = urlParamPattern.matcher(pattern);
+//                while (urlParamMatcher.find()){
+//                    org.thingsplode.synapse.core.domain.Parameter<String> urlP = new org.thingsplode.synapse.core.domain.Parameter<>("a","b");
+//                }
+        methodIdentifierPattern = methodIdentifierPattern + uri.createParameterExpression();
+
         SortedMap<String, MethodContext> methods = routes.rootCtxes.get(pattern);
-        MethodContext mc = methods.get(methodName);
+        MethodContext mc = methods.get(methodIdentifierPattern);
         if (mc == null || (!mc.requestMethods.isEmpty() && !mc.requestMethods.contains(reqMethod))) {
             return Optional.empty();
         }
@@ -142,7 +150,7 @@ public class InternalServiceRegistry {
         methods.stream().forEach((m) -> {
             MethodContext mc;
             mc = new MethodContext(rootCtx, m);
-            mc.parameters.addAll(processParameters(m));
+            mc.parameters.addAll(processParameters(rootCtx, m));
 
             if (m.isAnnotationPresent(RequestMapping.class)) {
                 RequestMapping rm = m.getAnnotation(RequestMapping.class);
@@ -157,7 +165,7 @@ public class InternalServiceRegistry {
         });
     }
 
-    private List<MethodParam> processParameters(Method m) {
+    private List<MethodParam> processParameters(String rootCtx, Method m) {
         List<MethodParam> mps = new ArrayList<>();
         if (m.getParameterCount() > 0) {
             Arrays.asList(m.getParameters()).forEach((Parameter p) -> {
@@ -165,7 +173,7 @@ public class InternalServiceRegistry {
                 MethodParam<?> mp;
 
                 if (p.isAnnotationPresent(RequestParam.class)) {
-                    mp = new MethodParam(p, MethodParam.ParameterSource.URI_PARAM, p.getAnnotation(RequestParam.class).value());
+                    mp = new MethodParam(p, MethodParam.ParameterSource.QUERY_PARAM, p.getAnnotation(RequestParam.class).value());
                     required = p.getAnnotation(RequestParam.class).required();
                     if (!Util.isEmpty(p.getAnnotation(RequestParam.class).defaultValue())) {
                         Class valueClass = p.getType();
@@ -180,7 +188,7 @@ public class InternalServiceRegistry {
                 } else if (AbstractMessage.class.isAssignableFrom(p.getType())) {
                     mp = new MethodParam(p, MethodParam.ParameterSource.BODY, p.getName());
                 } else {
-                    mp = new MethodParam(p, MethodParam.ParameterSource.URI_PARAM, p.getName());
+                    mp = new MethodParam(p, MethodParam.ParameterSource.QUERY_PARAM, p.getName());
                 }
                 mp.required = required;
                 mp.parameter = p;
@@ -220,6 +228,42 @@ public class InternalServiceRegistry {
         List<RequestMethod> requestMethods = new ArrayList<>();
         List<MethodParam> parameters = new ArrayList<>();
 
+        String createParameterExpression() {
+            if (parameters.isEmpty()) {
+                return "";
+            }
+            String exp = "";
+            boolean first = true;
+            for (MethodParam p : parameters) {
+                boolean skip = p.parameter.isAnnotationPresent(PathVariable.class) || p.source == MethodParam.ParameterSource.BODY;
+                if (!skip) {
+                    String pid = p.required ? p.paramId : "[" + p.paramId + "]";
+                    exp = exp + (first ? "?" + pid : "&" + pid);
+                    first = false;
+                }
+            }
+            return exp;
+        }
+
+        private void preparePathVariableMatching(String methodName) {
+            this.parameters.forEach(p -> {
+                //check for path variables on the root context or on the request map
+                if (p.source == MethodParam.ParameterSource.PATH_VARIABLE) {
+                    String pathVariableName = p.parameter.getAnnotation(PathVariable.class).value();
+                    Pattern regexP = Pattern.compile("\\{" + pathVariableName + "\\}");
+                    if (regexP.matcher(rootCtx).find()) {
+                        p.pathVariableMatcher = rootCtx.replace("{" + pathVariableName + "}", "/[^/]+/");
+                        p.pathVariableOnRootContext = true;
+                    } else if (regexP.matcher(methodName).find()) {
+                        p.pathVariableMatcher = methodName.replace("{" + pathVariableName + "}", "/[^/]+/");
+                        p.pathVariableOnRootContext = false;
+                    } else {
+                        throw new IllegalArgumentException("The parameter " + p.parameter.getName() + " on method " + this.method.getName() + " on class " + this.method.getDeclaringClass().getSimpleName() + " has the " + PathVariable.class.getSimpleName() + ", but no path variable defined in the root context.");
+                    }
+                }
+            });
+        }
+
         public MethodContext(String rootCtx, Method method) {
             this.rootCtx = rootCtx;
             this.method = method;
@@ -248,6 +292,7 @@ public class InternalServiceRegistry {
         void addRequestMethods(RequestMethod[] rms) {
             addRequestMethods(Arrays.asList(rms));
         }
+
     }
 
     class Routes {
@@ -257,13 +302,17 @@ public class InternalServiceRegistry {
         Set<String> paths = new HashSet<>();
 
         synchronized void put(String rootCtx, String methodName, MethodContext mc) {
+
             String rootRegexp = rootCtx.replaceAll("/\\{.*\\}/", "/[^/]+/");
             methodName = methodName.startsWith("/") ? methodName.substring(1) : methodName;
+            methodName = methodName + mc.createParameterExpression();
+            mc.preparePathVariableMatching(methodName);
+
             SortedMap<String, MethodContext> rootCtxMethods = rootCtxes.get(rootRegexp);
             if (rootCtxMethods != null) {
                 rootCtxMethods.put(methodName, mc);
             } else {
-                patterns.add(Pattern.compile(rootRegexp));
+                patterns.add(Pattern.compile(rootRegexp, Pattern.CASE_INSENSITIVE));
                 SortedMap<String, MethodContext> map = new TreeMap<>();
                 map.put(methodName, mc);
                 rootCtxes.put(rootRegexp, map);

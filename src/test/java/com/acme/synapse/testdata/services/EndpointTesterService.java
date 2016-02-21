@@ -24,6 +24,7 @@ import org.thingsplode.synapse.core.domain.Request;
 import org.thingsplode.synapse.core.domain.Response;
 import com.acme.synapse.testdata.services.core.Address;
 import com.acme.synapse.testdata.services.core.Tuple;
+import org.thingsplode.synapse.core.annotations.RequestParam;
 
 /**
  *
@@ -39,7 +40,7 @@ public class EndpointTesterService {
     }
 
     @RequestMapping({"add", "calculate"})
-    public Response<Integer> add(Integer a, Integer b) {
+    public Response<Integer> add(@RequestParam("a") Integer a, @RequestParam("b") Integer b) {
         Integer res = a + b;
         return new Response<>(new Response.ResponseHeader(HttpResponseStatus.OK), res);
     }

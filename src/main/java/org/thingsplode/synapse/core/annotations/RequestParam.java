@@ -30,7 +30,7 @@ import java.lang.annotation.Target;
 @Documented
 public @interface RequestParam {
 
-    String value() default "";
+    String value();
 
     /**
      * Whether the parameter is required.
@@ -54,5 +54,5 @@ public @interface RequestParam {
      * {@code false}.
      * @return 
      */
-    String defaultValue();
+    String defaultValue() default "";
 }

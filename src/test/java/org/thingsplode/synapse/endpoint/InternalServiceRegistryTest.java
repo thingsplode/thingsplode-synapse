@@ -65,6 +65,7 @@ public class InternalServiceRegistryTest {
         registry.register(new EndpointTesterService());
         registry.register(new CrudTestEndpointService());
 
+        ///test request method matching
         Optional<InternalServiceRegistry.MethodContext> optM = registry.getMethodContext(RequestMethod.GET, new Uri("/1221221/devices/add"));
         Assert.assertTrue(!optM.isPresent());
 
@@ -73,38 +74,50 @@ public class InternalServiceRegistryTest {
 
         Optional<InternalServiceRegistry.MethodContext> optM2 = registry.getMethodContext(RequestMethod.PUT, new Uri("/1221221/devices/add"));
         Assert.assertTrue(optM2.isPresent());
-
-        Optional<InternalServiceRegistry.MethodContext> opt = registry.getMethodContext(RequestMethod.GET, new Uri("/test/user.name/messages/calculate"));
+        ///----------------------------
+        
+        ///Test multiple request uris to the same method and named parameters
+        Optional<InternalServiceRegistry.MethodContext> opt = registry.getMethodContext(RequestMethod.GET, new Uri("/test/user.name/messages/calculate?a=2&b=3"));
         Assert.assertTrue(opt.isPresent());
         Assert.assertEquals("/test/{user}/messages", opt.get().rootCtx);
 
-        Optional<InternalServiceRegistry.MethodContext> opt1 = registry.getMethodContext(RequestMethod.GET, new Uri("/test/user.name/messages/add"));
+        Optional<InternalServiceRegistry.MethodContext> opt1 = registry.getMethodContext(RequestMethod.GET, new Uri("/test/user.name/messages/add?a=1231434&b=212112"));
         Assert.assertTrue(opt1.isPresent());
         Assert.assertEquals("/test/{user}/messages", opt1.get().rootCtx);
-
+        ///----------------------------
+        
+        ///Test path variable resolution
         Optional<InternalServiceRegistry.MethodContext> opt2 = registry.getMethodContext(RequestMethod.GET, new Uri("/test/user.name/messages/clear"));
         Assert.assertTrue(opt2.isPresent());
         Assert.assertEquals("/test/{user}/messages", opt2.get().rootCtx);
 
         Optional<InternalServiceRegistry.MethodContext> opt3 = registry.getMethodContext(RequestMethod.GET, new Uri("/test/user/name/messages/clear"));
         Assert.assertTrue(!opt3.isPresent());
-
-        Optional<InternalServiceRegistry.MethodContext> opt4 = registry.getMethodContext(RequestMethod.GET, new Uri("/com/acme/synapse/testdata/services/DummyMarkedEndpoint/"));
-        Assert.assertTrue(!opt4.isPresent());
-
-        Optional<InternalServiceRegistry.MethodContext> opt5 = registry.getMethodContext(RequestMethod.GET, new Uri("/com/acme/synapse/testdata/services/DummyMarkedEndpoint/echo"));
-        Assert.assertTrue(opt5.isPresent());
-
-        Optional<InternalServiceRegistry.MethodContext> opt6 = registry.getMethodContext(RequestMethod.GET, new Uri("/com/acme/synapse/testdata/services/RpcEndpoint/ping"));
-        Assert.assertTrue(!opt6.isPresent());
-
-        Optional<InternalServiceRegistry.MethodContext> opt7 = registry.getMethodContext(RequestMethod.GET, new Uri("/com/acme/synapse/testdata/services/RpcEndpointImpl/ping"));
-        Assert.assertTrue(opt7.isPresent());
-
+        ///----------------------------
+        
+        ///Test Request Response with request mapping
         Optional<InternalServiceRegistry.MethodContext> opt8 = registry.getMethodContext(RequestMethod.GET, new Uri("/test/user@name/messages/sum"));
         Assert.assertTrue(opt8.isPresent());
 
         Optional<InternalServiceRegistry.MethodContext> opt9 = registry.getMethodContext(RequestMethod.GET, new Uri("/some_user/devices/listAll"));
         Assert.assertTrue(opt9.isPresent());
+
+        ///Test interface marked services
+        Optional<InternalServiceRegistry.MethodContext> opt4 = registry.getMethodContext(RequestMethod.GET, new Uri("/com/acme/synapse/testdata/services/DummyMarkedEndpoint/"));
+        Assert.assertTrue(!opt4.isPresent());
+
+        Optional<InternalServiceRegistry.MethodContext> opt5 = registry.getMethodContext(RequestMethod.GET, new Uri("/com/acme/synapse/testdata/services/DummyMarkedEndpoint/echo?arg0=\"something in the rain\""));
+        Assert.assertTrue(opt5.isPresent());
+        ///----------------------------
+        
+        //Test RPC interfaces
+        Optional<InternalServiceRegistry.MethodContext> opt6 = registry.getMethodContext(RequestMethod.GET, new Uri("/com/acme/synapse/testdata/services/RpcEndpoint/ping"));
+        Assert.assertTrue(!opt6.isPresent());
+
+        Optional<InternalServiceRegistry.MethodContext> opt7 = registry.getMethodContext(RequestMethod.GET, new Uri("/com/acme/synapse/testdata/services/RpcEndpointImpl/ping"));
+        Assert.assertTrue(opt7.isPresent());
+        ///----------------------------
+        
+
     }
 }

@@ -34,6 +34,19 @@ public class Uri {
     private String query;
     private List<Parameter<String>> queryParameters;
 
+    public String createParameterExpression() {
+        if (queryParameters == null || queryParameters.isEmpty()) {
+            return "";
+        }
+        String pex = "?";
+        boolean first = true;
+        for (Parameter p : queryParameters) {
+            pex = pex + (first ? p.getName() : "&" + p.getName());
+            first = false;
+        }
+        return pex;
+    }
+
     public Uri(String uri) throws UnsupportedEncodingException {
         this(uri, "UTF-8");
     }
