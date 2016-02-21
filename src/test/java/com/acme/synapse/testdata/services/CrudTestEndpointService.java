@@ -40,6 +40,11 @@ public class CrudTestEndpointService {
     public Device getDeviceById(@PathVariable("deviceId") long id) {
         return createDevice();
     }
+    
+    @RequestMapping(value = "/switches/{deviceId}", method = {RequestMethod.GET})
+    public Device getSwicthesById(@PathVariable("deviceId") long id) {
+        return createDevice();
+    }
 
     //example: "/test/devices/getById/1122321
     public Response<Device> getById(@RequestBody Long deviceID) {

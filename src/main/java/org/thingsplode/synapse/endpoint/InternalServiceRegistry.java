@@ -92,14 +92,25 @@ public class InternalServiceRegistry {
             return Optional.empty();
         }
 
-//        Matcher urlParamMatcher = urlParamPattern.matcher(pattern);
-//                while (urlParamMatcher.find()){
-//                    org.thingsplode.synapse.core.domain.Parameter<String> urlP = new org.thingsplode.synapse.core.domain.Parameter<>("a","b");
-//                }
         methodIdentifierPattern = methodIdentifierPattern + uri.createParameterExpression();
 
         SortedMap<String, MethodContext> methods = routes.rootCtxes.get(pattern);
         MethodContext mc = methods.get(methodIdentifierPattern);
+        if (mc == null) {
+            final String variableMethodIdentifier = methodIdentifierPattern;
+            Optional<String> variableMethodKey = methods.keySet().stream().filter(k -> {
+                if (urlParamPattern.matcher(k).find()) {
+                    final String keyMatcher = k.replaceAll("\\{.*\\}", "[^/]+");
+                    if (Pattern.compile(keyMatcher).matcher(variableMethodIdentifier).find()) {
+                        return true;
+                    }
+                }
+                return false;
+            }).findFirst();
+            if (variableMethodKey.isPresent()) {
+                mc = methods.get(variableMethodKey.get());
+            }
+        }
         if (mc == null || (!mc.requestMethods.isEmpty() && !mc.requestMethods.contains(reqMethod))) {
             return Optional.empty();
         }
