@@ -40,6 +40,7 @@ import org.thingsplode.synapse.core.annotations.RequestParam;
 import org.thingsplode.synapse.core.annotations.Service;
 import org.thingsplode.synapse.core.domain.AbstractMessage;
 import org.thingsplode.synapse.core.domain.RequestMethod;
+import org.thingsplode.synapse.core.exceptions.SynapseMethodNotFoundException;
 import org.thingsplode.synapse.util.Util;
 
 /**
@@ -63,15 +64,21 @@ public class InternalServiceRegistry {
         return routes.paths;
     }
 
-    public Optional<Method> matchUri(RequestMethod req, Uri uri) {
+    /**
+     * Returns the method which corresponds best to the {@link Uri} and the {@link RequestMethod}.
+     * @param <R>
+     * @param req the request method (it also can be null)
+     * @param uri
+     * @return an {@link Optional<Method>} filled with the method if one was found. Otherwise the mcOpt.isPresent() is false;
+     * @throws org.thingsplode.synapse.core.exceptions.SynapseMethodNotFoundException
+     */
+    public <R> R invoke(RequestMethod req, Uri uri) throws SynapseMethodNotFoundException {
         Optional<MethodContext> mcOpt = getMethodContext(req, uri);
         if (!mcOpt.isPresent()) {
-            return Optional.empty();
+            throw new SynapseMethodNotFoundException(req, uri);
         }
         MethodContext mc = mcOpt.get();
-        //mc.
-        return null;
-
+        mc.method.invoke(mc, args);
     }
 
     Optional<MethodContext> getMethodContext(RequestMethod reqMethod, Uri uri) {

@@ -25,6 +25,7 @@ import org.junit.Test;
 import com.acme.synapse.testdata.services.RpcEndpointImpl;
 import com.acme.synapse.testdata.services.EndpointTesterService;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Method;
 import java.util.Optional;
 import org.junit.Assert;
 import org.thingsplode.synapse.core.Uri;
@@ -73,6 +74,10 @@ public class InternalServiceRegistryTest {
 
         Optional<InternalServiceRegistry.MethodContext> optM1 = registry.getMethodContext(RequestMethod.POST, new Uri("/1221221/devices/add"));
         Assert.assertTrue(optM1.isPresent());
+
+        Optional<Method> methOpt = registry.matchUri(RequestMethod.POST, new Uri("/1221221/devices/add"));
+        Assert.assertTrue(methOpt.isPresent());
+        
 
         Optional<InternalServiceRegistry.MethodContext> optM2 = registry.getMethodContext(RequestMethod.PUT, new Uri("/1221221/devices/add"));
         Assert.assertTrue(optM2.isPresent());
