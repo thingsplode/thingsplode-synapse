@@ -17,7 +17,6 @@ package com.acme.synapse.testdata.services.core;
 
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.UUID;
 
 /**
  *
@@ -25,16 +24,17 @@ import java.util.UUID;
  */
 public class Device implements Serializable {
     
-    private UUID id;
+    private long id;
     private String logicalName;
+    private Integer treshold;
     private Collection<Device> subDevices;
 
-    public Device() {
-        id = UUID.randomUUID();
+    public long getId() {
+        return id;
     }
 
-    public UUID getId() {
-        return id;
+    public void setId(long id) {
+        this.id = id;
     }
 
     public String getLogicalName() {
@@ -45,6 +45,14 @@ public class Device implements Serializable {
         this.logicalName = logicalName;
     }
 
+    public Integer getTreshold() {
+        return treshold;
+    }
+
+    public void setTreshold(Integer treshold) {
+        this.treshold = treshold;
+    }
+    
     public Collection<Device> getSubDevices() {
         return subDevices;
     }

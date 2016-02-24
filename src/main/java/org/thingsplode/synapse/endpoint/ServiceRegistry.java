@@ -94,7 +94,9 @@ public class ServiceRegistry {
         MethodContext mc = mcOpt.get();
         try {
             Object result = mc.method.invoke(mc.serviceInstance, mc.extractInvocationArguments(uri, requestBody));
-            if (result instanceof Response) {
+            if (result == null) {
+                return new Response(new Response.ResponseHeader(HttpResponseStatus.OK));
+            } else if (result instanceof Response) {
                 return (Response) result;
             } else if (result instanceof Serializable) {
                 return new Response(new Response.ResponseHeader(HttpResponseStatus.OK), (Serializable) result);
@@ -254,16 +256,17 @@ public class ServiceRegistry {
         return Arrays.asList(ifaces).stream().filter(i -> SynapseEndpointServiceMarker.class.isAssignableFrom(i)).collect(Collectors.toList());
     }
 
-    private <T> T generateValueFromString(Class<T> type, String sValue) {
+    private Object generateValueFromString(Class type, String sValue) {
         if (sValue == null || Util.isEmpty(sValue)) {
             return null;
         }
-        if (type.equals(Integer.class)) {
-            return type.cast(Integer.parseInt(sValue));
-        } else if (type.equals(Long.class)) {
-            return type.cast(Long.parseLong(sValue));
-        } else if (type.equals(String.class)) {
-            return type.cast(sValue);
+        //todo: find and test other primitives and base types
+        if (Integer.class.isAssignableFrom(type) || int.class.isAssignableFrom(type)) {
+            return Integer.parseInt(sValue);
+        } else if (Long.class.isAssignableFrom(type) || long.class.isAssignableFrom(type)) {
+            return Long.parseLong(sValue);
+        } else if (String.class.isAssignableFrom(type)) {
+            return sValue;
         }
         return null;
     }
@@ -348,9 +351,9 @@ public class ServiceRegistry {
                         System.out.println("M: -> " + methodName);
                         System.out.println("index of { ->" + methodName.indexOf("{"));
                         System.out.println("index of } -> " + methodName.indexOf("}"));
-                        System.out.println("length -> "+ methodName.length());
+                        System.out.println("length -> " + methodName.length());
                         //String pattern = (methodName.indexOf("{") == 0 ? "^" : "(?!" + methodName.substring(0, methodName.indexOf("{")) + ")") + "([A-Za-z0-9._@]+)" + (methodName.indexOf("}") == methodName.length()-1 ? "$" : "(?=" + methodName.substring(methodName.indexOf("}") + 1, methodName.length()) + ")");
-                        String pattern = (methodName.indexOf("{") == 0 ? "" : "(?!" + methodName.substring(0, methodName.indexOf("{")) + ")") + "([A-Za-z0-9._@]+)" + (methodName.indexOf("}") == methodName.length()-1 ? "$" : "(?=" + methodName.substring(methodName.indexOf("}") + 1, methodName.length()) + ")");
+                        String pattern = (methodName.indexOf("{") == 0 ? "" : "(?!" + methodName.substring(0, methodName.indexOf("{")) + ")") + "([A-Za-z0-9._@]+)" + (methodName.indexOf("}") == methodName.length() - 1 ? "$" : "(?=" + methodName.substring(methodName.indexOf("}") + 1, methodName.length()) + ")");
                         //(?!switches/)([A-Za-z0-9._@]+)$
                         //^(?!switches/)([A-Za-z0-9._@]+)$
                         p.pathVariableMatcher = Pattern.compile(pattern);

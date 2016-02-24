@@ -38,7 +38,9 @@ public class CrudTestEndpointService {
 
     @RequestMapping(value = "{deviceId}", method = {RequestMethod.GET})
     public Device getDeviceById(@PathVariable("deviceId") long id) {
-        return createDevice();
+        Device d = createDevice();
+        d.setId(id);
+        return d;
     }
     
     @RequestMapping(value = "/switches/{deviceId}", method = {RequestMethod.GET})
@@ -48,7 +50,9 @@ public class CrudTestEndpointService {
 
     //example: "/test/devices/getById/1122321
     public Response<Device> getById(@RequestBody Long deviceID) {
-        return new Response<>(new Response.ResponseHeader(HttpResponseStatus.OK), createDevice());
+        Device d = createDevice();
+        d.setId(deviceID);
+        return new Response<>(new Response.ResponseHeader(HttpResponseStatus.OK), d);
     }
 
     @RequestMapping("owner")
@@ -57,13 +61,18 @@ public class CrudTestEndpointService {
     }
 
     @RequestMapping("owner")
-    public Response<Device> getByOwner(Long ownerId) {
-        return new Response<>(new Response.ResponseHeader(HttpResponseStatus.OK), createDevice());
+    public Response<Device> getByOwner(Long deviceId) {
+        Device d = createDevice();
+        d.setId(deviceId);
+        return new Response<>(new Response.ResponseHeader(HttpResponseStatus.OK), d);
     }
     
     @RequestMapping("owner")
-    public Response<Device> getByOwner(Long ownerId, Integer limit) {
-        return new Response<>(new Response.ResponseHeader(HttpResponseStatus.OK), createDevice());
+    public Response<Device> getByOwner(Long deviceId, Integer treshold) {
+        Device d = createDevice();
+        d.setId(deviceId);
+        d.setTreshold(treshold);
+        return new Response<>(new Response.ResponseHeader(HttpResponseStatus.OK), d);
     }
 
     @RequestMapping("owner/old")
