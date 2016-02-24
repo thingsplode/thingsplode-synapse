@@ -19,7 +19,7 @@ import java.io.Serializable;
 import java.net.InetSocketAddress;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
-import org.thingsplode.synapse.core.exceptions.SynapseMarshallerException;
+import org.thingsplode.synapse.core.exceptions.MarshallerException;
 
 /**
  *
@@ -81,14 +81,15 @@ public abstract class AbstractMessage<T extends Serializable> implements Seriali
         this.body = body;
     }
 
-    public <T> T expectBody(Class<T> type) throws SynapseMarshallerException {
+    public <T> T expectBody(Class<T> type) throws MarshallerException {
+        //todo: review if it makes sense
         if (body == null) {
-            throw new SynapseMarshallerException("This message has not extension.", HttpStatus.EXPECTATION_FAILED);
+            throw new MarshallerException("This message has not extension.", HttpStatus.EXPECTATION_FAILED);
         }
         try {
             return type.cast(body);
         } catch (ClassCastException ex) {
-            throw new SynapseMarshallerException("The expected message is not type of " + type.getSimpleName() + ": " + ex.getMessage(), HttpStatus.EXPECTATION_FAILED, ex);
+            throw new MarshallerException("The expected message is not type of " + type.getSimpleName() + ": " + ex.getMessage(), HttpStatus.EXPECTATION_FAILED, ex);
         }
     }
 

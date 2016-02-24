@@ -13,34 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsplode.synapse.endpoint;
+package org.thingsplode.synapse.core.exceptions;
 
-import java.lang.reflect.Parameter;
-import java.util.regex.Pattern;
+import org.thingsplode.synapse.core.Uri;
+import org.thingsplode.synapse.core.domain.HttpStatus;
+import org.thingsplode.synapse.core.domain.RequestMethod;
 
 /**
  *
  * @author tamas.csaba@gmail.com
  */
-class MethodParam<T> {
+public class MethodNotFoundException extends SynapseException {
 
-    ParameterSource source;
-    String paramId;
-    Parameter parameter;
-    Object defaultValue;
-    Class defaultValueClass;
-    Pattern pathVariableMatcher;
-    boolean pathVariableOnRootContext = true;
-    boolean required = true;
-
-    public MethodParam(Parameter param, ParameterSource source, String paramId) {
-        this.source = source;
-        this.paramId = paramId;
-    }
-
-    enum ParameterSource {
-        PATH_VARIABLE,
-        QUERY_PARAM,
-        BODY
+    public MethodNotFoundException(RequestMethod m, Uri u) {
+        super("Path: " + u.getPath() + " not implemented or method: " + m.name() + " not supported.", HttpStatus.NOT_FOUND);
     }
 }

@@ -15,17 +15,15 @@
  */
 package org.thingsplode.synapse.core.exceptions;
 
-import org.thingsplode.synapse.core.Uri;
 import org.thingsplode.synapse.core.domain.HttpStatus;
-import org.thingsplode.synapse.core.domain.RequestMethod;
 
 /**
  *
  * @author tamas.csaba@gmail.com
  */
-public class SynapseMethodNotFoundException extends SynapseException {
+public class MissingParameterException extends SynapseException {
 
-    public SynapseMethodNotFoundException(RequestMethod m, Uri u) {
-        super("Path: " + u.getPath() + " not implemented or method: " + m.name() + " not supported.", HttpStatus.NOT_FOUND);
+    public MissingParameterException(String path, String paramName) {
+        super("The param {" + paramName + "} cannot be found on the path: " + path, HttpStatus.BAD_REQUEST);
     }
 }

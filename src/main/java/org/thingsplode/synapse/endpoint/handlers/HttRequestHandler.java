@@ -28,7 +28,7 @@ import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshaker;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory;
 import io.netty.util.CharsetUtil;
-import java.util.Optional;
+import java.nio.charset.Charset;
 import org.thingsplode.synapse.core.Uri;
 import org.thingsplode.synapse.endpoint.ServiceRegistry;
 import org.thingsplode.synapse.endpoint.UriHandlingCapable;
@@ -60,11 +60,26 @@ public class HttRequestHandler extends SimpleChannelInboundHandler<FullHttpReque
         //Accept-Encoding : gzip, deflate, sdch
         //Accept-Language : en-US,en;q=0.8
         // content-length : 0
+        //************************ 
+        //method: PUT uri: /api/test version: HTTP/1.1
+        //headers: 
+        //User-Agent : curl/7.35.0
+        //Host : localhost:8080
+        //Accept : */*
+        //Content-Type : application/json
+        //Content-Length : 25
+        //CONTENT --> {"message":"hello world"}
+        
         System.out.println("method: " + req.method().name() + " uri: " + req.uri() + " version: " + req.protocolVersion());
         System.out.println("headers: ");
         req.headers().entries().stream().forEach((entry) -> {
             System.out.println(entry.getKey() + " : " + entry.getValue());
         });
+        
+        byte[] dst = new byte[req.content().capacity()];
+        req.content().getBytes(0, dst);
+        System.out.println("CONTENT --> " + new String(dst, Charset.forName("UTF-8")));
+                
 
         Uri uri = new Uri(req.uri());
         //Optional<InternalServiceRegistry.MethodContext> mcOpt = registry.matchUri(req.method(), uri);

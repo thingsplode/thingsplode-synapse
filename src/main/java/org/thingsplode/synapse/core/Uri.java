@@ -15,10 +15,12 @@
  */
 package org.thingsplode.synapse.core;
 
+import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import org.thingsplode.synapse.core.domain.Parameter;
 import org.thingsplode.synapse.util.Util;
 
@@ -45,6 +47,14 @@ public class Uri {
             first = false;
         }
         return pex;
+    }
+
+    public String getQueryParamterValue(String parameterName) {
+        if (queryParameters == null || queryParameters.isEmpty()) {
+            return null;
+        }
+        Optional<Parameter<String>> o = queryParameters.stream().filter(p -> p.getName().equalsIgnoreCase(parameterName)).findFirst();
+        return o.isPresent() ? o.get().getValue() : null;
     }
 
     public Uri(String uri) throws UnsupportedEncodingException {

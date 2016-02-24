@@ -21,13 +21,13 @@ import org.thingsplode.synapse.core.domain.HttpStatus;
  *
  * @author tamas.csaba@gmail.com
  */
-public class SynapseMarshallerException extends SynapseException {
+public class MarshallerException extends SynapseException {
 
-    public SynapseMarshallerException(String msg, HttpStatus status) {
+    public MarshallerException(String msg, HttpStatus status) {
         super(msg, status);
     }
 
-    public SynapseMarshallerException(String message, HttpStatus status, Throwable throwable) {
+    public MarshallerException(String message, HttpStatus status, Throwable throwable) {
         super(message, status, throwable);
     }
 

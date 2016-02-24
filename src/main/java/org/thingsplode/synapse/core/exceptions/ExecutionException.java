@@ -13,34 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsplode.synapse.endpoint;
+package org.thingsplode.synapse.core.exceptions;
 
-import java.lang.reflect.Parameter;
-import java.util.regex.Pattern;
+import org.thingsplode.synapse.core.Uri;
+import org.thingsplode.synapse.core.domain.HttpStatus;
 
 /**
  *
  * @author tamas.csaba@gmail.com
  */
-class MethodParam<T> {
+public class ExecutionException extends SynapseException {
 
-    ParameterSource source;
-    String paramId;
-    Parameter parameter;
-    Object defaultValue;
-    Class defaultValueClass;
-    Pattern pathVariableMatcher;
-    boolean pathVariableOnRootContext = true;
-    boolean required = true;
-
-    public MethodParam(Parameter param, ParameterSource source, String paramId) {
-        this.source = source;
-        this.paramId = paramId;
+    public ExecutionException(String message){
+        super(message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
-
-    enum ParameterSource {
-        PATH_VARIABLE,
-        QUERY_PARAM,
-        BODY
+    
+    public ExecutionException(Uri u, Exception e) {
+        super("Service execution error on path: " + u.getPath() + " with error -> " + e.getMessage() + ". Exception Type: " + e.getClass(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

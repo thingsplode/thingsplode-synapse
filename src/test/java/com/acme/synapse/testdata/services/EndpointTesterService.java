@@ -53,7 +53,7 @@ public class EndpointTesterService {
 
     @RequestMapping("/clear")
     public void clearAll(@PathVariable("user") String user) {
-        System.out.println("Cleared");
+        System.out.println("\n\n User: ["+user+"] cleared");
     }
 
     @RequestMapping({"check_address"})

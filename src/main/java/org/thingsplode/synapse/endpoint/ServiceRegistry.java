@@ -15,6 +15,9 @@
  */
 package org.thingsplode.synapse.endpoint;
 
+import io.netty.handler.codec.http.HttpResponseStatus;
+import java.io.Serializable;
+import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -44,7 +47,9 @@ import org.thingsplode.synapse.core.annotations.Service;
 import org.thingsplode.synapse.core.domain.AbstractMessage;
 import org.thingsplode.synapse.core.domain.RequestMethod;
 import org.thingsplode.synapse.core.domain.Response;
-import org.thingsplode.synapse.core.exceptions.SynapseMethodNotFoundException;
+import org.thingsplode.synapse.core.exceptions.ExecutionException;
+import org.thingsplode.synapse.core.exceptions.MethodNotFoundException;
+import org.thingsplode.synapse.core.exceptions.MissingParameterException;
 import org.thingsplode.synapse.util.Util;
 
 /**
@@ -69,25 +74,36 @@ public class ServiceRegistry {
     }
 
     /**
-     * Returns the method which corresponds best to the {@link Uri} and the {@link RequestMethod}.
-     * @param <R>
+     * Returns the method which corresponds best to the {@link Uri} and the
+     * {@link RequestMethod}.
+     *
      * @param req the request method (it also can be null)
      * @param uri
-     * @return an {@link Optional<Method>} filled with the method if one was found. Otherwise the mcOpt.isPresent() is false;
-     * @throws org.thingsplode.synapse.core.exceptions.SynapseMethodNotFoundException
+     * @param requestBody
+     * @return an {@link Optional<Method>} filled with the method if one was
+     * found. Otherwise the mcOpt.isPresent() is false;
+     * @throws org.thingsplode.synapse.core.exceptions.MethodNotFoundException
+     * @throws org.thingsplode.synapse.core.exceptions.ExecutionException
+     * @throws org.thingsplode.synapse.core.exceptions.MissingParameterException
      */
-    public Response invoke(RequestMethod req, Uri uri) throws SynapseMethodNotFoundException {
+    public Response invoke(RequestMethod req, Uri uri, Object requestBody) throws MethodNotFoundException, ExecutionException, MissingParameterException {
         Optional<MethodContext> mcOpt = getMethodContext(req, uri);
         if (!mcOpt.isPresent()) {
-            throw new SynapseMethodNotFoundException(req, uri);
+            throw new MethodNotFoundException(req, uri);
         }
         MethodContext mc = mcOpt.get();
         try {
-            Object result = mc.method.invoke(mc.serviceInstance, mc.extractArguments());
+            Object result = mc.method.invoke(mc.serviceInstance, mc.extractInvocationArguments(uri, requestBody));
+            if (result instanceof Response) {
+                return (Response) result;
+            } else if (result instanceof Serializable) {
+                return new Response(new Response.ResponseHeader(HttpResponseStatus.OK), (Serializable) result);
+            } else {
+                throw new ExecutionException("The servive method return type is not serializable.");
+            }
         } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
-            Logger.getLogger(ServiceRegistry.class.getName()).log(Level.SEVERE, null, ex);
+            throw new ExecutionException(uri, ex);
         }
-        return null;
     }
 
     Optional<MethodContext> getMethodContext(RequestMethod reqMethod, Uri uri) {
@@ -135,6 +151,7 @@ public class ServiceRegistry {
     }
 
     public void register(Object serviceInstance) {
+        //todo: make validation to expose Request Mapping or Path Varibale types where conversion from String to method parameter type is possible
         Class<?> srvClass = serviceInstance.getClass();
         String rootContext;
         List<Class> markedInterfaces = getMarkedInterfaces(srvClass.getInterfaces());
@@ -204,7 +221,7 @@ public class ServiceRegistry {
                     required = p.getAnnotation(RequestParam.class).required();
                     if (!Util.isEmpty(p.getAnnotation(RequestParam.class).defaultValue())) {
                         Class valueClass = p.getType();
-                        mp.defaultValue = generateDefaultValue(valueClass, p.getAnnotation(RequestParam.class).defaultValue());
+                        mp.defaultValue = generateValueFromString(valueClass, p.getAnnotation(RequestParam.class).defaultValue());
                         mp.defaultValueClass = valueClass;
                     }
                 } else if (p.isAnnotationPresent(RequestBody.class)) {
@@ -237,7 +254,10 @@ public class ServiceRegistry {
         return Arrays.asList(ifaces).stream().filter(i -> SynapseEndpointServiceMarker.class.isAssignableFrom(i)).collect(Collectors.toList());
     }
 
-    private <T> T generateDefaultValue(Class<T> type, String sValue) {
+    private <T> T generateValueFromString(Class<T> type, String sValue) {
+        if (sValue == null || Util.isEmpty(sValue)) {
+            return null;
+        }
         if (type.equals(Integer.class)) {
             return type.cast(Integer.parseInt(sValue));
         } else if (type.equals(Long.class)) {
@@ -255,6 +275,46 @@ public class ServiceRegistry {
         Object serviceInstance;
         List<RequestMethod> requestMethods = new ArrayList<>();
         List<MethodParam> parameters = new ArrayList<>();
+
+        private Object[] extractInvocationArguments(Uri uri, Object messageBody) throws MissingParameterException {
+            final List<Object> methodParams = new ArrayList<>();
+            for (MethodParam p : parameters) {
+                switch (p.source) {
+                    case BODY: {
+                        if (messageBody != null) {
+                            methodParams.add(messageBody);
+                        } else if (p.defaultValue != null) {
+                            methodParams.add(p.defaultValue);
+                        } else if (!p.required) {
+                            methodParams.add(null);
+                        } else {
+                            throw new MissingParameterException(uri.getPath(), p.paramId);
+                        }
+                        break;
+                    }
+                    case QUERY_PARAM: {
+                        Object value = generateValueFromString(p.parameter.getType(), uri.getQueryParamterValue(p.paramId));
+                        if (value == null && p.required) {
+                            throw new MissingParameterException(uri.getQuery(), p.paramId);
+                        }
+                        methodParams.add(value);
+                        break;
+                    }
+                    case PATH_VARIABLE: {
+                        Matcher m = p.pathVariableMatcher.matcher(uri.getPath());
+                        if (m.find()) {
+                            methodParams.add(generateValueFromString(p.parameter.getType(), m.group()));
+                        } else if (!p.required) {
+                            methodParams.add(null);
+                        } else {
+                            throw new MissingParameterException(uri.getPath(), p.paramId);
+                        }
+                        break;
+                    }
+                }
+            }
+            return methodParams.toArray();
+        }
 
         String createParameterExpression() {
             if (parameters.isEmpty()) {
@@ -280,10 +340,20 @@ public class ServiceRegistry {
                     String pathVariableName = p.parameter.getAnnotation(PathVariable.class).value();
                     Pattern regexP = Pattern.compile("\\{" + pathVariableName + "\\}");
                     if (regexP.matcher(rootCtx).find()) {
-                        p.pathVariableMatcher = rootCtx.replace("{" + pathVariableName + "}", "/[^/]+/");
+                        String pattern = "(?!\\" + rootCtx.substring(0, rootCtx.indexOf("{")) + ")" + "([A-Za-z0-9._@]+)(?=" + rootCtx.substring(rootCtx.indexOf("}") + 1, rootCtx.length()) + ")";
+                        p.pathVariableMatcher = Pattern.compile(pattern);
+                        //(?!/test/)([A-Za-z0-9._@]+)(?=/messages/sum)
                         p.pathVariableOnRootContext = true;
                     } else if (regexP.matcher(methodName).find()) {
-                        p.pathVariableMatcher = methodName.replace("{" + pathVariableName + "}", "/[^/]+/");
+                        System.out.println("M: -> " + methodName);
+                        System.out.println("index of { ->" + methodName.indexOf("{"));
+                        System.out.println("index of } -> " + methodName.indexOf("}"));
+                        System.out.println("length -> "+ methodName.length());
+                        //String pattern = (methodName.indexOf("{") == 0 ? "^" : "(?!" + methodName.substring(0, methodName.indexOf("{")) + ")") + "([A-Za-z0-9._@]+)" + (methodName.indexOf("}") == methodName.length()-1 ? "$" : "(?=" + methodName.substring(methodName.indexOf("}") + 1, methodName.length()) + ")");
+                        String pattern = (methodName.indexOf("{") == 0 ? "" : "(?!" + methodName.substring(0, methodName.indexOf("{")) + ")") + "([A-Za-z0-9._@]+)" + (methodName.indexOf("}") == methodName.length()-1 ? "$" : "(?=" + methodName.substring(methodName.indexOf("}") + 1, methodName.length()) + ")");
+                        //(?!switches/)([A-Za-z0-9._@]+)$
+                        //^(?!switches/)([A-Za-z0-9._@]+)$
+                        p.pathVariableMatcher = Pattern.compile(pattern);
                         p.pathVariableOnRootContext = false;
                     } else {
                         throw new IllegalArgumentException("The parameter " + p.parameter.getName() + " on method " + this.method.getName() + " on class " + this.method.getDeclaringClass().getSimpleName() + " has the " + PathVariable.class.getSimpleName() + ", but no path variable defined in the root context.");
@@ -322,12 +392,6 @@ public class ServiceRegistry {
         void addRequestMethods(RequestMethod[] rms) {
             addRequestMethods(Arrays.asList(rms));
         }
-
-        private Object[] extractArguments() {
-            
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
-
     }
 
     class Routes {
