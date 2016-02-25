@@ -41,6 +41,7 @@ class MethodParam<T> {
     enum ParameterSource {
         PATH_VARIABLE,
         QUERY_PARAM,
-        BODY
+        BODY,
+        PARAMETER_WRAPPER
     }
 }

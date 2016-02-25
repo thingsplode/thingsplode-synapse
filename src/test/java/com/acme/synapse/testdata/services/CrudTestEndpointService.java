@@ -45,7 +45,9 @@ public class CrudTestEndpointService {
     
     @RequestMapping(value = "/switches/{deviceId}", method = {RequestMethod.GET})
     public Device getSwicthesById(@PathVariable("deviceId") long id) {
-        return createDevice();
+        Device d = createDevice();
+        d.setId(id);
+        return d;
     }
 
     //example: "/test/devices/getById/1122321
@@ -74,7 +76,7 @@ public class CrudTestEndpointService {
         d.setTreshold(treshold);
         return new Response<>(new Response.ResponseHeader(HttpResponseStatus.OK), d);
     }
-
+    
     @RequestMapping("owner/old")
     public Response<Device> getByOwnerOld() {
         return new Response<>(new Response.ResponseHeader(HttpResponseStatus.OK), createDevice());

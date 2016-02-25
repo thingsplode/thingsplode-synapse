@@ -17,7 +17,6 @@ package org.thingsplode.synapse.endpoint;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 import java.io.Serializable;
-import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -32,8 +31,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -45,6 +42,7 @@ import org.thingsplode.synapse.core.annotations.RequestMapping;
 import org.thingsplode.synapse.core.annotations.RequestParam;
 import org.thingsplode.synapse.core.annotations.Service;
 import org.thingsplode.synapse.core.domain.AbstractMessage;
+import org.thingsplode.synapse.core.domain.ParameterWrapper;
 import org.thingsplode.synapse.core.domain.RequestMethod;
 import org.thingsplode.synapse.core.domain.Response;
 import org.thingsplode.synapse.core.exceptions.ExecutionException;
@@ -87,6 +85,9 @@ public class ServiceRegistry {
      * @throws org.thingsplode.synapse.core.exceptions.MissingParameterException
      */
     public Response invoke(RequestMethod req, Uri uri, Object requestBody) throws MethodNotFoundException, ExecutionException, MissingParameterException {
+        if (requestBody != null) {
+
+        }
         Optional<MethodContext> mcOpt = getMethodContext(req, uri);
         if (!mcOpt.isPresent()) {
             throw new MethodNotFoundException(req, uri);
@@ -196,7 +197,7 @@ public class ServiceRegistry {
         methods.stream().forEach((m) -> {
             MethodContext mc;
             mc = new MethodContext(rootCtx, serviceInstance, m);
-            mc.parameters.addAll(processParameters(rootCtx, m));
+            mc.parameters.addAll(processParameters(serviceInstance, m));
 
             if (m.isAnnotationPresent(RequestMapping.class)) {
                 RequestMapping rm = m.getAnnotation(RequestMapping.class);
@@ -211,30 +212,33 @@ public class ServiceRegistry {
         });
     }
 
-    private List<MethodParam> processParameters(String rootCtx, Method m) {
+    private List<MethodParam> processParameters(Object serviceInstance, Method m) {
         List<MethodParam> mps = new ArrayList<>();
         if (m.getParameterCount() > 0) {
             Arrays.asList(m.getParameters()).forEach((Parameter p) -> {
                 boolean required = true;
                 MethodParam<?> mp;
-
-                if (p.isAnnotationPresent(RequestParam.class)) {
-                    mp = new MethodParam(p, MethodParam.ParameterSource.QUERY_PARAM, p.getAnnotation(RequestParam.class).value());
-                    required = p.getAnnotation(RequestParam.class).required();
-                    if (!Util.isEmpty(p.getAnnotation(RequestParam.class).defaultValue())) {
-                        Class valueClass = p.getType();
-                        mp.defaultValue = generateValueFromString(valueClass, p.getAnnotation(RequestParam.class).defaultValue());
-                        mp.defaultValueClass = valueClass;
+                if (serviceInstance.getClass().isAnnotationPresent(Service.class)) {
+                    if (p.isAnnotationPresent(RequestParam.class)) {
+                        mp = new MethodParam(p, MethodParam.ParameterSource.QUERY_PARAM, p.getAnnotation(RequestParam.class).value());
+                        required = p.getAnnotation(RequestParam.class).required();
+                        if (!Util.isEmpty(p.getAnnotation(RequestParam.class).defaultValue())) {
+                            Class valueClass = p.getType();
+                            mp.defaultValue = generateValueFromString(valueClass, p.getAnnotation(RequestParam.class).defaultValue());
+                            mp.defaultValueClass = valueClass;
+                        }
+                    } else if (p.isAnnotationPresent(RequestBody.class)) {
+                        mp = new MethodParam(p, MethodParam.ParameterSource.BODY, p.getName());
+                        required = p.getAnnotation(RequestBody.class).required();
+                    } else if (p.isAnnotationPresent(PathVariable.class)) {
+                        mp = new MethodParam(p, MethodParam.ParameterSource.PATH_VARIABLE, p.getAnnotation(PathVariable.class).value());
+                    } else if (AbstractMessage.class.isAssignableFrom(p.getType())) {
+                        mp = new MethodParam(p, MethodParam.ParameterSource.BODY, p.getName());
+                    } else {
+                        mp = new MethodParam(p, MethodParam.ParameterSource.QUERY_PARAM, p.getName());
                     }
-                } else if (p.isAnnotationPresent(RequestBody.class)) {
-                    mp = new MethodParam(p, MethodParam.ParameterSource.BODY, p.getName());
-                    required = p.getAnnotation(RequestBody.class).required();
-                } else if (p.isAnnotationPresent(PathVariable.class)) {
-                    mp = new MethodParam(p, MethodParam.ParameterSource.PATH_VARIABLE, p.getAnnotation(PathVariable.class).value());
-                } else if (AbstractMessage.class.isAssignableFrom(p.getType())) {
-                    mp = new MethodParam(p, MethodParam.ParameterSource.BODY, p.getName());
                 } else {
-                    mp = new MethodParam(p, MethodParam.ParameterSource.QUERY_PARAM, p.getName());
+                    mp = new MethodParam<>(p, MethodParam.ParameterSource.PARAMETER_WRAPPER, p.getName());
                 }
                 mp.required = required;
                 mp.parameter = p;
@@ -295,6 +299,15 @@ public class ServiceRegistry {
                         }
                         break;
                     }
+                    case PARAMETER_WRAPPER: {
+                        if (messageBody == null || !(messageBody instanceof ParameterWrapper)) {
+                            throw new MissingParameterException(uri.getPath(), p.paramId);
+                        }
+                        ((ParameterWrapper) messageBody).getParams().forEach(wp -> {
+                            methodParams.add(wp.getValue());
+                        });
+                        break;
+                    }
                     case QUERY_PARAM: {
                         Object value = generateValueFromString(p.parameter.getType(), uri.getQueryParamterValue(p.paramId));
                         if (value == null && p.required) {
@@ -326,7 +339,7 @@ public class ServiceRegistry {
             String exp = "";
             boolean first = true;
             for (MethodParam p : parameters) {
-                boolean skip = p.parameter.isAnnotationPresent(PathVariable.class) || p.source == MethodParam.ParameterSource.BODY;
+                boolean skip = p.parameter.isAnnotationPresent(PathVariable.class) || p.source == MethodParam.ParameterSource.BODY || p.source == MethodParam.ParameterSource.PARAMETER_WRAPPER;
                 if (!skip) {
                     String pid = p.required ? p.paramId : "[" + p.paramId + "]";
                     exp = exp + (first ? "?" + pid : "&" + pid);
@@ -348,10 +361,6 @@ public class ServiceRegistry {
                         //(?!/test/)([A-Za-z0-9._@]+)(?=/messages/sum)
                         p.pathVariableOnRootContext = true;
                     } else if (regexP.matcher(methodName).find()) {
-                        System.out.println("M: -> " + methodName);
-                        System.out.println("index of { ->" + methodName.indexOf("{"));
-                        System.out.println("index of } -> " + methodName.indexOf("}"));
-                        System.out.println("length -> " + methodName.length());
                         //String pattern = (methodName.indexOf("{") == 0 ? "^" : "(?!" + methodName.substring(0, methodName.indexOf("{")) + ")") + "([A-Za-z0-9._@]+)" + (methodName.indexOf("}") == methodName.length()-1 ? "$" : "(?=" + methodName.substring(methodName.indexOf("}") + 1, methodName.length()) + ")");
                         String pattern = (methodName.indexOf("{") == 0 ? "" : "(?!" + methodName.substring(0, methodName.indexOf("{")) + ")") + "([A-Za-z0-9._@]+)" + (methodName.indexOf("}") == methodName.length() - 1 ? "$" : "(?=" + methodName.substring(methodName.indexOf("}") + 1, methodName.length()) + ")");
                         //(?!switches/)([A-Za-z0-9._@]+)$

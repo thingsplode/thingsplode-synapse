@@ -24,12 +24,19 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import com.acme.synapse.testdata.services.RpcEndpointImpl;
 import com.acme.synapse.testdata.services.EndpointTesterService;
+import com.acme.synapse.testdata.services.core.Address;
 import com.acme.synapse.testdata.services.core.Device;
+import com.acme.synapse.testdata.services.core.Filter;
+import com.acme.synapse.testdata.services.core.Tuple;
+import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.Optional;
 import org.junit.Assert;
 import org.thingsplode.synapse.core.Uri;
+import org.thingsplode.synapse.core.domain.ParameterWrapper;
+import org.thingsplode.synapse.core.domain.Request;
 import org.thingsplode.synapse.core.domain.RequestMethod;
 import org.thingsplode.synapse.core.domain.Response;
 import org.thingsplode.synapse.core.exceptions.ExecutionException;
@@ -114,6 +121,28 @@ public class ServiceRegistryTest {
         Assert.assertTrue(rsp2.getBody() == 1443546);
     }
 
+    @Test
+    public void testRequestBody() throws UnsupportedEncodingException, MethodNotFoundException, ExecutionException, MissingParameterException {
+        Optional<ServiceRegistry.MethodContext> opt = registry.getMethodContext(RequestMethod.GET, new Uri("/test/user.name/messages/check_address"));
+        Assert.assertTrue(opt.isPresent());
+        Assert.assertEquals("/test/{user}/messages", opt.get().rootCtx);
+
+        final String country = "some country";
+        final String street = "some street";
+        Response<Address> rsp1 = registry.invoke(RequestMethod.GET, new Uri("/test/user.name/messages/check_address"), new Address(street, country, 4040));
+        Assert.assertTrue(rsp1.getBody().getCountry().equalsIgnoreCase(country));
+        Assert.assertTrue(rsp1.getBody().getStreet().equalsIgnoreCase(street));
+        Assert.assertTrue(rsp1.getBody().getPostalCode() == 5050);
+        
+        Optional<ServiceRegistry.MethodContext> opt2 = registry.getMethodContext(RequestMethod.GET, new Uri("/user.name/devices/getById"));
+        Assert.assertTrue(opt2.isPresent());
+        Assert.assertEquals("/{userid}/devices", opt2.get().rootCtx);
+        
+        Response<Device> rsp2 = registry.invoke(RequestMethod.GET, new Uri("/user.name/devices/getById"), new Long(112));
+        Assert.assertTrue(rsp2.getBody().getId() == 112);
+
+    }
+
     //@Test()
     public void testMissingParams() throws MethodNotFoundException, ExecutionException, MissingParameterException, UnsupportedEncodingException {
         Response<Integer> rsp1 = registry.invoke(RequestMethod.GET, new Uri("/test/user.name/messages/add"), null);
@@ -145,6 +174,12 @@ public class ServiceRegistryTest {
         Response<Device> rsp = registry.invoke(RequestMethod.GET, new Uri("/1212212/devices/2323434"), null);
         Assert.assertTrue(rsp.getHeader().getResponseCode() == HttpResponseStatus.OK);
         Assert.assertTrue(rsp.getBody().getId() == 2323434l);
+
+        Optional<ServiceRegistry.MethodContext> optGbdi1 = registry.getMethodContext(RequestMethod.GET, new Uri("/1212212/devices/switches/1998"));
+        Assert.assertTrue(optGbdi1.isPresent());
+        Response<Device> rsp1 = registry.invoke(RequestMethod.GET, new Uri("/1212212/devices/switches/1998"), null);
+        Assert.assertTrue(rsp1.getHeader().getResponseCode() == HttpResponseStatus.OK);
+        Assert.assertTrue(rsp1.getBody().getId() == 1998);
     }
 
     @Test
@@ -173,54 +208,117 @@ public class ServiceRegistryTest {
         ///Test overloaded methods
         Optional<ServiceRegistry.MethodContext> elOpt1 = registry.getMethodContext(RequestMethod.GET, new Uri("/222/devices/owner"));
         Assert.assertTrue(elOpt1.isPresent());
-        
-        Response<Device> rsp = registry.invoke(RequestMethod.GET, new Uri("/222/devices/owner"), null);
-        Assert.assertTrue(rsp.getBody().getLogicalName().equalsIgnoreCase("some device"));
+
+        Response<Device> rsp1 = registry.invoke(RequestMethod.GET, new Uri("/222/devices/owner"), null);
+        Assert.assertTrue(rsp1.getHeader().getResponseCode() == HttpResponseStatus.OK);
+        Assert.assertTrue(rsp1.getBody().getLogicalName().equalsIgnoreCase("some device"));
 
         Optional<ServiceRegistry.MethodContext> elOpt2 = registry.getMethodContext(RequestMethod.GET, new Uri("/222/devices/owner?arg0=222"));
         Assert.assertTrue(elOpt2.isPresent());
 
+        Response<Device> rsp2 = registry.invoke(RequestMethod.GET, new Uri("/222/devices/owner?arg0=222"), null);
+        Assert.assertTrue(rsp2.getHeader().getResponseCode() == HttpResponseStatus.OK);
+        Assert.assertTrue(rsp2.getBody().getLogicalName().equalsIgnoreCase("some device"));
+        Assert.assertTrue(rsp2.getBody().getId() == 222);
+        Assert.assertTrue(rsp2.getBody().getTreshold() == null);
+
         Optional<ServiceRegistry.MethodContext> elOpt3 = registry.getMethodContext(RequestMethod.GET, new Uri("/222/devices/owner?arg0=222&arg1=114"));
         Assert.assertTrue(elOpt3.isPresent());
 
+        Response<Device> rsp3 = registry.invoke(RequestMethod.GET, new Uri("/222/devices/owner?arg0=222&arg1=114"), null);
+        Assert.assertTrue(rsp3.getHeader().getResponseCode() == HttpResponseStatus.OK);
+        Assert.assertTrue(rsp3.getBody().getLogicalName().equalsIgnoreCase("some device"));
+        Assert.assertTrue(rsp3.getBody().getId() == 222);
+        Assert.assertTrue(rsp3.getBody().getTreshold() == 114);
+
         Optional<ServiceRegistry.MethodContext> elOpt4 = registry.getMethodContext(RequestMethod.GET, new Uri("/222/devices/owner/old"));
         Assert.assertTrue(elOpt4.isPresent());
+
+        Response<Device> rsp4 = registry.invoke(RequestMethod.GET, new Uri("/222/devices/owner/old"), null);
+        Assert.assertTrue(rsp4.getHeader().getResponseCode() == HttpResponseStatus.OK);
+        Assert.assertTrue(rsp4.getBody().getLogicalName().equalsIgnoreCase("some device"));
         ///----------------------------
     }
 
     @Test
-    public void testReqMethodWithReqMapping() throws UnsupportedEncodingException {
+    public void testReqMethodWithReqMapping() throws UnsupportedEncodingException, MethodNotFoundException, ExecutionException, MissingParameterException {
         ///Test Request Response with request mapping
         Optional<ServiceRegistry.MethodContext> opt8 = registry.getMethodContext(RequestMethod.GET, new Uri("/test/user@name/messages/sum"));
         Assert.assertTrue(opt8.isPresent());
         //(?!/test/)([.@a-z0-9]+)(?=/messages/sum)
         //(?!/test/)([A-Za-z0-9._@]+)(?=/messages/sum)
+        Request<Tuple<Integer, Integer>> req = new Request<>(new Request.RequestHeader(HttpMethod.GET), new Tuple<>(10, 10));
+        Response<Integer> rsp1 = registry.invoke(RequestMethod.GET, new Uri("/test/user@name/messages/sum"), req);
+        Assert.assertTrue(rsp1.getHeader().getResponseCode() == HttpResponseStatus.OK);
+        Assert.assertTrue(rsp1.getBody() == 20);
 
         Optional<ServiceRegistry.MethodContext> opt9 = registry.getMethodContext(RequestMethod.GET, new Uri("/some_user/devices/listAll"));
         Assert.assertTrue(opt9.isPresent());
+
+        Response<ArrayList<Device>> rsp2 = registry.invoke(RequestMethod.GET, new Uri("/some_user/devices/listAll"), null);
+        Assert.assertTrue(rsp2.getHeader().getResponseCode() == HttpResponseStatus.OK);
+        Assert.assertTrue(0 == rsp2.getBody().size());
     }
 
     @Test
-    public void testInterfaceMarkedServices() throws UnsupportedEncodingException {
+    public void testInterfaceMarkedServices() throws UnsupportedEncodingException, MethodNotFoundException, ExecutionException, MissingParameterException {
         ///Test interface marked services
         Optional<ServiceRegistry.MethodContext> opt4 = registry.getMethodContext(RequestMethod.GET, new Uri("/com/acme/synapse/testdata/services/DummyMarkedEndpoint/"));
         Assert.assertTrue(!opt4.isPresent());
 
-        Optional<ServiceRegistry.MethodContext> opt5 = registry.getMethodContext(RequestMethod.GET, new Uri("/com/acme/synapse/testdata/services/DummyMarkedEndpoint/echo?arg0=\"something in the rain\""));
+        Optional<ServiceRegistry.MethodContext> opt5 = registry.getMethodContext(RequestMethod.GET, new Uri("/com/acme/synapse/testdata/services/DummyMarkedEndpoint/echo"));
         Assert.assertTrue(opt5.isPresent());
+
+        Response<String> rsp1 = registry.invoke(RequestMethod.GET, new Uri("/com/acme/synapse/testdata/services/DummyMarkedEndpoint/echo"), ParameterWrapper.create().add("arg0", String.class, "\"something in the rain\""));
+        Assert.assertTrue(rsp1.getHeader().getResponseCode() == HttpResponseStatus.OK);
+        Assert.assertTrue(rsp1.getBody().equalsIgnoreCase("Greetings earthlings: " + "\"something in the rain\""));
+
+        Response<String> rsp2 = registry.invoke(RequestMethod.GET, new Uri("/com/acme/synapse/testdata/services/DummyMarkedEndpoint/echo"), ParameterWrapper.create().add("arg0", String.class, "something in the rain"));
+        Assert.assertTrue(rsp2.getHeader().getResponseCode() == HttpResponseStatus.OK);
+        Assert.assertTrue(rsp2.getBody().equalsIgnoreCase("Greetings earthlings: " + "something in the rain"));
         ///----------------------------
     }
 
     @Test
-    public void testRpcServices() throws UnsupportedEncodingException {
-
+    public void testRpcServices1() throws UnsupportedEncodingException, MethodNotFoundException, ExecutionException, MissingParameterException {
         //Test RPC interfaces
         Optional<ServiceRegistry.MethodContext> opt6 = registry.getMethodContext(RequestMethod.GET, new Uri("/com/acme/synapse/testdata/services/RpcEndpoint/ping"));
         Assert.assertTrue(!opt6.isPresent());
 
         Optional<ServiceRegistry.MethodContext> opt7 = registry.getMethodContext(RequestMethod.GET, new Uri("/com/acme/synapse/testdata/services/RpcEndpointImpl/ping"));
         Assert.assertTrue(opt7.isPresent());
-        ///----------------------------
 
+        Response rsp = registry.invoke(RequestMethod.GET, new Uri("/com/acme/synapse/testdata/services/RpcEndpointImpl/ping"), null);
+        Assert.assertTrue(rsp.getHeader().getResponseCode() == HttpResponseStatus.OK);
+        Assert.assertTrue(rsp.getBody() == null);
+    }
+
+    @Test
+    public void testRpcServices2() throws UnsupportedEncodingException, MethodNotFoundException, ExecutionException, MissingParameterException {
+        Response<String> rsp1 = registry.invoke(RequestMethod.GET, new Uri("/com/acme/synapse/testdata/services/RpcEndpointImpl/echo"), ParameterWrapper.create().add("arg0", String.class, "Hello people"));
+        Assert.assertTrue(rsp1.getHeader().getResponseCode() == HttpResponseStatus.OK);
+        Assert.assertTrue(rsp1.getBody().equalsIgnoreCase("Hello people"));
+    }
+
+    @Test
+    public void testRpcServices3() throws UnsupportedEncodingException, MethodNotFoundException, ExecutionException, MissingParameterException {
+        Response<Filter> rsp2 = registry.invoke(RequestMethod.GET, new Uri("/com/acme/synapse/testdata/services/RpcEndpointImpl/getInfo"), null);
+        Assert.assertTrue(rsp2.getHeader().getResponseCode() == HttpResponseStatus.OK);
+        Assert.assertTrue(rsp2.getBody().getQuery().equalsIgnoreCase("some query"));
+        Assert.assertTrue(rsp2.getBody().getPage() == 10);
+        Assert.assertTrue(rsp2.getBody().getPageSize() == 100);
+    }
+
+    @Test
+    public void testRpcServices4() throws UnsupportedEncodingException, MethodNotFoundException, ExecutionException, MissingParameterException {
+        Response<Filter> rsp3 = registry.invoke(RequestMethod.GET, new Uri("/com/acme/synapse/testdata/services/RpcEndpointImpl/filter"), ParameterWrapper.create().add("arg0", Filter.class, new Filter("other query", Integer.MAX_VALUE, Integer.MAX_VALUE)));
+        Assert.assertTrue(rsp3.getHeader().getResponseCode() == HttpResponseStatus.OK);
+        Assert.assertTrue(rsp3.getBody().getPage() == 100);
+        Assert.assertTrue(rsp3.getBody().getPageSize() == 200);
+    }
+
+    @Test(expected = MethodNotFoundException.class)
+    public void testNegative() throws MethodNotFoundException, ExecutionException, MissingParameterException, UnsupportedEncodingException {
+        Response<Filter> rsp1 = registry.invoke(RequestMethod.GET, new Uri("/com/acme/synapse/testdata/services/RpcEndpointImpl/getInfo?arg0=some param"), null);
     }
 }

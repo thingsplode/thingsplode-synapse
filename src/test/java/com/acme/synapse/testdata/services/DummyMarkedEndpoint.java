@@ -24,7 +24,7 @@ import org.thingsplode.synapse.core.SynapseEndpointServiceMarker;
 public class DummyMarkedEndpoint implements SynapseEndpointServiceMarker {
 
     public String echo(String text) {
-        return "Greetings earthlings.";
+        return "Greetings earthlings: " + text;
     }
 
 }

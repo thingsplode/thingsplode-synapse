@@ -57,9 +57,10 @@ public class EndpointTesterService {
     }
 
     @RequestMapping({"check_address"})
-    public boolean verifyAddress(@RequestBody Address address) {
+    public Address verifyAddress(@RequestBody Address address) {
         System.out.println("Address received");
-        return true;
+        address.setPostalCode(5050);
+        return address;
     }
 
 }

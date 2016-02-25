@@ -26,6 +26,6 @@ import org.thingsplode.synapse.core.domain.RequestMethod;
 public class MethodNotFoundException extends SynapseException {
 
     public MethodNotFoundException(RequestMethod m, Uri u) {
-        super("Path: " + u.getPath() + " not implemented or method: " + m.name() + " not supported.", HttpStatus.NOT_FOUND);
+        super("Path: " + u.getPath() + (u.getQuery() != null ? u.getQuery() : "") + " not implemented or method: " + m.name() + " not supported.", HttpStatus.NOT_FOUND);
     }
 }
