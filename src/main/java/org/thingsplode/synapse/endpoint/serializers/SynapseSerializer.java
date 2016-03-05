@@ -25,11 +25,11 @@ import org.thingsplode.synapse.core.exceptions.SerializationException;
  * @param <WIREFORMAT>
  * @param <JAVATYPE>
  */
-public interface Parser<WIREFORMAT,JAVATYPE extends Serializable> {
+public interface SynapseSerializer<WIREFORMAT,JAVATYPE extends Serializable> {
 
     public MediaRange getSupportedMediaRange();
     
     WIREFORMAT marshall(JAVATYPE object) throws SerializationException;
 
-    JAVATYPE unMarshall(WIREFORMAT object) throws SerializationException;
+    <T extends JAVATYPE> T unMarshall(Class<T> objectType, WIREFORMAT wirecontent) throws SerializationException;
 }

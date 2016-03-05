@@ -32,12 +32,12 @@ import org.thingsplode.synapse.endpoint.serializers.adapters.HttpResponseStatusA
  *
  * @author tamas.csaba@gmail.com
  */
-public class GsonParser implements Parser<String, Serializable> {
+public class GsonSerializer implements SynapseSerializer<String, Serializable> {
 
     private final Gson gson;
     private final MediaRange supportedRange = new MediaRange("application/json, text/json");
 
-    public GsonParser(boolean prettyPrint, HashMap<Type, Object> typeaAdapters, List<ExclusionStrategy> exlusionStrategies) {
+    public GsonSerializer(boolean prettyPrint, HashMap<Type, Object> typeaAdapters, List<ExclusionStrategy> exlusionStrategies) {
         GsonBuilder b = new GsonBuilder()
                 .registerTypeAdapter(Class.class, new ClassTypeAdapter())
                 .registerTypeAdapter(HttpResponseStatus.class, new HttpResponseStatusAdapter());
@@ -65,8 +65,8 @@ public class GsonParser implements Parser<String, Serializable> {
     }
 
     @Override
-    public Serializable unMarshall(String object) throws SerializationException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public <T extends Serializable> T unMarshall(Class<T> objectClass, String wirecontent) throws SerializationException {
+        return gson.fromJson(wirecontent, objectClass);
     }
 
     @Override
