@@ -67,7 +67,6 @@ public abstract class AbstractTest {
     }
 }
 
-
 //http://netty.io/wiki/user-guide-for-4.x.html#wiki-h3-11
 //https://keyholesoftware.com/2015/03/16/netty-a-different-kind-of-websocket-server/
 //https://github.com/jwboardman/khs-stockticker/blob/master/src/main/java/com/khs/stockticker/StockTickerServer.java

@@ -83,20 +83,20 @@ public class Endpoint {
     private Endpoint() {
     }
 
-    private Endpoint(String id, Connections cncts) {
+    private Endpoint(String id, Connections connections) {
         this.endpointId = id;
-        this.connections = cncts;
+        this.connections = connections;
     }
 
     /**
      *
      * @param endpointId
-     * @param transport
+     * @param connections
      * @return
      * @throws java.lang.InterruptedException
      */
-    public static Endpoint create(String endpointId, Connections transport) throws InterruptedException {
-        Endpoint ep = new Endpoint(endpointId, transport);
+    public static Endpoint create(String endpointId, Connections connections) throws InterruptedException {
+        Endpoint ep = new Endpoint(endpointId, connections);
         return ep;
     }
 
@@ -115,7 +115,7 @@ public class Endpoint {
                                 p.addLast(HTTP_ENCODER, new HttpResponseEncoder());
                                 p.addLast(HTTP_DECODER, new HttpRequestDecoder());
                                 p.addLast("aggregator", new HttpObjectAggregator(65536));
-                                p.addLast("http_request_handler", new HttRequestHandler());
+                                p.addLast("http_request_handler", new HttRequestHandler(endpointId, null));
                                 p.addLast(evtExecutorGroup, "handler", new RequestHandler());
                             }
                         });

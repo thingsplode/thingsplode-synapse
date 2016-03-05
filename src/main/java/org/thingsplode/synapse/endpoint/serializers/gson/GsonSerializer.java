@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsplode.synapse.endpoint.serializers;
+package org.thingsplode.synapse.endpoint.serializers.gson;
 
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.Gson;
@@ -25,8 +25,9 @@ import java.util.HashMap;
 import java.util.List;
 import org.thingsplode.synapse.core.domain.MediaRange;
 import org.thingsplode.synapse.core.exceptions.SerializationException;
-import org.thingsplode.synapse.endpoint.serializers.adapters.ClassTypeAdapter;
-import org.thingsplode.synapse.endpoint.serializers.adapters.HttpResponseStatusAdapter;
+import org.thingsplode.synapse.endpoint.serializers.SynapseSerializer;
+import org.thingsplode.synapse.endpoint.serializers.gson.adapters.ClassTypeAdapter;
+import org.thingsplode.synapse.endpoint.serializers.gson.adapters.HttpResponseStatusAdapter;
 
 /**
  *
@@ -34,7 +35,7 @@ import org.thingsplode.synapse.endpoint.serializers.adapters.HttpResponseStatusA
  */
 public class GsonSerializer implements SynapseSerializer<String, Serializable> {
 
-    private final Gson gson;
+    final Gson gson;
     private final MediaRange supportedRange = new MediaRange("application/json, text/json");
 
     public GsonSerializer(boolean prettyPrint, HashMap<Type, Object> typeaAdapters, List<ExclusionStrategy> exlusionStrategies) {
@@ -58,7 +59,8 @@ public class GsonSerializer implements SynapseSerializer<String, Serializable> {
     @Override
     public String marshall(Serializable src) throws SerializationException {
         try {
-            return gson.toJson(src);
+            //Type type = new TypeToken<Request<Device>>(){}.getType();
+            return gson.toJson(src, src.getClass());
         } catch (Exception e) {
             throw new SerializationException("Couldn't marshall to json due to: " + e.getMessage(), e);
         }

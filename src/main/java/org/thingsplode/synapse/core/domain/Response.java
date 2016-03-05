@@ -15,8 +15,14 @@
  */
 package org.thingsplode.synapse.core.domain;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import java.io.Serializable;
+import org.thingsplode.synapse.endpoint.serializers.jackson.adapters.HttpResponseStatusDeserializer;
+import org.thingsplode.synapse.endpoint.serializers.jackson.adapters.HttpResponseStatusSerializer;
 
 /**
  *
@@ -32,7 +38,8 @@ public class Response<T extends Serializable> extends AbstractMessage<T> {
         this.header = header;
     }
 
-    public Response(ResponseHeader header, T body) {
+    @JsonCreator
+    public Response(@JsonProperty("header") ResponseHeader header, @JsonProperty("body") T body) {
         super(body);
         this.header = header;
     }
@@ -47,10 +54,25 @@ public class Response<T extends Serializable> extends AbstractMessage<T> {
 
     public static class ResponseHeader extends AbstractMessage.MessageHeader {
 
+        @JsonSerialize(using = HttpResponseStatusSerializer.class)
+        @JsonDeserialize(using = HttpResponseStatusDeserializer.class)
         private HttpResponseStatus responseCode = HttpResponseStatus.INTERNAL_SERVER_ERROR;
+        private String correlationId;
 
+        
         public ResponseHeader(HttpResponseStatus responseCode) {
             this.responseCode = responseCode;
+        }
+
+        @JsonCreator
+        public ResponseHeader(@JsonProperty("msgId") String msgId, @JsonProperty("correlationId") String correlationId, @JsonProperty("responseCode") HttpResponseStatus responseCode) {
+            this(responseCode);
+            super.msgId = msgId;
+            this.correlationId = correlationId;
+        }
+
+        public String getCorrelationId() {
+            return correlationId;
         }
 
         public HttpResponseStatus getResponseCode() {

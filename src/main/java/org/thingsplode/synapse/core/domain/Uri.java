@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsplode.synapse.core;
+package org.thingsplode.synapse.core.domain;
 
-import java.io.Serializable;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import org.thingsplode.synapse.core.domain.Parameter;
 import org.thingsplode.synapse.util.Util;
 
 /**
@@ -53,8 +53,15 @@ public class Uri {
         if (queryParameters == null || queryParameters.isEmpty()) {
             return null;
         }
-        Optional<Parameter<String>> o = queryParameters.stream().filter(p -> p.getName().equalsIgnoreCase(parameterName)).findFirst();
+        Optional<Parameter<String>> o = queryParameters.stream().filter((p) -> p.getName().equalsIgnoreCase(parameterName)).findFirst();
         return o.isPresent() ? o.get().getValue() : null;
+    }
+
+    @JsonCreator
+    private Uri(@JsonProperty("path") String path, @JsonProperty("query") String query, @JsonProperty("queryParameters") List<Parameter<String>> queryParameters) {
+        this.path = path;
+        this.query = query;
+        this.queryParameters = queryParameters;
     }
 
     public Uri(String uri) throws UnsupportedEncodingException {
@@ -65,11 +72,9 @@ public class Uri {
         if (Util.isEmpty(uri)) {
             throw new IllegalArgumentException("The URI cannot be null.");
         }
-
         if (!uri.startsWith("/")) {
             uri = "/" + uri;
         }
-
         int q = uri.lastIndexOf('?');
         if (q != -1) {
             query = uri.substring(q + 1);

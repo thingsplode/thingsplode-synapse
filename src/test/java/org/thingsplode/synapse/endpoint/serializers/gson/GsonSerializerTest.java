@@ -13,24 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsplode.synapse.core;
+package org.thingsplode.synapse.endpoint.serializers.gson;
 
-import java.io.UnsupportedEncodingException;
-import org.junit.Assert;
-import org.junit.Test;
+import java.io.Serializable;
+import org.thingsplode.synapse.endpoint.serializers.AbstractParserTest;
+import org.thingsplode.synapse.endpoint.serializers.SynapseSerializer;
 
 /**
  *
  * @author tamas.csaba@gmail.com
  */
-public class UriTest {
+public class GsonSerializerTest extends AbstractParserTest {
 
-    @Test
-    public void testUriProcessor() throws UnsupportedEncodingException {
-        String us = "this_service/call?parameter=1&param=2";
-        Uri uri = new Uri(us);
-        Assert.assertEquals("/this_service/call", uri.getPath());
-        Assert.assertEquals("parameter=1&param=2", uri.getQuery());
-        Assert.assertTrue(uri.getQueryParameters().size() == 2);
+    private final GsonSerializer serializer = new GsonSerializer(true, null, null);
+
+    @Override
+    public SynapseSerializer<String, Serializable> getSerializer() {
+        return serializer;
     }
+
+
+
 }

@@ -15,10 +15,10 @@
  */
 package org.thingsplode.synapse.core.domain;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import java.io.Serializable;
 import java.net.InetSocketAddress;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicLong;
 import org.thingsplode.synapse.core.exceptions.MarshallerException;
 
 /**
@@ -27,7 +27,7 @@ import org.thingsplode.synapse.core.exceptions.MarshallerException;
  * @param <T>
  */
 public abstract class AbstractMessage<T extends Serializable> implements Serializable {
-
+    @JsonTypeInfo(use=JsonTypeInfo.Id.CLASS, include=JsonTypeInfo.As.PROPERTY, property="@body_type")
     private T body;
 
     public AbstractMessage() {
@@ -40,12 +40,24 @@ public abstract class AbstractMessage<T extends Serializable> implements Seriali
 
     public static class MessageHeader {
 
-        private final AtomicLong id = new AtomicLong(0);
+        protected String msgId;
         private String protocolVersion;
         private InetSocketAddress callerAddress;
         private Set<Parameter> parameters;
 
         public MessageHeader() {
+        }
+
+        public MessageHeader(String msgId) {
+            this.msgId = msgId;
+        }
+
+        public String getMsgId() {
+            return msgId;
+        }
+
+        public void setMsgId(String msgId) {
+            this.msgId = msgId;
         }
 
         public String getProtocolVersion() {
@@ -81,7 +93,7 @@ public abstract class AbstractMessage<T extends Serializable> implements Seriali
         this.body = body;
     }
 
-    public <T> T expectBody(Class<T> type) throws MarshallerException {
+    public <E> E expectBody(Class<E> type) throws MarshallerException {
         //todo: review if it makes sense
         if (body == null) {
             throw new MarshallerException("This message has not extension.", HttpStatus.EXPECTATION_FAILED);

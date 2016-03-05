@@ -23,15 +23,16 @@ import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshaker;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory;
 import io.netty.util.CharsetUtil;
-import java.nio.charset.Charset;
-import org.thingsplode.synapse.core.Uri;
 import org.thingsplode.synapse.endpoint.ServiceRegistry;
 import org.thingsplode.synapse.endpoint.UriHandlingCapable;
+import org.thingsplode.synapse.endpoint.handlers.internal.FileHandler;
+import org.thingsplode.synapse.util.Util;
 
 /**
  *
@@ -39,72 +40,64 @@ import org.thingsplode.synapse.endpoint.UriHandlingCapable;
  */
 public class HttRequestHandler extends SimpleChannelInboundHandler<FullHttpRequest> implements UriHandlingCapable {
 
+    private static final String HVALUE_UPGRADE = "Upgrade";
+    private final String endpointId;
+    private final FileHandler fileHandler;
     private WebSocketServerHandshaker handshaker;
     private ServiceRegistry registry;
+    
+
+    public HttRequestHandler(String endpointId, FileHandler fileHandler) {
+        this.endpointId = endpointId;
+        this.fileHandler = fileHandler;
+    }
 
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest req) throws Exception {
+    protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest httpRequest) throws Exception {
         // Handle a bad request.
-        if (!req.decoderResult().isSuccess()) {
+        if (!httpRequest.decoderResult().isSuccess()) {
             sendError(ctx, HttpResponseStatus.BAD_REQUEST);
             return;
         }
-        //method: GET uri: /this_service/call?parameter=1 version: HTTP/1.1
-  
-         // Host : localhost:8080
-        //Connection : keep-alive
-        //Cache-Control : max-age=0
-        //Accept : text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8
-        // Upgrade-Insecure-Requests : 1
-        //User-Agent : Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/48.0.2564.82 Chrome/48.0.2564.82 Safari/537.36
-        //Accept-Encoding : gzip, deflate, sdch
-        //Accept-Language : en-US,en;q=0.8
-        // content-length : 0
-        //************************ 
-        //method: PUT uri: /api/test version: HTTP/1.1
-        //headers: 
-        //User-Agent : curl/7.35.0
-        //Host : localhost:8080
-        //Accept : */*
-        //Content-Type : application/json
-        //Content-Length : 25
-        //CONTENT --> {"message":"hello world"}
-        
-        System.out.println("method: " + req.method().name() + " uri: " + req.uri() + " version: " + req.protocolVersion());
-        System.out.println("headers: ");
-        req.headers().entries().stream().forEach((entry) -> {
-            System.out.println(entry.getKey() + " : " + entry.getValue());
-        });
-        
-        byte[] dst = new byte[req.content().capacity()];
-        req.content().getBytes(0, dst);
-        System.out.println("CONTENT --> " + new String(dst, Charset.forName("UTF-8")));
-                
 
-        Uri uri = new Uri(req.uri());
+        if (httpRequest.method() == HttpMethod.HEAD
+                || httpRequest.method() == HttpMethod.PATCH
+                || httpRequest.method() == HttpMethod.TRACE
+                || httpRequest.method() == HttpMethod.CONNECT
+                || httpRequest.method() == HttpMethod.OPTIONS) {
+            sendError(ctx, HttpResponseStatus.FORBIDDEN);
+            return;
+        }
+
+        //Uri uri = new Uri(httpRequest.uri());
         //Optional<InternalServiceRegistry.MethodContext> mcOpt = registry.matchUri(req.method(), uri);
-        
-        
+        //Request req = new Request(new Request.RequestHeader(uri, RequestMethod.fromHttpMethod(httpRequest.getMethod())), httpRequest.content());
+        //registry.invoke(RequestMethod.GET, uri, registry)
+        //---------------------------------
         // check for websocket upgrade request
-        String upgradeHeader = req.headers().get("Upgrade");
-        if (upgradeHeader != null && "websocket".equalsIgnoreCase(upgradeHeader)) {
+        String upgradeHeader = httpRequest.headers().get(HVALUE_UPGRADE);
+        if (!Util.isEmpty(upgradeHeader) && "websocket".equalsIgnoreCase(upgradeHeader)) {
             // Handshake. Ideally you'd want to configure your websocket uri
-            String url = "ws://" + req.headers().get("Host") + "/wsticker";
+            String url = "ws://" + httpRequest.headers().get("Host") + "/" + endpointId;
+            //todo: configure frame size
             WebSocketServerHandshakerFactory wsFactory = new WebSocketServerHandshakerFactory(url, null, false);
-            handshaker = wsFactory.newHandshaker(req);
+            handshaker = wsFactory.newHandshaker(httpRequest);
             if (handshaker == null) {
                 WebSocketServerHandshakerFactory.sendUnsupportedVersionResponse(ctx.channel());
             } else {
-                handshaker.handshake(ctx.channel(), req);
+                handshaker.handshake(ctx.channel(), httpRequest);
             }
         } else {
-            //boolean handled = handleREST(ctx, req);
-            boolean handled = false;
+            boolean handled = handleREST(ctx, httpRequest);
             if (!handled) {
                 //httpFileHandler.sendFile(ctx, req);
             }
         }
 
+    }
+
+    private boolean handleREST(ChannelHandlerContext ctx, FullHttpRequest httpRequest) {
+        return false;
     }
 
     public void sendError(ChannelHandlerContext ctx, HttpResponseStatus status) {

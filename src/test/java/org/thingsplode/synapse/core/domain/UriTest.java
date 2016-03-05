@@ -13,26 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.acme.synapse.testdata.services.core;
+package org.thingsplode.synapse.core.domain;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  *
  * @author tamas.csaba@gmail.com
- * @param <X>
- * @param <Y>
  */
-public class Tuple<X, Y> implements Serializable {
+public class UriTest {
 
-    public final X x;
-    public final Y y;
-
-    @JsonCreator
-    public Tuple(@JsonProperty("x") X x, @JsonProperty("y") Y y) {
-        this.x = x;
-        this.y = y;
+    @Test
+    public void testUriProcessor() throws UnsupportedEncodingException {
+        String us = "this_service/call?parameter=1&param=2";
+        Uri uri = new Uri(us);
+        Assert.assertEquals("/this_service/call", uri.getPath());
+        Assert.assertEquals("parameter=1&param=2", uri.getQuery());
+        Assert.assertTrue(uri.getQueryParameters().size() == 2);
     }
 }

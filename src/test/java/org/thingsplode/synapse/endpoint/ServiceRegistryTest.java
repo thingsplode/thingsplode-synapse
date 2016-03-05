@@ -34,10 +34,10 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Optional;
 import org.junit.Assert;
-import org.thingsplode.synapse.core.Uri;
+import org.thingsplode.synapse.core.domain.Uri;
 import org.thingsplode.synapse.core.domain.ParameterWrapper;
 import org.thingsplode.synapse.core.domain.Request;
-import org.thingsplode.synapse.core.domain.RequestMethod;
+import org.thingsplode.synapse.core.domain.Request.RequestHeader.RequestMethod;
 import org.thingsplode.synapse.core.domain.Response;
 import org.thingsplode.synapse.core.exceptions.ExecutionException;
 import org.thingsplode.synapse.core.exceptions.MarshallerException;
@@ -50,7 +50,7 @@ import org.thingsplode.synapse.core.exceptions.MissingParameterException;
  */
 public class ServiceRegistryTest {
 
-    private ServiceRegistry registry = new ServiceRegistry();
+    private final ServiceRegistry registry = new ServiceRegistry();
     private boolean inited = false;
 
     public ServiceRegistryTest() {
@@ -133,11 +133,11 @@ public class ServiceRegistryTest {
         Assert.assertTrue(rsp1.getBody().getCountry().equalsIgnoreCase(country));
         Assert.assertTrue(rsp1.getBody().getStreet().equalsIgnoreCase(street));
         Assert.assertTrue(rsp1.getBody().getPostalCode() == 5050);
-        
+
         Optional<ServiceRegistry.MethodContext> opt2 = registry.getMethodContext(RequestMethod.GET, new Uri("/user.name/devices/getById"));
         Assert.assertTrue(opt2.isPresent());
         Assert.assertEquals("/{userid}/devices", opt2.get().rootCtx);
-        
+
         Response<Device> rsp2 = registry.invoke(RequestMethod.GET, new Uri("/user.name/devices/getById"), new Long(112));
         Assert.assertTrue(rsp2.getBody().getId() == 112);
 
@@ -247,8 +247,8 @@ public class ServiceRegistryTest {
         Assert.assertTrue(opt8.isPresent());
         //(?!/test/)([.@a-z0-9]+)(?=/messages/sum)
         //(?!/test/)([A-Za-z0-9._@]+)(?=/messages/sum)
-        Request<Tuple<Integer, Integer>> req = new Request<>(new Request.RequestHeader(HttpMethod.GET), new Tuple<>(10, 10));
-        Response<Integer> rsp1 = registry.invoke(RequestMethod.GET, new Uri("/test/user@name/messages/sum"), req);
+        Request<Tuple<Integer, Integer>> req = new Request<>(new Request.RequestHeader(new Uri("/test/user@name/messages/sum"), RequestMethod.fromHttpMethod(HttpMethod.GET)), new Tuple<>(10, 10));
+        Response<Integer> rsp1 = registry.invoke(req.getHeader().getMethod(), req.getHeader().getUri(), req);
         Assert.assertTrue(rsp1.getHeader().getResponseCode() == HttpResponseStatus.OK);
         Assert.assertTrue(rsp1.getBody() == 20);
 
@@ -321,4 +321,5 @@ public class ServiceRegistryTest {
     public void testNegative() throws MethodNotFoundException, ExecutionException, MissingParameterException, UnsupportedEncodingException {
         Response<Filter> rsp1 = registry.invoke(RequestMethod.GET, new Uri("/com/acme/synapse/testdata/services/RpcEndpointImpl/getInfo?arg0=some param"), null);
     }
+
 }

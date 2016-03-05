@@ -15,25 +15,24 @@
  */
 package org.thingsplode.synapse.core.domain;
 
-import java.lang.reflect.Method;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import org.thingsplode.synapse.endpoint.serializers.jackson.adapters.ParameterWrapperDeserializer;
 
 /**
  *
  * @author tamas.csaba@gmail.com
  */
-public class ParameterWrapper {
+@JsonDeserialize(using = ParameterWrapperDeserializer.class)
+public class ParameterWrapper implements Serializable {
 
     private final ArrayList<Parameter> params = new ArrayList<>();
 
-//    public ParameterWrapper(Method method) {
-//        Arrays.asList(method.getParameters()).forEach(p -> {
-//            params.add(new Parameter(p.getName(), p.getType(), ));
-//        });
-//    }
     public static ParameterWrapper create() {
         return new ParameterWrapper();
     }
@@ -47,31 +46,29 @@ public class ParameterWrapper {
         return Collections.synchronizedList(params);
     }
 
-    public class Parameter {
+    public static class Parameter {
 
         String paramid;
         Object value;
         Class type;
 
-        public Parameter(String paramid, Class type, Object value) {
+        @JsonCreator
+        public Parameter(@JsonProperty("paramid") String paramid, @JsonProperty("type") Class type, @JsonProperty("value") Object value) {
             this.paramid = paramid;
             this.value = value;
+            this.type = type;
         }
 
         public String getParamid() {
             return paramid;
         }
 
-        public void setParamid(String paramid) {
-            this.paramid = paramid;
-        }
-
         public Object getValue() {
             return value;
         }
 
-        public void setValue(Object value) {
-            this.value = value;
+        public Class getType() {
+            return type;
         }
 
     }

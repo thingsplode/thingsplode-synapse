@@ -25,6 +25,8 @@ import java.util.regex.Pattern;
  */
 public class Util {
 
+    private static final Pattern p = Pattern.compile(".(?:jpg|gif|png|css|html|zip|txt)$");
+    
     public static boolean isEmpty(String string) {
         return string == null || string.length() == 0;
     }
@@ -50,5 +52,9 @@ public class Util {
             return regexPattern.matcher(s).find();
         }).count();
         return stringArray.length == matched;
+    }
+    
+    public boolean isAcceptedFileExtension(String checkableUrl){
+        return false;
     }
 }

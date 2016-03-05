@@ -15,8 +15,8 @@
  */
 package org.thingsplode.synapse.core.exceptions;
 
-import org.thingsplode.synapse.core.Uri;
 import org.thingsplode.synapse.core.domain.HttpStatus;
+import org.thingsplode.synapse.core.domain.Request;
 
 /**
  *
@@ -24,11 +24,11 @@ import org.thingsplode.synapse.core.domain.HttpStatus;
  */
 public class ExecutionException extends SynapseException {
 
-    public ExecutionException(String message){
+    public ExecutionException(String message) {
         super(message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
-    
-    public ExecutionException(Uri u, Exception e) {
-        super("Service execution error on path: " + u.getPath() + " with error -> " + e.getMessage() + ". Exception Type: " + e.getClass(), HttpStatus.INTERNAL_SERVER_ERROR);
+
+    public ExecutionException(Request.RequestHeader header, Exception e) {
+        super("Service execution error on path: " + header.getUri().getPath() + " and method: " + header.getMethod() + " with error -> " + e.getMessage() + ". Exception Type: " + e.getClass(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

@@ -36,7 +36,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.thingsplode.synapse.core.SynapseEndpointServiceMarker;
-import org.thingsplode.synapse.core.domain.Request.RequestHeader.RequestMethod.Uri;
+import org.thingsplode.synapse.core.domain.Uri;
 import org.thingsplode.synapse.core.annotations.PathVariable;
 import org.thingsplode.synapse.core.annotations.RequestBody;
 import org.thingsplode.synapse.core.annotations.RequestMapping;
@@ -60,6 +60,7 @@ public class ServiceRegistry {
 
     private Routes routes;
     private Pattern urlParamPattern = Pattern.compile("\\{(.*?)\\}", Pattern.CASE_INSENSITIVE);
+    
 
     public ServiceRegistry() {
         routes = new Routes();
