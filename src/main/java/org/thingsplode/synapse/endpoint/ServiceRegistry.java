@@ -15,6 +15,7 @@
  */
 package org.thingsplode.synapse.endpoint;
 
+
 import io.netty.handler.codec.http.HttpResponseStatus;
 import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
@@ -35,7 +36,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.thingsplode.synapse.core.SynapseEndpointServiceMarker;
-import org.thingsplode.synapse.core.Uri;
+import org.thingsplode.synapse.core.domain.Request.RequestHeader.RequestMethod.Uri;
 import org.thingsplode.synapse.core.annotations.PathVariable;
 import org.thingsplode.synapse.core.annotations.RequestBody;
 import org.thingsplode.synapse.core.annotations.RequestMapping;
@@ -43,7 +44,8 @@ import org.thingsplode.synapse.core.annotations.RequestParam;
 import org.thingsplode.synapse.core.annotations.Service;
 import org.thingsplode.synapse.core.domain.AbstractMessage;
 import org.thingsplode.synapse.core.domain.ParameterWrapper;
-import org.thingsplode.synapse.core.domain.RequestMethod;
+import org.thingsplode.synapse.core.domain.Request;
+import org.thingsplode.synapse.core.domain.Request.RequestHeader.RequestMethod;
 import org.thingsplode.synapse.core.domain.Response;
 import org.thingsplode.synapse.core.exceptions.ExecutionException;
 import org.thingsplode.synapse.core.exceptions.MethodNotFoundException;
@@ -75,8 +77,7 @@ public class ServiceRegistry {
      * Returns the method which corresponds best to the {@link Uri} and the
      * {@link RequestMethod}.
      *
-     * @param req the request method (it also can be null)
-     * @param uri
+     * @param header
      * @param requestBody
      * @return an {@link Optional<Method>} filled with the method if one was
      * found. Otherwise the mcOpt.isPresent() is false;
@@ -84,17 +85,16 @@ public class ServiceRegistry {
      * @throws org.thingsplode.synapse.core.exceptions.ExecutionException
      * @throws org.thingsplode.synapse.core.exceptions.MissingParameterException
      */
-    public Response invoke(RequestMethod req, Uri uri, Object requestBody) throws MethodNotFoundException, ExecutionException, MissingParameterException {
-        if (requestBody != null) {
+    public Response invoke(Request.RequestHeader header, String requestBody) throws MethodNotFoundException, ExecutionException, MissingParameterException {
 
-        }
-        Optional<MethodContext> mcOpt = getMethodContext(req, uri);
+        Optional<MethodContext> mcOpt = getMethodContext(header);
         if (!mcOpt.isPresent()) {
-            throw new MethodNotFoundException(req, uri);
+            throw new MethodNotFoundException(header);
         }
         MethodContext mc = mcOpt.get();
+
         try {
-            Object result = mc.method.invoke(mc.serviceInstance, mc.extractInvocationArguments(uri, requestBody));
+            Object result = mc.method.invoke(mc.serviceInstance, mc.extractInvocationArguments(header, requestBody));
             if (result == null) {
                 return new Response(new Response.ResponseHeader(HttpResponseStatus.OK));
             } else if (result instanceof Response) {
@@ -105,17 +105,17 @@ public class ServiceRegistry {
                 throw new ExecutionException("The servive method return type is not serializable.");
             }
         } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
-            throw new ExecutionException(uri, ex);
+            throw new ExecutionException(header, ex);
         }
     }
 
-    Optional<MethodContext> getMethodContext(RequestMethod reqMethod, Uri uri) {
+    Optional<MethodContext> getMethodContext(Request.RequestHeader header) {
         String methodIdentifierPattern = null;
         String pattern = null;
         for (Pattern p : routes.patterns) {
-            Matcher m = p.matcher(uri.getPath());
+            Matcher m = p.matcher(header.getUri().getPath());
             if (m.find()) {
-                methodIdentifierPattern = uri.getPath().substring(m.end());
+                methodIdentifierPattern = header.getUri().getPath().substring(m.end());
                 if (methodIdentifierPattern.startsWith("/")) {
                     methodIdentifierPattern = methodIdentifierPattern.substring(1);
                 }
@@ -127,7 +127,7 @@ public class ServiceRegistry {
             return Optional.empty();
         }
 
-        methodIdentifierPattern = methodIdentifierPattern + uri.createParameterExpression();
+        methodIdentifierPattern = methodIdentifierPattern + header.getUri().createParameterExpression();
 
         SortedMap<String, MethodContext> methods = routes.rootCtxes.get(pattern);
         MethodContext mc = methods.get(methodIdentifierPattern);
@@ -146,7 +146,7 @@ public class ServiceRegistry {
                 mc = methods.get(variableMethodKey.get());
             }
         }
-        if (mc == null || (!mc.requestMethods.isEmpty() && !mc.requestMethods.contains(reqMethod))) {
+        if (mc == null || (!mc.requestMethods.isEmpty() && !mc.requestMethods.contains(header.getMethod()))) {
             return Optional.empty();
         }
 
@@ -283,7 +283,7 @@ public class ServiceRegistry {
         List<RequestMethod> requestMethods = new ArrayList<>();
         List<MethodParam> parameters = new ArrayList<>();
 
-        private Object[] extractInvocationArguments(Uri uri, Object messageBody) throws MissingParameterException {
+        private Object[] extractInvocationArguments(Request.RequestHeader header, Object messageBody) throws MissingParameterException {
             final List<Object> methodParams = new ArrayList<>();
             for (MethodParam p : parameters) {
                 switch (p.source) {
@@ -295,13 +295,13 @@ public class ServiceRegistry {
                         } else if (!p.required) {
                             methodParams.add(null);
                         } else {
-                            throw new MissingParameterException(uri.getPath(), p.paramId);
+                            throw new MissingParameterException(header.getUri().getPath(), p.paramId);
                         }
                         break;
                     }
                     case PARAMETER_WRAPPER: {
                         if (messageBody == null || !(messageBody instanceof ParameterWrapper)) {
-                            throw new MissingParameterException(uri.getPath(), p.paramId);
+                            throw new MissingParameterException(header.getUri().getPath(), p.paramId);
                         }
                         ((ParameterWrapper) messageBody).getParams().forEach(wp -> {
                             methodParams.add(wp.getValue());
@@ -309,21 +309,21 @@ public class ServiceRegistry {
                         break;
                     }
                     case QUERY_PARAM: {
-                        Object value = generateValueFromString(p.parameter.getType(), uri.getQueryParamterValue(p.paramId));
+                        Object value = generateValueFromString(p.parameter.getType(), header.getUri().getQueryParamterValue(p.paramId));
                         if (value == null && p.required) {
-                            throw new MissingParameterException(uri.getQuery(), p.paramId);
+                            throw new MissingParameterException(header.getUri().getQuery(), p.paramId);
                         }
                         methodParams.add(value);
                         break;
                     }
                     case PATH_VARIABLE: {
-                        Matcher m = p.pathVariableMatcher.matcher(uri.getPath());
+                        Matcher m = p.pathVariableMatcher.matcher(header.getUri().getPath());
                         if (m.find()) {
                             methodParams.add(generateValueFromString(p.parameter.getType(), m.group()));
                         } else if (!p.required) {
                             methodParams.add(null);
                         } else {
-                            throw new MissingParameterException(uri.getPath(), p.paramId);
+                            throw new MissingParameterException(header.getUri().getPath(), p.paramId);
                         }
                         break;
                     }
