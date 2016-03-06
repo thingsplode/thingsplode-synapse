@@ -24,6 +24,7 @@ import org.thingsplode.synapse.endpoint.Endpoint;
 import org.thingsplode.synapse.endpoint.Endpoint.Connections;
 import com.acme.synapse.testdata.services.RpcEndpointImpl;
 import com.acme.synapse.testdata.services.RpcEndpoint;
+import java.io.FileNotFoundException;
 
 /**
  *
@@ -42,7 +43,7 @@ public abstract class AbstractTest {
             private Endpoint ep;
 
             @Override
-            protected void before() throws InterruptedException {
+            protected void before() throws InterruptedException, FileNotFoundException {
                 System.out.println("\n\n BEFORE METHOD CALLED\n\n");
                 RpcEndpoint remoteService = new RpcEndpointImpl();
                 Connections c;
@@ -50,7 +51,8 @@ public abstract class AbstractTest {
                 this.ep = Endpoint.create("test", new Connections(new InetSocketAddress("0.0.0.0", 8080)))
                         .logLevel(LogLevel.TRACE)
                         .protocol(Endpoint.Protocol.JSON)
-                        .transportType(Endpoint.TransportType.HTTP_REST);
+                        .transportType(Endpoint.TransportType.HTTP_REST)
+                        .enableFileHandler("./");
                         //.publish("test_service", remoteService);
                 this.ep.start();
             }

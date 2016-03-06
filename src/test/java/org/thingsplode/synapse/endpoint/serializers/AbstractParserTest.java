@@ -17,7 +17,6 @@ package org.thingsplode.synapse.endpoint.serializers;
 
 import com.acme.synapse.testdata.services.core.Device;
 import io.netty.handler.codec.http.HttpResponseStatus;
-import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.UUID;

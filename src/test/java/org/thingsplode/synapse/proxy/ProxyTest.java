@@ -58,7 +58,9 @@ public class ProxyTest extends AbstractTest {
 
     @Test
     public void baseTest() throws InterruptedException {
-        Thread.sleep(50000L);
+        while (true) {
+            Thread.sleep(50000L);
+        }
 //        EndpointProxy proxy = EndpointProxy.init().endpoints().defaultPolicy().start();
 //        TestEndpoint testEp = proxy.createStub("test_service", TestEndpoint.class);
 //        testEp.ping();
