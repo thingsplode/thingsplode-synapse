@@ -15,7 +15,6 @@
  */
 package org.thingsplode.synapse.endpoint;
 
-
 import io.netty.handler.codec.http.HttpResponseStatus;
 import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
@@ -50,6 +49,8 @@ import org.thingsplode.synapse.core.domain.Response;
 import org.thingsplode.synapse.core.exceptions.ExecutionException;
 import org.thingsplode.synapse.core.exceptions.MethodNotFoundException;
 import org.thingsplode.synapse.core.exceptions.MissingParameterException;
+import org.thingsplode.synapse.core.exceptions.SerializationException;
+import org.thingsplode.synapse.endpoint.serializers.SerializationService;
 import org.thingsplode.synapse.util.Util;
 
 /**
@@ -60,7 +61,7 @@ public class ServiceRegistry {
 
     private Routes routes;
     private Pattern urlParamPattern = Pattern.compile("\\{(.*?)\\}", Pattern.CASE_INSENSITIVE);
-    
+    private SerializationService serializationService = new SerializationService();
 
     public ServiceRegistry() {
         routes = new Routes();
@@ -85,17 +86,29 @@ public class ServiceRegistry {
      * @throws org.thingsplode.synapse.core.exceptions.MethodNotFoundException
      * @throws org.thingsplode.synapse.core.exceptions.ExecutionException
      * @throws org.thingsplode.synapse.core.exceptions.MissingParameterException
+     * @throws org.thingsplode.synapse.core.exceptions.SerializationException
      */
-    public Response invoke(Request.RequestHeader header, String requestBody) throws MethodNotFoundException, ExecutionException, MissingParameterException {
+    public Response invokeWithParseable(Request.RequestHeader header, Object requestBody) throws MethodNotFoundException, ExecutionException, MissingParameterException, SerializationException {
 
-        Optional<MethodContext> mcOpt = getMethodContext(header);
-        if (!mcOpt.isPresent()) {
-            throw new MethodNotFoundException(header);
+        MethodContext mc = getMethodContextOrThrowException(header);
+
+        Object requestBodyObject = null;
+        if ((requestBody instanceof String) && !Util.isEmpty((String) requestBody)) {
+            Optional<MethodParam> mpo = mc.getMethodParamForRequestBody();
+            if (mpo.isPresent()) {
+                requestBodyObject = serializationService.getPreferredSerializer(null).unMarshall(mpo.get().parameter.getType(), (String) requestBody);
+            }
         }
-        MethodContext mc = mcOpt.get();
+        return invokeWithObject(header, mc, requestBodyObject);
+    }
 
+    Response invoke(Request.RequestHeader header, Object requestBody) throws MethodNotFoundException, ExecutionException, MissingParameterException, SerializationException {
+        return invokeWithObject(header, getMethodContextOrThrowException(header), requestBody);
+    }
+
+    Response invokeWithObject(Request.RequestHeader header, MethodContext mc, Object requestBodyObject) throws MissingParameterException, ExecutionException {
         try {
-            Object result = mc.method.invoke(mc.serviceInstance, mc.extractInvocationArguments(header, requestBody));
+            Object result = mc.method.invoke(mc.serviceInstance, mc.extractInvocationArguments(header, requestBodyObject));
             if (result == null) {
                 return new Response(new Response.ResponseHeader(HttpResponseStatus.OK));
             } else if (result instanceof Response) {
@@ -108,6 +121,14 @@ public class ServiceRegistry {
         } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
             throw new ExecutionException(header, ex);
         }
+    }
+
+    private MethodContext getMethodContextOrThrowException(Request.RequestHeader header) throws MethodNotFoundException {
+        Optional<MethodContext> mcOpt = getMethodContext(header);
+        if (!mcOpt.isPresent()) {
+            throw new MethodNotFoundException(header);
+        }
+        return mcOpt.get();
     }
 
     Optional<MethodContext> getMethodContext(Request.RequestHeader header) {
@@ -283,6 +304,13 @@ public class ServiceRegistry {
         Object serviceInstance;
         List<RequestMethod> requestMethods = new ArrayList<>();
         List<MethodParam> parameters = new ArrayList<>();
+
+        Optional<MethodParam> getMethodParamForRequestBody() {
+            if (parameters.isEmpty()) {
+                return Optional.empty();
+            }
+            return parameters.stream().filter(p -> (p.source == MethodParam.ParameterSource.BODY || p.source == MethodParam.ParameterSource.PARAMETER_WRAPPER)).findAny();
+        }
 
         private Object[] extractInvocationArguments(Request.RequestHeader header, Object messageBody) throws MissingParameterException {
             final List<Object> methodParams = new ArrayList<>();

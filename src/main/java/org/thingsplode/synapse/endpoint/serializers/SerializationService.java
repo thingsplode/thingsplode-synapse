@@ -15,20 +15,18 @@
  */
 package org.thingsplode.synapse.endpoint.serializers;
 
-import java.io.Serializable;
 import org.thingsplode.synapse.core.domain.MediaRange;
-import org.thingsplode.synapse.core.exceptions.SerializationException;
+import org.thingsplode.synapse.endpoint.serializers.jackson.JacksonSerializer;
 
 /**
  *
  * @author tamas.csaba@gmail.com
- * @param <WIREFORMAT>
  */
-public interface SynapseSerializer<WIREFORMAT> {
+public class SerializationService {
 
-    public MediaRange getSupportedMediaRange();
-    
-    WIREFORMAT marshall(Serializable object) throws SerializationException;
+    private final JacksonSerializer jacksonSerializer = new JacksonSerializer(true);
 
-    <T> T unMarshall(Class<T> objectType, WIREFORMAT wirecontent) throws SerializationException;
+    public SynapseSerializer<String> getPreferredSerializer(MediaRange mediaRange) {
+        return jacksonSerializer;
+    }
 }

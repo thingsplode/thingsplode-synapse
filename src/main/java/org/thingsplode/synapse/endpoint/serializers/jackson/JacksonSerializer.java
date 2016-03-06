@@ -32,17 +32,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import org.thingsplode.synapse.core.domain.MediaRange;
-import org.thingsplode.synapse.core.domain.ParameterWrapper;
 import org.thingsplode.synapse.core.exceptions.SerializationException;
 import org.thingsplode.synapse.endpoint.serializers.SynapseSerializer;
-import org.thingsplode.synapse.endpoint.serializers.jackson.adapters.ParameterWrapperDeserializer;
 import org.thingsplode.synapse.util.Util;
 
 /**
  *
  * @author tamas.csaba@gmail.com
  */
-public class JacksonSerializer implements SynapseSerializer<String, Serializable> {
+public class JacksonSerializer implements SynapseSerializer<String> {
 
     private final ObjectMapper mapper;
     private SimpleModule module;
@@ -95,7 +93,7 @@ public class JacksonSerializer implements SynapseSerializer<String, Serializable
     }
 
     @Override
-    public <T extends Serializable> T unMarshall(Class<T> objectType, String wirecontent) throws SerializationException {
+    public <T> T unMarshall(Class<T> objectType, String wirecontent) throws SerializationException {
         try {
             if (!Util.isEmpty(wirecontent)) {
                 return mapper.readValue(wirecontent, objectType);

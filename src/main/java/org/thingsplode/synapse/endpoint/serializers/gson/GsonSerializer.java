@@ -33,7 +33,7 @@ import org.thingsplode.synapse.endpoint.serializers.gson.adapters.HttpResponseSt
  *
  * @author tamas.csaba@gmail.com
  */
-public class GsonSerializer implements SynapseSerializer<String, Serializable> {
+public class GsonSerializer implements SynapseSerializer<String> {
 
     final Gson gson;
     private final MediaRange supportedRange = new MediaRange("application/json, text/json");
@@ -67,7 +67,7 @@ public class GsonSerializer implements SynapseSerializer<String, Serializable> {
     }
 
     @Override
-    public <T extends Serializable> T unMarshall(Class<T> objectClass, String wirecontent) throws SerializationException {
+    public <T> T unMarshall(Class<T> objectClass, String wirecontent) throws SerializationException {
         return gson.fromJson(wirecontent, objectClass);
     }
 

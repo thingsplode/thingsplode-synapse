@@ -15,7 +15,6 @@
  */
 package org.thingsplode.synapse.endpoint.serializers.gson;
 
-import java.io.Serializable;
 import org.thingsplode.synapse.endpoint.serializers.AbstractParserTest;
 import org.thingsplode.synapse.endpoint.serializers.SynapseSerializer;
 
@@ -28,7 +27,7 @@ public class GsonSerializerTest extends AbstractParserTest {
     private final GsonSerializer serializer = new GsonSerializer(true, null, null);
 
     @Override
-    public SynapseSerializer<String, Serializable> getSerializer() {
+    public SynapseSerializer<String> getSerializer() {
         return serializer;
     }
 

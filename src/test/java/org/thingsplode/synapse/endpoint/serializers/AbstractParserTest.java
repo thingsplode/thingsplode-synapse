@@ -40,7 +40,7 @@ public class AbstractParserTest {
     
     private final JacksonSerializer serializer = new JacksonSerializer(true);
     
-    public SynapseSerializer<String, Serializable> getSerializer() {
+    public SynapseSerializer<String> getSerializer() {
         return serializer;
     }
     
