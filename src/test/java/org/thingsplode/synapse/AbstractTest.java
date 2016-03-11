@@ -15,6 +15,9 @@
  */
 package org.thingsplode.synapse;
 
+import com.acme.synapse.testdata.services.CrudTestEndpointService;
+import com.acme.synapse.testdata.services.DummyMarkedEndpoint;
+import com.acme.synapse.testdata.services.EndpointTesterService;
 import io.netty.handler.logging.LogLevel;
 import java.net.InetSocketAddress;
 import org.apache.log4j.BasicConfigurator;
@@ -45,15 +48,17 @@ public abstract class AbstractTest {
             @Override
             protected void before() throws InterruptedException, FileNotFoundException {
                 System.out.println("\n\n BEFORE METHOD CALLED\n\n");
-                RpcEndpoint remoteService = new RpcEndpointImpl();
                 Connections c;
                 BasicConfigurator.configure();
                 this.ep = Endpoint.create("test", new Connections(new InetSocketAddress("0.0.0.0", 8080)))
                         .logLevel(LogLevel.TRACE)
                         .protocol(Endpoint.Protocol.JSON)
                         .transportType(Endpoint.TransportType.HTTP_REST)
-                        .enableFileHandler("./");
-                        //.publish("test_service", remoteService);
+                        .enableFileHandler("./")
+                        .publish(new RpcEndpointImpl())
+                        .publish(new EndpointTesterService())
+                        .publish(new CrudTestEndpointService())
+                        .publish(new DummyMarkedEndpoint());
                 this.ep.start();
             }
 

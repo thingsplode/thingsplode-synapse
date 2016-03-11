@@ -19,6 +19,9 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.netty.handler.codec.http.HttpMethod;
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 import org.thingsplode.synapse.core.domain.Request.RequestHeader;
 import org.thingsplode.synapse.core.domain.Request.RequestHeader.RequestMethod;
 
@@ -59,11 +62,12 @@ public class Request<T extends Serializable> extends AbstractMessage<T> {
     public void setHeader(RequestHeader header) {
         this.header = header;
     }
-
+    
     public static class RequestHeader extends AbstractMessage.MessageHeader {
 
         private final Uri uri;
         private final RequestMethod method;
+        private final HashMap<String, String> requestProperties = new HashMap<>();
 
         @JsonCreator
         public RequestHeader(@JsonProperty("msgId") String msgId, @JsonProperty("uri") Uri uri, @JsonProperty("method") RequestMethod method) {
@@ -78,6 +82,22 @@ public class Request<T extends Serializable> extends AbstractMessage<T> {
 
         public RequestMethod getMethod() {
             return method;
+        }
+
+        public void addRequestProperty(String key, String value) {
+
+            requestProperties.put(key, value);
+
+        }
+
+        public Optional<String> getRequestProperty(String propertyKey) {
+            return Optional.ofNullable(requestProperties.get(propertyKey));
+        }
+
+        public void addAllRequestProperties(Iterable<Map.Entry<String, String>> iterable) {
+            if (iterable != null) {
+                iterable.forEach(e -> requestProperties.put(e.getKey(), e.getValue()));
+            }
         }
 
         public enum RequestMethod {

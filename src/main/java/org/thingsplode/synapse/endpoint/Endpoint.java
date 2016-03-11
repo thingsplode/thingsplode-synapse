@@ -37,6 +37,7 @@ import io.netty.handler.logging.LoggingHandler;
 import io.netty.util.concurrent.DefaultEventExecutorGroup;
 import io.netty.util.concurrent.EventExecutorGroup;
 import io.netty.util.concurrent.GlobalEventExecutor;
+import java.io.FileNotFoundException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -47,7 +48,9 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.thingsplode.synapse.endpoint.handlers.HttRequestHandler;
+import org.thingsplode.synapse.endpoint.handlers.HttpFileHandler;
+import org.thingsplode.synapse.endpoint.handlers.HttpRequestHandler;
+import org.thingsplode.synapse.endpoint.handlers.HttpResponseHandler;
 import org.thingsplode.synapse.endpoint.handlers.RequestHandler;
 import org.thingsplode.synapse.util.NetworkUtil;
 
@@ -73,7 +76,9 @@ public class Endpoint {
     private TransportType transportType = TransportType.DOMAIN_SOCKET;
     private Protocol protocol = Protocol.JSON;
     private Lifecycle lifecycle = Lifecycle.UNITIALIZED;
+    private HttpFileHandler fileHandler = null;
     private EventExecutorGroup evtExecutorGroup = new DefaultEventExecutorGroup(10);
+    private ServiceRegistry serviceRegistry = new ServiceRegistry();
 
     private enum Lifecycle {
         UNITIALIZED,
@@ -115,7 +120,11 @@ public class Endpoint {
                                 p.addLast(HTTP_ENCODER, new HttpResponseEncoder());
                                 p.addLast(HTTP_DECODER, new HttpRequestDecoder());
                                 p.addLast("aggregator", new HttpObjectAggregator(65536));
-                                p.addLast("http_request_handler", new HttRequestHandler(endpointId, null));
+                                p.addLast("http_request_handler", new HttpRequestHandler(endpointId, serviceRegistry));
+                                p.addLast("http_response_handler", new HttpResponseHandler());
+                                if (fileHandler != null) {
+                                    p.addLast("http_file_handler", fileHandler);
+                                }
                                 p.addLast(evtExecutorGroup, "handler", new RequestHandler());
                             }
                         });
@@ -197,11 +206,12 @@ public class Endpoint {
         }
     }
 
-    public Endpoint publish(String serviceID, Object serviceInstance) {
-//        if (lifecycle == Lifecycle.UNITIALIZED){
-//            throw new IllegalStateException();
-//        }
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public Endpoint publish(Object serviceInstance) {
+        //        if (lifecycle == Lifecycle.UNITIALIZED){
+        //            throw new IllegalStateException();
+        //        }
+        serviceRegistry.register(serviceInstance);
+        return this;
     }
 
     public enum Protocol {
@@ -214,12 +224,10 @@ public class Endpoint {
          * Default
          */
         HTTP_REST,
-
         /**
          *
          */
         WEBSOCKET_STOMP,
-
         /**
          *
          */
@@ -262,6 +270,11 @@ public class Endpoint {
         public Set<SocketAddress> getSocketAddresses() {
             return socketAddresses;
         }
+    }
+
+    public Endpoint enableFileHandler(String webroot) throws FileNotFoundException {
+        fileHandler = new HttpFileHandler(webroot);
+        return this;
     }
 
     public Endpoint logLevel(LogLevel logLevel) {

@@ -13,14 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsplode.synapse.endpoint;
+package org.thingsplode.synapse.core.domain;
 
 /**
  *
  * @author tamas.csaba@gmail.com
  */
-public interface UriHandlingCapable {
+public class FileRequest extends Request<String> {
+
+    public FileRequest() {
+    }
     
-    void setServiceRegistry(ServiceRegistry registry);
-    
+    public FileRequest(RequestHeader header) {
+        super(header);
+    }
 }

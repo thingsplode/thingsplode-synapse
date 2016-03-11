@@ -42,6 +42,7 @@ import org.thingsplode.synapse.core.annotations.RequestMapping;
 import org.thingsplode.synapse.core.annotations.RequestParam;
 import org.thingsplode.synapse.core.annotations.Service;
 import org.thingsplode.synapse.core.domain.AbstractMessage;
+import org.thingsplode.synapse.core.domain.MediaType;
 import org.thingsplode.synapse.core.domain.ParameterWrapper;
 import org.thingsplode.synapse.core.domain.Request;
 import org.thingsplode.synapse.core.domain.Request.RequestHeader.RequestMethod;
@@ -80,33 +81,35 @@ public class ServiceRegistry {
      * {@link RequestMethod}.
      *
      * @param header
-     * @param requestBody
+     * @param requestBody the
      * @return an {@link Optional<Method>} filled with the method if one was
      * found. Otherwise the mcOpt.isPresent() is false;
-     * @throws org.thingsplode.synapse.core.exceptions.MethodNotFoundException
      * @throws org.thingsplode.synapse.core.exceptions.ExecutionException
      * @throws org.thingsplode.synapse.core.exceptions.MissingParameterException
      * @throws org.thingsplode.synapse.core.exceptions.SerializationException
      */
-    public Response invokeWithParseable(Request.RequestHeader header, Object requestBody) throws MethodNotFoundException, ExecutionException, MissingParameterException, SerializationException {
+    public Response invokeWithParseable(Request.RequestHeader header, Object requestBody) throws ExecutionException, MissingParameterException, SerializationException {
 
-        MethodContext mc = getMethodContextOrThrowException(header);
+        Optional<MethodContext> mcOpt = getMethodContext(header);
+        if (!mcOpt.isPresent()) {
+            return new Response(new Response.ResponseHeader(header, HttpResponseStatus.NOT_FOUND, new MediaType("text/plain; charset=UTF-8")));
+        }
 
         Object requestBodyObject = null;
         if ((requestBody instanceof String) && !Util.isEmpty((String) requestBody)) {
-            Optional<MethodParam> mpo = mc.getMethodParamForRequestBody();
+            Optional<MethodParam> mpo = mcOpt.get().getMethodParamForRequestBody();
             if (mpo.isPresent()) {
                 requestBodyObject = serializationService.getPreferredSerializer(null).unMarshall(mpo.get().parameter.getType(), (String) requestBody);
             }
         }
-        return invokeWithObject(header, mc, requestBodyObject);
+        return invoke(header, mcOpt.get(), requestBodyObject);
     }
 
-    Response invoke(Request.RequestHeader header, Object requestBody) throws MethodNotFoundException, ExecutionException, MissingParameterException, SerializationException {
-        return invokeWithObject(header, getMethodContextOrThrowException(header), requestBody);
+    Response invokeWithJavaObject(Request.RequestHeader header, Object requestBody) throws MethodNotFoundException, ExecutionException, MissingParameterException, SerializationException {
+        return invoke(header, getMethodContextOrThrowException(header), requestBody);
     }
 
-    Response invokeWithObject(Request.RequestHeader header, MethodContext mc, Object requestBodyObject) throws MissingParameterException, ExecutionException {
+    Response invoke(Request.RequestHeader header, MethodContext mc, Object requestBodyObject) throws MissingParameterException, ExecutionException {
         try {
             Object result = mc.method.invoke(mc.serviceInstance, mc.extractInvocationArguments(header, requestBodyObject));
             if (result == null) {

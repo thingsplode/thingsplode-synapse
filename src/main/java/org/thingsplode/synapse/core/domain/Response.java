@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import java.io.Serializable;
+import javafx.scene.media.Media;
 import org.thingsplode.synapse.endpoint.serializers.jackson.adapters.HttpResponseStatusDeserializer;
 import org.thingsplode.synapse.endpoint.serializers.jackson.adapters.HttpResponseStatusSerializer;
 
@@ -58,10 +59,16 @@ public class Response<T extends Serializable> extends AbstractMessage<T> {
         @JsonDeserialize(using = HttpResponseStatusDeserializer.class)
         private HttpResponseStatus responseCode = HttpResponseStatus.INTERNAL_SERVER_ERROR;
         private String correlationId;
+        private MediaType contentType;
 
-        
         public ResponseHeader(HttpResponseStatus responseCode) {
             this.responseCode = responseCode;
+        }
+        
+        public ResponseHeader(Request.RequestHeader header, HttpResponseStatus responseCode, MediaType media){
+            this(responseCode);
+            this.correlationId = header.getMsgId();
+            this.contentType = media;
         }
 
         @JsonCreator
@@ -71,6 +78,14 @@ public class Response<T extends Serializable> extends AbstractMessage<T> {
             this.correlationId = correlationId;
         }
 
+        public MediaType getContentType() {
+            return contentType;
+        }
+
+        public void setContentType(MediaType contentType) {
+            this.contentType = contentType;
+        }
+        
         public String getCorrelationId() {
             return correlationId;
         }

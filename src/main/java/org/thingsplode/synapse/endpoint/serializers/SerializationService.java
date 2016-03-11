@@ -16,6 +16,7 @@
 package org.thingsplode.synapse.endpoint.serializers;
 
 import org.thingsplode.synapse.core.domain.MediaRange;
+import org.thingsplode.synapse.core.domain.MediaType;
 import org.thingsplode.synapse.endpoint.serializers.jackson.JacksonSerializer;
 
 /**
@@ -27,6 +28,10 @@ public class SerializationService {
     private final JacksonSerializer jacksonSerializer = new JacksonSerializer(true);
 
     public SynapseSerializer<String> getPreferredSerializer(MediaRange mediaRange) {
+        return jacksonSerializer;
+    }
+
+    public SynapseSerializer<String> getSerializer(MediaType contentType) {
         return jacksonSerializer;
     }
 }
