@@ -57,6 +57,7 @@ import org.thingsplode.synapse.util.NetworkUtil;
 /**
  *
  * @author tamas.csaba@gmail.com
+ * //todo: add basic authorization
  */
 public class Endpoint {
 

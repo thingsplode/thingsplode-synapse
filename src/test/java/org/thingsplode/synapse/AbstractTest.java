@@ -26,7 +26,6 @@ import org.junit.rules.ExternalResource;
 import org.thingsplode.synapse.endpoint.Endpoint;
 import org.thingsplode.synapse.endpoint.Endpoint.Connections;
 import com.acme.synapse.testdata.services.RpcEndpointImpl;
-import com.acme.synapse.testdata.services.RpcEndpoint;
 import java.io.FileNotFoundException;
 
 /**

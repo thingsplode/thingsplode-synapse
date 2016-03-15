@@ -16,6 +16,8 @@
 package org.thingsplode.synapse.endpoint.serializers;
 
 import com.acme.synapse.testdata.services.core.Device;
+import com.acme.synapse.testdata.services.core.Tuple;
+import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -26,6 +28,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.thingsplode.synapse.core.domain.ParameterWrapper;
 import org.thingsplode.synapse.core.domain.Request;
+import org.thingsplode.synapse.core.domain.Request.RequestHeader.RequestMethod;
 import org.thingsplode.synapse.core.domain.Response;
 import org.thingsplode.synapse.core.domain.Uri;
 import org.thingsplode.synapse.core.exceptions.SerializationException;
@@ -119,5 +122,19 @@ public class AbstractParserTest {
         Assert.assertTrue(ur.getHeader().getResponseCode() == HttpResponseStatus.OK);
         Assert.assertNotNull(ur.getBody());
         Assert.assertTrue(ur.getBody().isEmpty());
+    }
+    
+    @Test
+    public void testMarshallingTuple() throws UnsupportedEncodingException, SerializationException{
+        Request<Tuple<Integer, Integer>> reqForMultiply = new Request<>(new Request.RequestHeader(null, new Uri("/test/user@name/messages/multiply"), RequestMethod.fromHttpMethod(HttpMethod.GET)), new Tuple<>(10, 100));
+        String json = getSerializer().marshall(reqForMultiply);
+        System.out.println(json);
+        Request<Tuple<Integer, Integer>> req = getSerializer().unMarshall(Request.class, json);
+        Assert.assertNotNull(req);
+        Assert.assertTrue(req.getHeader() != null);
+        Assert.assertTrue(req.getHeader().getMethod() == RequestMethod.GET);
+        Assert.assertNotNull(req.getBody());
+        Assert.assertTrue(req.getBody().x == 10);
+        Assert.assertTrue(req.getBody().y == 100);
     }
 }

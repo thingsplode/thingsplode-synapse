@@ -33,7 +33,6 @@ import org.thingsplode.synapse.core.annotations.RequestParam;
 @Service("/test/{user}/messages/")
 public class EndpointTesterService {
 
-    
     public Response<Integer> sum(Request<Tuple<Integer, Integer>> req) {
         Integer res = req.getBody().x + req.getBody().y;
         return new Response<>(new Response.ResponseHeader(HttpResponseStatus.OK), res);
@@ -51,9 +50,14 @@ public class EndpointTesterService {
         return new Response<>(new Response.ResponseHeader(HttpResponseStatus.OK), res);
     }
 
+    @RequestMapping("register")
+    public Response<String> registerAddress(Request<Address> req) {
+        return new Response<>(new Response.ResponseHeader(HttpResponseStatus.OK), "Address is created:" + req.getBody().getPostalCode());
+    }
+
     @RequestMapping("/clear")
     public void clearAll(@PathVariable("user") String user) {
-        System.out.println("\n\n User: ["+user+"] cleared");
+        System.out.println("\n\n User: [" + user + "] cleared");
     }
 
     @RequestMapping({"check_address"})

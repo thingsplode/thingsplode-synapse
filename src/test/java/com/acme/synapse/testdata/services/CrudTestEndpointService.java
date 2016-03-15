@@ -15,9 +15,12 @@
  */
 package com.acme.synapse.testdata.services;
 
+import com.acme.synapse.testdata.services.core.Address;
 import com.acme.synapse.testdata.services.core.Device;
+import com.acme.synapse.testdata.services.core.Tuple;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import java.util.ArrayList;
+import java.util.Calendar;
 import org.thingsplode.synapse.core.annotations.PathVariable;
 import org.thingsplode.synapse.core.annotations.RequestBody;
 import org.thingsplode.synapse.core.annotations.RequestMapping;
@@ -40,9 +43,12 @@ public class CrudTestEndpointService {
     public Device getDeviceById(@PathVariable("deviceId") long id) {
         Device d = createDevice();
         d.setId(id);
+        d.setAddress(new Address("some street", "some country", 4040));
+        d.setServicePeriod(new Tuple<>(Calendar.getInstance().getTime(), Calendar.getInstance().getTime()));
+        d.setTreshold(100);
         return d;
     }
-    
+
     @RequestMapping(value = "/switches/{deviceId}", method = {RequestMethod.GET})
     public Device getSwicthesById(@PathVariable("deviceId") long id) {
         Device d = createDevice();
@@ -54,12 +60,17 @@ public class CrudTestEndpointService {
     public Response<Device> getById(@RequestBody Long deviceID) {
         Device d = createDevice();
         d.setId(deviceID);
+        d.setTreshold(100);
+        d.setServicePeriod(new Tuple<>(Calendar.getInstance().getTime(), Calendar.getInstance().getTime()));
+        d.setAddress(new Address("some street", "some country", 4040));
         return new Response<>(new Response.ResponseHeader(HttpResponseStatus.OK), d);
     }
 
     @RequestMapping("owner")
     public Response<Device> getByOwner() {
-        return new Response<>(new Response.ResponseHeader(HttpResponseStatus.OK), createDevice());
+        Device d = createDevice();
+        d.setLogicalName("owner");
+        return new Response<>(new Response.ResponseHeader(HttpResponseStatus.OK), d);
     }
 
     @RequestMapping("owner")
@@ -68,7 +79,7 @@ public class CrudTestEndpointService {
         d.setId(deviceId);
         return new Response<>(new Response.ResponseHeader(HttpResponseStatus.OK), d);
     }
-    
+
     @RequestMapping("owner")
     public Response<Device> getByOwner(Long deviceId, Integer treshold) {
         Device d = createDevice();
@@ -76,7 +87,7 @@ public class CrudTestEndpointService {
         d.setTreshold(treshold);
         return new Response<>(new Response.ResponseHeader(HttpResponseStatus.OK), d);
     }
-    
+
     @RequestMapping("owner/old")
     public Response<Device> getByOwnerOld() {
         return new Response<>(new Response.ResponseHeader(HttpResponseStatus.OK), createDevice());
@@ -87,7 +98,7 @@ public class CrudTestEndpointService {
         Device d = new Device();
         d.setLogicalName("some device");
         ArrayList sdevices = new ArrayList<>();
-        sdevices.add(d);
+        sdevices.add(new Device(1124, "sub device", Integer.SIZE));
         d.setSubDevices(sdevices);
         return d;
     }

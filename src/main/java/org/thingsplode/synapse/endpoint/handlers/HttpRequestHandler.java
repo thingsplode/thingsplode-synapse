@@ -16,20 +16,13 @@
 package org.thingsplode.synapse.endpoint.handlers;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
-import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpRequest;
-import io.netty.handler.codec.http.FullHttpResponse;
-import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
-import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshaker;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory;
-import io.netty.util.CharsetUtil;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import java.io.UnsupportedEncodingException;
@@ -68,7 +61,7 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
         try {
             // Handle a bad request.
             if (!httpRequest.decoderResult().isSuccess()) {
-                sendError(ctx, HttpResponseStatus.BAD_REQUEST, "Could not decode request.");
+                HttpResponseHandler.sendError(ctx, HttpResponseStatus.BAD_REQUEST, "Could not decode request.");
                 return;
             }
 
@@ -77,7 +70,7 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
                     || httpRequest.method() == HttpMethod.TRACE
                     || httpRequest.method() == HttpMethod.CONNECT
                     || httpRequest.method() == HttpMethod.OPTIONS) {
-                sendError(ctx, HttpResponseStatus.FORBIDDEN, "Method forbidden (The following are not supported: HEAD, PATCH, TRACE, CONNECT, OPTIONS).");
+                HttpResponseHandler.sendError(ctx, HttpResponseStatus.FORBIDDEN, "Method forbidden (The following are not supported: HEAD, PATCH, TRACE, CONNECT, OPTIONS).");
                 return;
             }
 
@@ -117,7 +110,7 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
             }
         } catch (Exception ex) {
             logger.error("Channel read error: " + ex.getMessage(), ex);
-            sendError(ctx, HttpResponseStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
+            HttpResponseHandler.sendError(ctx, HttpResponseStatus.INTERNAL_SERVER_ERROR, ex.getClass().getSimpleName() + ": " + ex.getMessage());
         }
     }
 
@@ -128,18 +121,8 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
             String json = new String(dst, Charset.forName("UTF-8"));
             return registry.invokeWithParseable(header, json);
         } catch (SynapseException ex) {
-            return new Response(new Response.ResponseHeader(header, HttpResponseStatus.valueOf(ex.getResponseStatus().value()), new MediaType("text/plain; charset=UTF-8")), ex.getMessage());
+            logger.error("Error processing REST request: " + ex.getMessage(), ex);
+            return new Response(new Response.ResponseHeader(header, HttpResponseStatus.valueOf(ex.getResponseStatus().value()), new MediaType("text/plain; charset=UTF-8")), ex.getClass().getSimpleName() + ": " + ex.getMessage());
         }
     }
-
-    public static void sendError(ChannelHandlerContext ctx, HttpResponseStatus status, String errorMsg) {
-        FullHttpResponse response = new DefaultFullHttpResponse(
-                HttpVersion.HTTP_1_1, status, Unpooled.copiedBuffer("Failure: " + errorMsg + "\r\n", CharsetUtil.UTF_8));
-        response.headers().set(HttpHeaderNames.CONTENT_TYPE, "text/plain; charset=UTF-8");
-
-        // Close the connection as soon as the error message is sent.
-        ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
-
-    }
-
 }

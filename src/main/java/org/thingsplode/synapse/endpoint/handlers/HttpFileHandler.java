@@ -95,7 +95,7 @@ public class HttpFileHandler extends SimpleChannelInboundHandler<FileRequest> {
     protected void channelRead0(ChannelHandlerContext ctx, FileRequest req) throws Exception {
         Optional<File> pathOpt = getSanitizedPath(req.getHeader().getUri().getPath());
         if (!pathOpt.isPresent()) {
-            HttpRequestHandler.sendError(ctx, HttpResponseStatus.FORBIDDEN, "Path is not available.");
+            HttpResponseHandler.sendError(ctx, HttpResponseStatus.FORBIDDEN, "Path is not available.");
             return;
         }
 
@@ -105,12 +105,12 @@ public class HttpFileHandler extends SimpleChannelInboundHandler<FileRequest> {
         //}
 
         if (!file.exists() || file.isHidden() || !file.exists() || file.isDirectory()) {
-            HttpRequestHandler.sendError(ctx, HttpResponseStatus.NOT_FOUND, "File not found.");
+            HttpResponseHandler.sendError(ctx, HttpResponseStatus.NOT_FOUND, "File not found.");
             return;
         }
 
         if (!file.isFile()) {
-            HttpRequestHandler.sendError(ctx, HttpResponseStatus.FORBIDDEN, "Is not a file.");
+            HttpResponseHandler.sendError(ctx, HttpResponseStatus.FORBIDDEN, "Is not a file.");
             return;
         }
         
@@ -141,7 +141,7 @@ public class HttpFileHandler extends SimpleChannelInboundHandler<FileRequest> {
       try {
          raf = new RandomAccessFile(file, "r");
       } catch (FileNotFoundException ex) {
-        HttpRequestHandler.sendError(ctx, HttpResponseStatus.NOT_FOUND, ex.getMessage());
+        HttpResponseHandler.sendError(ctx, HttpResponseStatus.NOT_FOUND, ex.getMessage());
          return;
       }
       

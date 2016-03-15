@@ -96,7 +96,7 @@ public class ServiceRegistryTest {
         assertResponse(registry.invokeWithJavaObject(new Request.RequestHeader(null, new Uri("/1221221/devices/add"), RequestMethod.POST), null));
         assertResponse(registry.invokeWithJavaObject(new Request.RequestHeader(null, new Uri("/1221221/devices/add"), RequestMethod.PUT), null));
     }
-
+    
     private void assertResponse(Response<Device> rsp) {
         Assert.assertTrue(rsp != null);
         Assert.assertTrue(rsp.getBody() instanceof Device);
@@ -216,7 +216,7 @@ public class ServiceRegistryTest {
 
         Response<Device> rsp1 = registry.invokeWithJavaObject(new Request.RequestHeader(null, new Uri("/222/devices/owner"), RequestMethod.GET), null);
         Assert.assertTrue(rsp1.getHeader().getResponseCode() == HttpResponseStatus.OK);
-        Assert.assertTrue(rsp1.getBody().getLogicalName().equalsIgnoreCase("some device"));
+        Assert.assertTrue(rsp1.getBody().getLogicalName().equalsIgnoreCase("owner"));
 
         Optional<ServiceRegistry.MethodContext> elOpt2 = registry.getMethodContext(new Request.RequestHeader(null, new Uri("/222/devices/owner?arg0=222"), RequestMethod.GET));
         Assert.assertTrue(elOpt2.isPresent());
@@ -258,6 +258,12 @@ public class ServiceRegistryTest {
         Assert.assertTrue(rsp1.getHeader().getResponseCode() == HttpResponseStatus.OK);
         Assert.assertTrue(rsp1.getBody() == 20);
 
+        Request<Tuple<Integer, Integer>> reqForMultiply = new Request<>(new Request.RequestHeader(null, new Uri("/test/user@name/messages/multiply"), RequestMethod.fromHttpMethod(HttpMethod.GET)), new Tuple<>(10, 10));
+        Response<Integer> multiplyRsp = registry.invokeWithJavaObject(reqForMultiply.getHeader(), reqForMultiply);
+        Assert.assertTrue(multiplyRsp.getHeader().getResponseCode() == HttpResponseStatus.OK);
+        Assert.assertTrue(multiplyRsp.getBody() == 100);
+
+        
         Optional<ServiceRegistry.MethodContext> opt9 = registry.getMethodContext(new Request.RequestHeader(null, new Uri("/some_user/devices/listAll"), RequestMethod.GET));
         Assert.assertTrue(opt9.isPresent());
 

@@ -21,6 +21,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -53,6 +55,7 @@ import org.thingsplode.synapse.core.exceptions.MissingParameterException;
 import org.thingsplode.synapse.core.exceptions.SerializationException;
 import org.thingsplode.synapse.endpoint.serializers.SerializationService;
 import org.thingsplode.synapse.util.Util;
+import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl;
 
 /**
  *
@@ -98,8 +101,29 @@ public class ServiceRegistry {
         Object requestBodyObject = null;
         if ((requestBody instanceof String) && !Util.isEmpty((String) requestBody)) {
             Optional<MethodParam> mpo = mcOpt.get().getMethodParamForRequestBody();
+            boolean wrapBodyInARequest = false;
             if (mpo.isPresent()) {
-                requestBodyObject = serializationService.getPreferredSerializer(null).unMarshall(mpo.get().parameter.getType(), (String) requestBody);
+                MethodParam mp = mpo.get();
+                //if endpoint marker is used, we expect a paramter wrapper
+                Class clazz = mp.source == MethodParam.ParameterSource.PARAMETER_WRAPPER ? ParameterWrapper.class : mp.parameter.getType();
+                if (AbstractMessage.class.isAssignableFrom(clazz)) {
+                    //if the parameter is a Request object (eg. Request<Tuple<Integer, Integer>> req), we need to construct it
+                    wrapBodyInARequest = true;
+                    if (mp.parameter.getParameterizedType() instanceof ParameterizedType) {
+                        Type t = (((ParameterizedType) mp.parameter.getParameterizedType()).getActualTypeArguments()[0]);
+                        if (t instanceof ParameterizedType) {
+                            //the parameter is something like: Request<Tuple<Integer, Integer>> req
+                            clazz = (Class<?>) ((ParameterizedType) t).getRawType();
+                        } else if (t instanceof Class) {
+                            //the parameter is something like: Request<Address> req
+                            clazz = (Class<?>) t;
+                        }
+                    }
+                }
+                requestBodyObject = serializationService.getPreferredSerializer(null).unMarshall(clazz, (String) requestBody);
+                if (wrapBodyInARequest) {
+                    requestBodyObject = new Request(header, (Serializable) requestBodyObject);
+                }
             }
         }
         return invoke(header, mcOpt.get(), requestBodyObject);
