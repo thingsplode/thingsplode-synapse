@@ -94,7 +94,8 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
                     header = new Request.RequestHeader(msgId, new Uri(httpRequest.uri()), Request.RequestHeader.RequestMethod.fromHttpMethod(httpRequest.method()));
                     header.addAllRequestProperties(httpRequest.headers());
                 } catch (UnsupportedEncodingException ex) {
-                    //return new Response(new Response.ResponseHeader(UUID.randomUUID().toString(), msgId, HttpResponseStatus.BAD_REQUEST));
+                    logger.error(ex.getMessage(), ex);
+                    HttpResponseHandler.sendError(ctx, HttpResponseStatus.BAD_REQUEST, ex.getClass().getSimpleName() + ": " + ex.getMessage());
                 }
                 Response response = handleREST(ctx, header, httpRequest.content());
                 //https://github.com/RestExpress/RestExpress/blob/master/core/src/test/java/org/restexpress/contenttype/MediaTypeParserTest.java

@@ -30,6 +30,7 @@ import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.http.HttpUtil;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.handler.ssl.SslHandler;
@@ -148,11 +149,11 @@ public class HttpFileHandler extends SimpleChannelInboundHandler<FileRequest> {
       long fileLength = raf.length();
 
       HttpResponse response = new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
-      HttpHeaders.setContentLength(response, fileLength);
+      HttpUtil.setContentLength(response, fileLength);
       setContentTypeHeader(response, file);
       setDateAndCacheHeaders(response, file);
       if (isKeepAlive(req.getHeader())) {
-         response.headers().set(HttpHeaders.Names.CONNECTION, HttpHeaders.Values.KEEP_ALIVE);
+         response.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderNames.CONNECTION);
       }
       // Write the initial line and the header.
       ctx.write(response);
@@ -209,7 +210,7 @@ public class HttpFileHandler extends SimpleChannelInboundHandler<FileRequest> {
         dateFormatter.setTimeZone(TimeZone.getTimeZone(HTTP_DATE_GMT_TIMEZONE));
 
         Calendar time = new GregorianCalendar();
-        response.headers().set(HttpHeaders.Names.DATE, dateFormatter.format(time.getTime()));
+        response.headers().set(HttpHeaderNames.DATE, dateFormatter.format(time.getTime()));
     }
 
     /**
@@ -219,7 +220,7 @@ public class HttpFileHandler extends SimpleChannelInboundHandler<FileRequest> {
      * @param file file to extract content type
      */
     public void setContentTypeHeader(HttpResponse response, File file) {
-        response.headers().set(HttpHeaders.Names.CONTENT_TYPE, MIME_TYPES_MAP.getContentType(file.getPath()));
+        response.headers().set(HttpHeaderNames.CONTENT_TYPE, MIME_TYPES_MAP.getContentType(file.getPath()));
     }
 
     /**
@@ -234,14 +235,14 @@ public class HttpFileHandler extends SimpleChannelInboundHandler<FileRequest> {
 
         // Date header
         Calendar time = new GregorianCalendar();
-        response.headers().set(HttpHeaders.Names.DATE, dateFormatter.format(time.getTime()));
+        response.headers().set(HttpHeaderNames.DATE, dateFormatter.format(time.getTime()));
 
         // Add cache headers
         time.add(Calendar.SECOND, HTTP_CACHE_SECONDS);
-        response.headers().set(HttpHeaders.Names.EXPIRES, dateFormatter.format(time.getTime()));
-        response.headers().set(HttpHeaders.Names.CACHE_CONTROL, "private, max-age=" + HTTP_CACHE_SECONDS);
+        response.headers().set(HttpHeaderNames.EXPIRES, dateFormatter.format(time.getTime()));
+        response.headers().set(HttpHeaderNames.CACHE_CONTROL, "private, max-age=" + HTTP_CACHE_SECONDS);
         response.headers().set(
-                HttpHeaders.Names.LAST_MODIFIED, dateFormatter.format(new Date(fileToCache.lastModified())));
+                HttpHeaderNames.LAST_MODIFIED, dateFormatter.format(new Date(fileToCache.lastModified())));
     }
 
     private Optional<File> getSanitizedPath(String uri) {

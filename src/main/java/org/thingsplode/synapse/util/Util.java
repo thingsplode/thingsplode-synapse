@@ -31,6 +31,12 @@ public class Util {
         return string == null || string.length() == 0;
     }
 
+    /**
+     *
+     * @param regexp
+     * @param stringArray
+     * @return
+     */
     public static boolean containsAnyOfStrings(String regexp, String[] stringArray) {
         Optional<String> result = Arrays.asList(stringArray).stream().filter(s -> {
             Pattern p = Pattern.compile(regexp);
@@ -39,6 +45,12 @@ public class Util {
         return result.isPresent();
     }
     
+    /**
+     *
+     * @param regexp
+     * @param stringArray
+     * @return
+     */
     public static boolean containsAll (String regexp, String[] stringArray) {
         long matched = Arrays.asList(stringArray).stream().filter(s -> {
             Pattern p = Pattern.compile(regexp);
@@ -47,6 +59,12 @@ public class Util {
         return stringArray.length == matched;
     }
     
+    /**
+     *
+     * @param regexPattern
+     * @param stringArray
+     * @return
+     */
     public static boolean containsAll (Pattern regexPattern, String[] stringArray) {
         long matched = Arrays.asList(stringArray).stream().filter(s -> {
             return regexPattern.matcher(s).find();
@@ -54,6 +72,11 @@ public class Util {
         return stringArray.length == matched;
     }
     
+    /**
+     *
+     * @param checkableUrl
+     * @return
+     */
     public boolean isAcceptedFileExtension(String checkableUrl){
         return false;
     }

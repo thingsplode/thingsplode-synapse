@@ -16,6 +16,8 @@
 package org.thingsplode.synapse.endpoint;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.util.internal.logging.InternalLogger;
+import io.netty.util.internal.logging.InternalLoggerFactory;
 import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -44,6 +46,7 @@ import org.thingsplode.synapse.core.annotations.RequestMapping;
 import org.thingsplode.synapse.core.annotations.RequestParam;
 import org.thingsplode.synapse.core.annotations.Service;
 import org.thingsplode.synapse.core.domain.AbstractMessage;
+import org.thingsplode.synapse.core.domain.Event;
 import org.thingsplode.synapse.core.domain.MediaType;
 import org.thingsplode.synapse.core.domain.ParameterWrapper;
 import org.thingsplode.synapse.core.domain.Request;
@@ -54,8 +57,8 @@ import org.thingsplode.synapse.core.exceptions.MethodNotFoundException;
 import org.thingsplode.synapse.core.exceptions.MissingParameterException;
 import org.thingsplode.synapse.core.exceptions.SerializationException;
 import org.thingsplode.synapse.endpoint.serializers.SerializationService;
+import org.thingsplode.synapse.util.Reflector;
 import org.thingsplode.synapse.util.Util;
-import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl;
 
 /**
  *
@@ -66,6 +69,7 @@ public class ServiceRegistry {
     private Routes routes;
     private Pattern urlParamPattern = Pattern.compile("\\{(.*?)\\}", Pattern.CASE_INSENSITIVE);
     private SerializationService serializationService = new SerializationService();
+    private static final InternalLogger logger = InternalLoggerFactory.getInstance(ServiceRegistry.class);
 
     public ServiceRegistry() {
         routes = new Routes();
@@ -77,6 +81,10 @@ public class ServiceRegistry {
 
     public Set<String> getAllSupportedPaths() {
         return routes.paths;
+    }
+
+    private enum WrapFlag {
+        NONE, REQUEST, EVENT
     }
 
     /**
@@ -101,14 +109,17 @@ public class ServiceRegistry {
         Object requestBodyObject = null;
         if ((requestBody instanceof String) && !Util.isEmpty((String) requestBody)) {
             Optional<MethodParam> mpo = mcOpt.get().getMethodParamForRequestBody();
-            boolean wrapBodyInARequest = false;
+            WrapFlag wrapBodyFlag = WrapFlag.NONE;
             if (mpo.isPresent()) {
                 MethodParam mp = mpo.get();
-                //if endpoint marker is used, we expect a paramter wrapper
+                //if endpoint marker is used, we expect a parameter wrapper
                 Class clazz = mp.source == MethodParam.ParameterSource.PARAMETER_WRAPPER ? ParameterWrapper.class : mp.parameter.getType();
-                if (AbstractMessage.class.isAssignableFrom(clazz)) {
+                if (mcOpt.get().serviceInstance instanceof AbstractEventSink) {
+                    wrapBodyFlag = WrapFlag.EVENT;
+                    clazz = ((AbstractEventSink) mcOpt.get().serviceInstance).getClazz();
+                } else if (Request.class.isAssignableFrom(clazz)) {
                     //if the parameter is a Request object (eg. Request<Tuple<Integer, Integer>> req), we need to construct it
-                    wrapBodyInARequest = true;
+                    wrapBodyFlag = WrapFlag.REQUEST;
                     if (mp.parameter.getParameterizedType() instanceof ParameterizedType) {
                         Type t = (((ParameterizedType) mp.parameter.getParameterizedType()).getActualTypeArguments()[0]);
                         if (t instanceof ParameterizedType) {
@@ -120,9 +131,12 @@ public class ServiceRegistry {
                         }
                     }
                 }
+
                 requestBodyObject = serializationService.getPreferredSerializer(null).unMarshall(clazz, (String) requestBody);
-                if (wrapBodyInARequest) {
+                if (wrapBodyFlag == WrapFlag.REQUEST) {
                     requestBodyObject = new Request(header, (Serializable) requestBodyObject);
+                } else if (wrapBodyFlag == WrapFlag.EVENT) {
+                    requestBodyObject = new Event(header, (Serializable) requestBodyObject);
                 }
             }
         }
@@ -202,18 +216,18 @@ public class ServiceRegistry {
         return Optional.of(mc);
     }
 
-    public void register(Object serviceInstance) {
+    public void register(String path, Object serviceInstance) {
         //todo: make validation to expose Request Mapping or Path Varibale types where conversion from String to method parameter type is possible
         Class<?> srvClass = serviceInstance.getClass();
         String rootContext;
-        List<Class> markedInterfaces = getMarkedInterfaces(srvClass.getInterfaces());
+        List<Class> markedInterfaces = Reflector.filterInterfaces(Reflector.extractInterfaces(srvClass), SynapseEndpointServiceMarker.class);                
         Set<Method> methods = new HashSet<>();
         if (!srvClass.isAnnotationPresent(Service.class)) {
             if ((markedInterfaces == null || markedInterfaces.isEmpty())) {
-                throw new IllegalArgumentException("The service instance must be annotated with: " + Service.class.getSimpleName() + "or the " + SynapseEndpointServiceMarker.class.getSimpleName() + " marker interface must be used.");
+                throw new IllegalArgumentException("The service instance must be annotated with: " + Service.class.getSimpleName() + " or the " + SynapseEndpointServiceMarker.class.getSimpleName() + " marker interface must be used.");
             }
             //Marked with marker interface
-            rootContext = "/" + srvClass.getCanonicalName().replaceAll("\\.", "/");
+            rootContext = Util.isEmpty(path) ? "/" + srvClass.getCanonicalName().replaceAll("\\.", "/") : path;
             markedInterfaces.forEach(i -> {
                 methods.addAll(Arrays.asList(i.getMethods()));
             });
@@ -223,7 +237,7 @@ public class ServiceRegistry {
                     .collect(Collectors.toList()));
         } else {
             //Annotated with @Service
-            rootContext = srvClass.getAnnotation(Service.class).value();
+            rootContext = Util.isEmpty(path) ? srvClass.getAnnotation(Service.class).value() : path;
             methods.addAll(Arrays.asList(srvClass.getMethods()).stream()
                     .filter(m -> {
                         return m.isAnnotationPresent(RequestMapping.class) || containsMessageClass(m.getParameterTypes()) || AbstractMessage.class.isAssignableFrom(m.getReturnType());
@@ -237,7 +251,7 @@ public class ServiceRegistry {
         if (Util.isEmpty(rootContext)) {
             rootContext = "/";
         }
-
+        logger.debug("Registering [" + serviceInstance.getClass().getSimpleName() + "] at: " + rootContext);
         populateMethods(rootContext, serviceInstance, methods);
     }
 
@@ -286,6 +300,9 @@ public class ServiceRegistry {
                     } else {
                         mp = new MethodParam(p, MethodParam.ParameterSource.QUERY_PARAM, p.getName());
                     }
+                } else if (p.isAnnotationPresent(RequestBody.class)) {
+                    mp = new MethodParam(p, MethodParam.ParameterSource.BODY, p.getName());
+                    required = p.getAnnotation(RequestBody.class).required();
                 } else {
                     mp = new MethodParam<>(p, MethodParam.ParameterSource.PARAMETER_WRAPPER, p.getName());
                 }
@@ -302,12 +319,7 @@ public class ServiceRegistry {
         return result.isPresent();
     }
 
-    private List<Class> getMarkedInterfaces(Class<?>[] ifaces) {
-        if (ifaces == null || ifaces.length == 0) {
-            return null;
-        }
-        return Arrays.asList(ifaces).stream().filter(i -> SynapseEndpointServiceMarker.class.isAssignableFrom(i)).collect(Collectors.toList());
-    }
+
 
     private Object generateValueFromString(Class type, String sValue) {
         if (sValue == null || Util.isEmpty(sValue)) {

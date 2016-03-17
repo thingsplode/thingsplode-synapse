@@ -24,9 +24,12 @@ import org.apache.log4j.BasicConfigurator;
 import org.junit.Rule;
 import org.junit.rules.ExternalResource;
 import org.thingsplode.synapse.endpoint.Endpoint;
-import org.thingsplode.synapse.endpoint.Endpoint.Connections;
+import org.thingsplode.synapse.endpoint.Endpoint.ConnectionProvider;
 import com.acme.synapse.testdata.services.RpcEndpointImpl;
+import com.acme.synapse.testdata.services.core.Address;
 import java.io.FileNotFoundException;
+import org.thingsplode.synapse.core.domain.Event;
+import org.thingsplode.synapse.endpoint.AbstractEventSink;
 
 /**
  *
@@ -47,9 +50,9 @@ public abstract class AbstractTest {
             @Override
             protected void before() throws InterruptedException, FileNotFoundException {
                 System.out.println("\n\n BEFORE METHOD CALLED\n\n");
-                Connections c;
+                ConnectionProvider c;
                 BasicConfigurator.configure();
-                this.ep = Endpoint.create("test", new Connections(new InetSocketAddress("0.0.0.0", 8080)))
+                this.ep = Endpoint.create("test", new ConnectionProvider(new InetSocketAddress("0.0.0.0", 8080)))
                         .logLevel(LogLevel.TRACE)
                         .protocol(Endpoint.Protocol.JSON)
                         .transportType(Endpoint.TransportType.HTTP_REST)
@@ -57,7 +60,13 @@ public abstract class AbstractTest {
                         .publish(new RpcEndpointImpl())
                         .publish(new EndpointTesterService())
                         .publish(new CrudTestEndpointService())
-                        .publish(new DummyMarkedEndpoint());
+                        .publish(new DummyMarkedEndpoint())
+                        .publish("/default/", new AbstractEventSink<Address>(Address.class) {
+                            @Override
+                            protected void eventReceived(Event<Address> event) {
+                                System.out.println("Event Received: " + event.getBody());
+                            }
+                        });
                 this.ep.start();
             }
 

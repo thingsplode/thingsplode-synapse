@@ -13,22 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsplode.synapse.core.domain;
+package org.thingsplode.synapse.endpoint;
 
 import java.io.Serializable;
+import org.thingsplode.synapse.core.SynapseEndpointServiceMarker;
+import org.thingsplode.synapse.core.annotations.RequestBody;
+import org.thingsplode.synapse.core.domain.Event;
 
 /**
  *
  * @author tamas.csaba@gmail.com
  * @param <T>
  */
-public class Event<T extends Serializable> extends Request<T> {
-
-    public Event(RequestHeader header) {
-        super(header);
-    }
-
-    public Event(RequestHeader header, T body) {
-        super(header, body);
-    }
+public interface EventSink<T extends Serializable> extends SynapseEndpointServiceMarker {
+    public void consume(@RequestBody Event<T> event);
 }

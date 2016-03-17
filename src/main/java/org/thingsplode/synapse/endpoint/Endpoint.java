@@ -56,8 +56,7 @@ import org.thingsplode.synapse.util.NetworkUtil;
 
 /**
  *
- * @author tamas.csaba@gmail.com
- * //todo: add basic authorization
+ * @author tamas.csaba@gmail.com //todo: add basic authorization
  */
 public class Endpoint {
 
@@ -71,7 +70,7 @@ public class Endpoint {
     private EventLoopGroup workerGroup = null;//the event loop group used for the connected clients
     private final ChannelGroup channelRegistry = new DefaultChannelGroup(ALL_CHANNEL_GROUP_NAME, GlobalEventExecutor.INSTANCE);//all active channels are listed here
     private String endpointId;
-    private Connections connections;
+    private ConnectionProvider connections;
     private LogLevel logLevel;
     private final ServerBootstrap bootstrap = new ServerBootstrap();
     private TransportType transportType = TransportType.DOMAIN_SOCKET;
@@ -89,7 +88,7 @@ public class Endpoint {
     private Endpoint() {
     }
 
-    private Endpoint(String id, Connections connections) {
+    private Endpoint(String id, ConnectionProvider connections) {
         this.endpointId = id;
         this.connections = connections;
     }
@@ -101,7 +100,7 @@ public class Endpoint {
      * @return
      * @throws java.lang.InterruptedException
      */
-    public static Endpoint create(String endpointId, Connections connections) throws InterruptedException {
+    public static Endpoint create(String endpointId, ConnectionProvider connections) throws InterruptedException {
         Endpoint ep = new Endpoint(endpointId, connections);
         return ep;
     }
@@ -121,11 +120,11 @@ public class Endpoint {
                                 p.addLast(HTTP_ENCODER, new HttpResponseEncoder());
                                 p.addLast(HTTP_DECODER, new HttpRequestDecoder());
                                 p.addLast("aggregator", new HttpObjectAggregator(65536));
-                                p.addLast("http_request_handler", new HttpRequestHandler(endpointId, serviceRegistry));
-                                p.addLast("http_response_handler", new HttpResponseHandler());
+                                p.addLast(evtExecutorGroup, "http_request_handler", new HttpRequestHandler(endpointId, serviceRegistry));
                                 if (fileHandler != null) {
-                                    p.addLast("http_file_handler", fileHandler);
+                                    p.addLast(evtExecutorGroup, "http_file_handler", fileHandler);
                                 }
+                                p.addLast("http_response_handler", new HttpResponseHandler());
                                 p.addLast(evtExecutorGroup, "handler", new RequestHandler());
                             }
                         });
@@ -207,11 +206,16 @@ public class Endpoint {
         }
     }
 
-    public Endpoint publish(Object serviceInstance) {
+    public Endpoint publish(String path, Object serviceInstance) {
         //        if (lifecycle == Lifecycle.UNITIALIZED){
         //            throw new IllegalStateException();
         //        }
-        serviceRegistry.register(serviceInstance);
+        serviceRegistry.register(path, serviceInstance);
+        return this;
+    }
+
+    public Endpoint publish(Object serviceInstance) {
+        this.publish(null, serviceInstance);
         return this;
     }
 
@@ -239,11 +243,11 @@ public class Endpoint {
         DOMAIN_SOCKET;
     }
 
-    public static class Connections {
+    public static class ConnectionProvider {
 
         private final Set<SocketAddress> socketAddresses;
 
-        public Connections(int port, String... interfaceNames) {
+        public ConnectionProvider(int port, String... interfaceNames) {
             this.socketAddresses = new HashSet<>();
             for (String iface : interfaceNames) {
                 InetAddress inetAddress;
@@ -261,7 +265,7 @@ public class Endpoint {
             }
         }
 
-        public Connections(SocketAddress... addresses) {
+        public ConnectionProvider(SocketAddress... addresses) {
             if (addresses == null) {
                 throw new RuntimeException("Please specify some socket addresses.");
             }

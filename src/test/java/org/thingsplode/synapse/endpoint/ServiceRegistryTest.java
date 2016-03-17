@@ -69,10 +69,10 @@ public class ServiceRegistryTest {
     @Before
     public void setUp() {
         if (!inited) {
-            registry.register(new RpcEndpointImpl());
-            registry.register(new DummyMarkedEndpoint());
-            registry.register(new EndpointTesterService());
-            registry.register(new CrudTestEndpointService());
+            registry.register(null, new RpcEndpointImpl());
+            registry.register(null, new DummyMarkedEndpoint());
+            registry.register(null, new EndpointTesterService());
+            registry.register(null, new CrudTestEndpointService());
             inited = true;
         }
     }

@@ -13,22 +13,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsplode.synapse.core.domain;
+package org.thingsplode.synapse.endpoint;
 
 import java.io.Serializable;
+import org.thingsplode.synapse.core.annotations.RequestBody;
+import org.thingsplode.synapse.core.domain.Event;
 
 /**
  *
  * @author tamas.csaba@gmail.com
  * @param <T>
  */
-public class Event<T extends Serializable> extends Request<T> {
+//todo: build common event handling logic
+public abstract class AbstractEventSink<T extends Serializable> implements EventSink<T> {
 
-    public Event(RequestHeader header) {
-        super(header);
+    private final Class<T> clazz;
+
+    public AbstractEventSink(Class<T> clazz) {
+        this.clazz = clazz;
     }
 
-    public Event(RequestHeader header, T body) {
-        super(header, body);
+    public Class<T> getClazz() {
+        return clazz;
     }
+
+    @Override
+    public void consume(@RequestBody Event<T> event) {
+        eventReceived(event);
+    }
+
+    protected abstract void eventReceived(Event<T> event);
+
 }

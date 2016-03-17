@@ -22,15 +22,14 @@ import org.thingsplode.synapse.endpoint.serializers.SynapseSerializer;
  *
  * @author tamas.csaba@gmail.com
  */
-public class GsonSerializerTest extends AbstractParserTest {
+//public class GsonSerializerTest extends AbstractParserTest {
+public class GsonSerializerTest {
 
     private final GsonSerializer serializer = new GsonSerializer(true, null, null);
 
-    @Override
+    //@Override
     public SynapseSerializer<String> getSerializer() {
         return serializer;
     }
-
-
 
 }
