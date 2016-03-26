@@ -229,7 +229,7 @@ public class SynapseReader extends Reader {
                 }
 
                 final RequestMapping requestMappingAnnotation = isServiceAnnotated ? ReflectionUtils.getAnnotation(method, RequestMapping.class) : null;
-                final List<String> operationPaths = isServiceAnnotated ? getPaths(serviceAnnotation, requestMappingAnnotation, parentPath) : isMarkedService ? getPaths(method) : null;
+                final List<String> operationPaths = isServiceAnnotated ? getPaths(serviceAnnotation, method, parentPath) : isMarkedService ? getPaths(method) : null;
 
                 Map<String, String> regexMap = new HashMap<>();
 
@@ -243,110 +243,102 @@ public class SynapseReader extends Reader {
                         .forEach(op -> {
                             final ApiOperation apiOperation = ReflectionUtils.getAnnotation(method, ApiOperation.class);
                             List<String> httpMethods = extractOperationMethods(apiOperation, method, SwaggerExtensions.chain());
-
-                            Operation operation = null;
-                            if (apiOperation != null
-                                    || getConfig().isScanAllResources()
-                                    || (httpMethods != null && !httpMethods.isEmpty())
-                                    || requestMappingAnnotation != null
-                                    || isMarkedService) {
-                                operation = parseMethod(cls, method, globalParameters);
-                            }
-                            if (operation != null) {
-
-                                if (parentParameters != null && !parentParameters.isEmpty()) {
-                                    //add parent parameters to this Operation
-                                    for (Parameter param : parentParameters) {
-                                        operation.parameter(param);
+                            List<Operation> operations = new ArrayList<>();
+                            if (httpMethods != null && !httpMethods.isEmpty()) {
+                                httpMethods.forEach(hm -> {
+                                    Operation operation = null;
+                                    if (apiOperation != null
+                                            || getConfig().isScanAllResources()
+                                            || (hm != null)
+                                            || requestMappingAnnotation != null
+                                            || isMarkedService) {
+                                        operation = parseMethod(cls, method, globalParameters);
                                     }
-                                }
-                                prepareOperation(operation, apiOperation, regexMap, globalSchemes);
+                                    if (operation != null) {
 
-                                Set<String> apiConsumes = new HashSet<>(consumes);
-                                if (parentConsumes != null) {
-                                    apiConsumes.addAll(parentConsumes);
-                                    if (operation.getConsumes() != null) {
-                                        apiConsumes.addAll(operation.getConsumes());
-                                    }
-                                }
+                                        if (parentParameters != null && !parentParameters.isEmpty()) {
+                                            //add parent parameters to this Operation
+                                            for (Parameter param : parentParameters) {
+                                                operation.parameter(param);
+                                            }
+                                        }
+                                        prepareOperation(operation, apiOperation, regexMap, globalSchemes);
 
-                                Set<String> apiProduces = new HashSet<>(produces);
-                                if (parentProduces != null) {
-                                    apiProduces.addAll(parentProduces);
-                                    if (operation.getProduces() != null) {
-                                        apiProduces.addAll(operation.getProduces());
-                                    }
-                                }
+                                        Set<String> apiConsumes = new HashSet<>(consumes);
+                                        if (parentConsumes != null) {
+                                            apiConsumes.addAll(parentConsumes);
+                                            if (operation.getConsumes() != null) {
+                                                apiConsumes.addAll(operation.getConsumes());
+                                            }
+                                        }
 
-                                final Class<?> subResource = getSubResourceWithJaxRsSubresourceLocatorSpecs(method);
-                                if (subResource != null && !scannedResources.contains(subResource)) {
-                                    scannedResources.add(subResource);
-                                    if (httpMethods != null && !httpMethods.isEmpty()) {
-                                        for (String hm : httpMethods) {
+                                        Set<String> apiProduces = new HashSet<>(produces);
+                                        if (parentProduces != null) {
+                                            apiProduces.addAll(parentProduces);
+                                            if (operation.getProduces() != null) {
+                                                apiProduces.addAll(operation.getProduces());
+                                            }
+                                        }
+
+                                        final Class<?> subResource = getSubResourceWithJaxRsSubresourceLocatorSpecs(method);
+                                        if (subResource != null && !scannedResources.contains(subResource)) {
+                                            scannedResources.add(subResource);
                                             read(subResource, op, hm, true, apiConsumes, apiProduces, tags, operation.getParameters(), scannedResources);
+
+                                            // remove the sub resource so that it can visit it later in another path
+                                            // but we have a room for optimization in the future to reuse the scanned result
+                                            // by caching the scanned resources in the reader instance to avoid actual scanning
+                                            // the the resources again
+                                            scannedResources.remove(subResource);
                                         }
-                                    } else {
-                                        read(subResource, op, "get", true, apiConsumes, apiProduces, tags, operation.getParameters(), scannedResources);
-                                    }
 
-                                    // remove the sub resource so that it can visit it later in another path
-                                    // but we have a room for optimization in the future to reuse the scanned result
-                                    // by caching the scanned resources in the reader instance to avoid actual scanning
-                                    // the the resources again
-                                    scannedResources.remove(subResource);
-                                }
+                                        if (apiOperation != null) {
+                                            boolean hasExplicitTag = false;
+                                            for (String tag : apiOperation.tags()) {
+                                                if (!"".equals(tag)) {
+                                                    operation.tag(tag);
+                                                    getSwagger().tag(new Tag().name(tag));
+                                                }
+                                            }
 
-                                // can't continue without a valid http method
-                                if (httpMethods == null || httpMethods.isEmpty()) {
-                                    ArrayList<String> hms = new ArrayList<>();
-                                    hms.add(parentMethod != null ? parentMethod : "get");
-                                    httpMethods = hms;
-                                }
-
-                                if (apiOperation != null) {
-                                    boolean hasExplicitTag = false;
-                                    for (String tag : apiOperation.tags()) {
-                                        if (!"".equals(tag)) {
-                                            operation.tag(tag);
-                                            getSwagger().tag(new Tag().name(tag));
+                                            operation.getVendorExtensions().putAll(BaseReaderUtils.parseExtensions(apiOperation.extensions()));
                                         }
-                                    }
 
-                                    operation.getVendorExtensions().putAll(BaseReaderUtils.parseExtensions(apiOperation.extensions()));
-                                }
+                                        if (operation.getConsumes() == null) {
+                                            for (String mediaType : apiConsumes) {
+                                                operation.consumes(mediaType);
+                                            }
+                                        }
+                                        if (operation.getProduces() == null) {
+                                            for (String mediaType : apiProduces) {
+                                                operation.produces(mediaType);
+                                            }
+                                        }
 
-                                if (operation.getConsumes() == null) {
-                                    for (String mediaType : apiConsumes) {
-                                        operation.consumes(mediaType);
-                                    }
-                                }
-                                if (operation.getProduces() == null) {
-                                    for (String mediaType : apiProduces) {
-                                        operation.produces(mediaType);
-                                    }
-                                }
+                                        if (operation.getTags() == null) {
+                                            for (String tagString : tags.keySet()) {
+                                                operation.tag(tagString);
+                                            }
+                                        }
+                                        // Only add global @Api securities if operation doesn't already have more specific securities
+                                        if (operation.getSecurity() == null) {
+                                            for (SecurityRequirement security : securities) {
+                                                operation.security(security);
+                                            }
+                                        }
 
-                                if (operation.getTags() == null) {
-                                    for (String tagString : tags.keySet()) {
-                                        operation.tag(tagString);
-                                    }
-                                }
-                                // Only add global @Api securities if operation doesn't already have more specific securities
-                                if (operation.getSecurity() == null) {
-                                    for (SecurityRequirement security : securities) {
-                                        operation.security(security);
-                                    }
-                                }
+                                        Path path = getSwagger().getPath(op);
+                                        if (path == null) {
+                                            path = new Path();
+                                            getSwagger().path(op, path);
+                                        }
+                                        path.set(hm, operation);
 
-                                Path path = getSwagger().getPath(op);
-                                if (path == null) {
-                                    path = new Path();
-                                    getSwagger().path(op, path);
-                                }
-                                path.set(httpMethods.get(0), operation);
-
-                                readImplicitParameters(method, operation);
+                                        readImplicitParameters(method, operation);
+                                    }
+                                });
                             }
+
                         });
             }
         }
@@ -648,9 +640,9 @@ public class SynapseReader extends Reader {
         }
     }
 
-    List<String> getPaths(Service serviceAnnotation, RequestMapping requestMapping, String parentPath) {
+    List<String> getPaths(Service serviceAnnotation, Method method, String parentPath) {
         final List<String> pathList = new ArrayList<>();
-
+        RequestMapping requestMapping = method.getAnnotation(RequestMapping.class);
         if (serviceAnnotation == null && requestMapping == null && StringUtils.isEmpty(parentPath)) {
             //if not a service, request mapping annotation and the parent path is also empty
             return pathList;
@@ -684,6 +676,8 @@ public class SynapseReader extends Reader {
                     pathList.add(fullPath + methodPath);
                 }
             });
+        } else if (method.getDeclaringClass().getAnnotation(Service.class) != null) {
+            pathList.add(b.append("/").append(method.getName()).toString());
         }
 
         return pathList.stream()
@@ -703,12 +697,15 @@ public class SynapseReader extends Reader {
                 l.add("get");
             }
             return l;
-        } else if (SynapseEndpointServiceMarker.class.isAssignableFrom(method.getDeclaringClass())) {
-            if (method.getReturnType().equals(Void.TYPE)) {
-                a.add("post");
-            } else {
-                a.add("get");
-            }
+        } else if (SynapseEndpointServiceMarker.class.isAssignableFrom(method.getDeclaringClass())
+                || method.getDeclaringClass().getAnnotation(Service.class) != null) {
+            a.add("get");
+            //todo: enable this when the service registry will support this differentiation
+            //if (method.getReturnType().equals(Void.TYPE)) {
+            //    a.add("post");
+            //} else {
+            //    a.add("get");
+            //}
             return a;
         } else if ((ReflectionUtils.getOverriddenMethod(method)) != null) {
             return extractOperationMethods(apiOperation, ReflectionUtils.getOverriddenMethod(method), chain);
@@ -721,23 +718,21 @@ public class SynapseReader extends Reader {
     }
 
     private void prepareOperation(Operation operation, ApiOperation apiOperation, Map<String, String> regexMap, Set<Scheme> globalSchemes) {
-        for (Parameter param : operation.getParameters()) {
-            if (regexMap.get(param.getName()) != null) {
-                String pattern = regexMap.get(param.getName());
-                param.setPattern(pattern);
-            }
-        }
+        operation.getParameters().stream().filter((param) -> (regexMap.get(param.getName()) != null)).forEach((param) -> {
+            String pattern = regexMap.get(param.getName());
+            param.setPattern(pattern);
+        });
 
         if (apiOperation != null) {
-            for (Scheme scheme : parseSchemes(apiOperation.protocols())) {
+            parseSchemes(apiOperation.protocols()).stream().forEach((scheme) -> {
                 operation.scheme(scheme);
-            }
+            });
         }
 
         if (operation.getSchemes() == null || operation.getSchemes().isEmpty()) {
-            for (Scheme scheme : globalSchemes) {
+            globalSchemes.stream().forEach((scheme) -> {
                 operation.scheme(scheme);
-            }
+            });
         }
     }
 }
