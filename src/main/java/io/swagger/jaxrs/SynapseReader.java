@@ -491,54 +491,19 @@ public class SynapseReader extends Reader {
         }
 
         // process parameters
+        //=====================
         globalParameters.stream().forEach((globalParameter) -> {
             operation.parameter(globalParameter);
         });
 
-        Type[] genericParameterTypes = method.getGenericParameterTypes();
-        Annotation[][] paramAnnotations = method.getParameterAnnotations();
-        for (int i = 0; i < genericParameterTypes.length; i++) {
-            final Type type = TypeFactory.defaultInstance().constructType(genericParameterTypes[i], cls);
-            getParameters(type, Arrays.asList(paramAnnotations[i])).stream().forEach((parameter) -> {
-                operation.parameter(parameter);
-            });
-        }
+        ParameterExtractor.getParameters(getSwagger(), cls, method).forEach(p -> operation.parameter(p));
+        
 
         if (operation.getResponses() == null) {
             Response response = new Response().description(SUCCESSFUL_OPERATION);
             operation.defaultResponse(response);
         }
         return operation;
-    }
-
-    private List<Parameter> getParameters(Type type, List<Annotation> annotations) {
-        final Iterator<SwaggerExtension> chain = SwaggerExtensions.chain();
-        if (!chain.hasNext()) {
-            return Collections.emptyList();
-        }
-        logger.debug("getParameters for " + type);
-        Set<Type> typesToSkip = new HashSet<>();
-        final SwaggerExtension extension = chain.next();
-        logger.debug("trying extension " + extension);
-
-        final List<Parameter> parameters = extension.extractParameters(annotations, type, typesToSkip, chain);
-        if (!parameters.isEmpty()) {
-            final List<Parameter> processed = new ArrayList<>(parameters.size());
-            parameters.stream().filter((parameter) -> (ParameterProcessor.applyAnnotations(getSwagger(), parameter, type, annotations) != null)).forEach((parameter) -> {
-                processed.add(parameter);
-            });
-            return processed;
-        } else {
-            logger.debug("no parameter found, looking at body params");
-            final List<Parameter> body = new ArrayList<>();
-            if (!typesToSkip.contains(type)) {
-                Parameter param = ParameterProcessor.applyAnnotations(getSwagger(), null, type, annotations);
-                if (param != null) {
-                    body.add(param);
-                }
-            }
-            return body;
-        }
     }
 
     private Map<String, Property> parseResponseHeaders(ResponseHeader[] headers) {
