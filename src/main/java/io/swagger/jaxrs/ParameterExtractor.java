@@ -61,15 +61,12 @@ public class ParameterExtractor {
                 type = TypeFactory.defaultInstance().constructType(ParameterWrapper.class, cls);
             } else if (cls.getAnnotation(Service.class) != null) {
                 //an endpoint with @Service annotation
-                if (Request.class.isAssignableFrom(genericParameterTypes[i].getClass())) {
-                    type = TypeFactory.defaultInstance().constructType(((ParameterizedType) genericParameterTypes[i]).getRawType(), cls);
-//                    if (genericParameterTypes[i] instanceof ParameterizedType) {
-//                        //the parameter is something like: Request<Tuple<Integer, Integer>> req
-//                        type = TypeFactory.defaultInstance().constructType(((ParameterizedType) genericParameterTypes[i]).getRawType(), cls);
-//                    } else {
-//                        //the parameter is something like: Request<Address> req
-//                        type = TypeFactory.defaultInstance().constructType(genericParameterTypes[i], cls);
-//                    }
+                if (genericParameterTypes[i] instanceof ParameterizedType 
+                        && Request.class.isAssignableFrom((Class<?>) ((ParameterizedType) genericParameterTypes[i]).getRawType())) {
+                    //if Request or Event Object
+                    type = TypeFactory.defaultInstance().constructType(((ParameterizedType) genericParameterTypes[i]).getActualTypeArguments()[0], cls);
+                } else {
+                    type = TypeFactory.defaultInstance().constructType(genericParameterTypes[i], cls);
                 }
 
             }
@@ -80,7 +77,9 @@ public class ParameterExtractor {
     }
 
     private static void extractParameters(Swagger swagger, List<Parameter> params, Type type, List<Annotation> annotations) {
-
+        if (type == null) {
+            throw new UnsupportedOperationException("The type cannot be null.");
+        }
         boolean annotated = false;
         for (Annotation annotation : annotations) {
             if (annotation instanceof RequestParam) {

@@ -57,7 +57,7 @@ public class GsonSerializer implements SynapseSerializer<String> {
     }
 
     @Override
-    public String marshall(Serializable src) throws SerializationException {
+    public String marshall(Object src) throws SerializationException {
         try {
             //Type type = new TypeToken<Request<Device>>(){}.getType();
             return gson.toJson(src, src.getClass());

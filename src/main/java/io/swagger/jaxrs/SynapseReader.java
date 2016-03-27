@@ -75,8 +75,6 @@ import org.thingsplode.synapse.core.annotations.Service;
  */
 public class SynapseReader extends Reader {
 
-    private static final String PATH_DELIMITER = "/";
-    private static final String SUCCESSFUL_OPERATION = "successful operation";
     private final Logger logger = LoggerFactory.getLogger(SynapseReader.class);
 
     public SynapseReader(Swagger swagger, ReaderConfig readerConfig) {
@@ -239,11 +237,10 @@ public class SynapseReader extends Reader {
 
                 operationPaths.stream()
                         .map(op -> PathUtils.parsePath(op, regexMap))
-                        .filter(op -> op != null && !isIgnored(op))
+                        .filter(op -> op != null && !MethodProcessor.isIgnored(op, getConfig()))
                         .forEach(op -> {
                             final ApiOperation apiOperation = ReflectionUtils.getAnnotation(method, ApiOperation.class);
                             List<String> httpMethods = extractOperationMethods(apiOperation, method, SwaggerExtensions.chain());
-                            List<Operation> operations = new ArrayList<>();
                             if (httpMethods != null && !httpMethods.isEmpty()) {
                                 httpMethods.forEach(hm -> {
                                     Operation operation = null;
@@ -252,7 +249,7 @@ public class SynapseReader extends Reader {
                                             || (hm != null)
                                             || requestMappingAnnotation != null
                                             || isMarkedService) {
-                                        operation = parseMethod(cls, method, globalParameters);
+                                        operation = MethodProcessor.parseMethod(cls, method, globalParameters, getSwagger());
                                     }
                                     if (operation != null) {
 
@@ -346,194 +343,6 @@ public class SynapseReader extends Reader {
         return getSwagger();
     }
 
-    private Operation parseMethod(Class<?> cls, Method method, List<Parameter> globalParameters) {
-        Operation operation = new Operation();
-
-        ApiOperation apiOperationAnnotation = ReflectionUtils.getAnnotation(method, ApiOperation.class);
-        ApiResponses responseAnnotation = ReflectionUtils.getAnnotation(method, ApiResponses.class);
-
-        String operationId = method.getName();
-        String responseContainer = null;
-
-        Type responseType = null;
-        Map<String, Property> defaultResponseHeaders = new HashMap<>();
-
-        if (apiOperationAnnotation != null) {
-            if (apiOperationAnnotation.hidden()) {
-                return null;
-            }
-            if (!"".equals(apiOperationAnnotation.nickname())) {
-                operationId = apiOperationAnnotation.nickname();
-            }
-
-            defaultResponseHeaders = parseResponseHeaders(apiOperationAnnotation.responseHeaders());
-
-            operation
-                    .summary(apiOperationAnnotation.value())
-                    .description(apiOperationAnnotation.notes());
-
-            if (apiOperationAnnotation.response() != null && !isVoid(apiOperationAnnotation.response())) {
-                responseType = apiOperationAnnotation.response();
-            }
-            if (!"".equals(apiOperationAnnotation.responseContainer())) {
-                responseContainer = apiOperationAnnotation.responseContainer();
-            }
-            if (apiOperationAnnotation.authorizations() != null) {
-                List<SecurityRequirement> securities = new ArrayList<>();
-                for (Authorization auth : apiOperationAnnotation.authorizations()) {
-                    if (auth.value() != null && !"".equals(auth.value())) {
-                        SecurityRequirement security = new SecurityRequirement();
-                        security.setName(auth.value());
-                        AuthorizationScope[] scopes = auth.scopes();
-                        for (AuthorizationScope scope : scopes) {
-                            if (scope.scope() != null && !"".equals(scope.scope())) {
-                                security.addScope(scope.scope());
-                            }
-                        }
-                        securities.add(security);
-                    }
-                }
-                if (securities.size() > 0) {
-                    securities.stream().forEach((sec) -> {
-                        operation.security(sec);
-                    });
-                }
-            }
-            if (apiOperationAnnotation.consumes() != null && !apiOperationAnnotation.consumes().isEmpty()) {
-                operation.consumes(apiOperationAnnotation.consumes());
-            }
-            if (apiOperationAnnotation.produces() != null && !apiOperationAnnotation.produces().isEmpty()) {
-                operation.produces(apiOperationAnnotation.produces());
-            }
-        }
-
-        if (apiOperationAnnotation != null && StringUtils.isNotEmpty(apiOperationAnnotation.responseReference())) {
-            Response response = new Response().description(SUCCESSFUL_OPERATION);
-            response.schema(new RefProperty(apiOperationAnnotation.responseReference()));
-            operation.addResponse(String.valueOf(apiOperationAnnotation.code()), response);
-        } else if (responseType == null) {
-            // pick out response from method declaration
-            logger.debug("picking up response class from method " + method);
-            responseType = method.getGenericReturnType();
-        }
-        if (isValidResponse(responseType)) {
-            final Property property = ModelConverters.getInstance().readAsProperty(responseType);
-            if (property != null) {
-                final Property responseProperty = ContainerWrapper.wrapContainer(responseContainer, property);
-                final int responseCode = apiOperationAnnotation == null ? 200 : apiOperationAnnotation.code();
-                operation.response(responseCode, new Response().description(SUCCESSFUL_OPERATION).schema(responseProperty)
-                        .headers(defaultResponseHeaders));
-                appendModels(responseType);
-            }
-        }
-
-        operation.operationId(operationId);
-
-        if (apiOperationAnnotation != null && apiOperationAnnotation.consumes() != null && apiOperationAnnotation.consumes().isEmpty()) {
-            //todo: check what to do with consumers
-//            final Consumes consumes = ReflectionUtils.getAnnotation(method, Consumes.class);
-//            if (consumes != null) {
-//                for (String mediaType : ReaderUtils.splitContentValues(consumes.value())) {
-//                    operation.consumes(mediaType);
-//                }
-//            }
-        }
-
-        if (apiOperationAnnotation != null && apiOperationAnnotation.produces() != null && apiOperationAnnotation.produces().isEmpty()) {
-            //todo: check what to do with produces
-//            final Produces produces = ReflectionUtils.getAnnotation(method, Produces.class);
-//            if (produces != null) {
-//                for (String mediaType : ReaderUtils.splitContentValues(produces.value())) {
-//                    operation.produces(mediaType);
-//                }
-//            }
-        }
-
-        List<ApiResponse> apiResponses = new ArrayList<>();
-        if (responseAnnotation != null) {
-            apiResponses.addAll(Arrays.asList(responseAnnotation.value()));
-        }
-
-        Class<?>[] exceptionTypes = method.getExceptionTypes();
-        for (Class<?> exceptionType : exceptionTypes) {
-            ApiResponses exceptionResponses = ReflectionUtils.getAnnotation(exceptionType, ApiResponses.class);
-            if (exceptionResponses != null) {
-                apiResponses.addAll(Arrays.asList(exceptionResponses.value()));
-            }
-        }
-
-        for (ApiResponse apiResponse : apiResponses) {
-            Map<String, Property> responseHeaders = parseResponseHeaders(apiResponse.responseHeaders());
-
-            Response response = new Response()
-                    .description(apiResponse.message())
-                    .headers(responseHeaders);
-
-            if (apiResponse.code() == 0) {
-                operation.defaultResponse(response);
-            } else {
-                operation.response(apiResponse.code(), response);
-            }
-
-            if (StringUtils.isNotEmpty(apiResponse.reference())) {
-                response.schema(new RefProperty(apiResponse.reference()));
-            } else if (!isVoid(apiResponse.response())) {
-                responseType = apiResponse.response();
-                final Property property = ModelConverters.getInstance().readAsProperty(responseType);
-                if (property != null) {
-                    response.schema(ContainerWrapper.wrapContainer(apiResponse.responseContainer(), property));
-                    appendModels(responseType);
-                }
-            }
-        }
-        if (ReflectionUtils.getAnnotation(method, Deprecated.class) != null) {
-            operation.setDeprecated(true);
-        }
-
-        // process parameters
-        //=====================
-        globalParameters.stream().forEach((globalParameter) -> {
-            operation.parameter(globalParameter);
-        });
-
-        ParameterExtractor.getParameters(getSwagger(), cls, method).forEach(p -> operation.parameter(p));
-        
-
-        if (operation.getResponses() == null) {
-            Response response = new Response().description(SUCCESSFUL_OPERATION);
-            operation.defaultResponse(response);
-        }
-        return operation;
-    }
-
-    private Map<String, Property> parseResponseHeaders(ResponseHeader[] headers) {
-        Map<String, Property> responseHeaders = null;
-        if (headers != null && headers.length > 0) {
-            for (ResponseHeader header : headers) {
-                String name = header.name();
-                if (!"".equals(name)) {
-                    if (responseHeaders == null) {
-                        responseHeaders = new HashMap<>();
-                    }
-                    String description = header.description();
-                    Class<?> cls = header.response();
-
-                    if (!isVoid(cls)) {
-                        final Property property = ModelConverters.getInstance().readAsProperty(cls);
-                        if (property != null) {
-                            Property responseProperty = ContainerWrapper.wrapContainer(header.responseContainer(), property,
-                                    ContainerWrapper.ARRAY, ContainerWrapper.LIST, ContainerWrapper.SET);
-                            responseProperty.setDescription(description);
-                            responseHeaders.put(name, responseProperty);
-                            appendModels(cls);
-                        }
-                    }
-                }
-            }
-        }
-        return responseHeaders;
-    }
-
     private static Set<Scheme> parseSchemes(String schemes) {
         final Set<Scheme> result = EnumSet.noneOf(Scheme.class);
         for (String item : StringUtils.trimToEmpty(schemes).split(",")) {
@@ -555,44 +364,6 @@ public class SynapseReader extends Reader {
                 }
             }
         }
-    }
-
-    private void appendModels(Type type) {
-        final Map<String, Model> models = ModelConverters.getInstance().readAll(type);
-        models.entrySet().stream().forEach((entry) -> {
-            getSwagger().model(entry.getKey(), entry.getValue());
-        });
-    }
-
-    private static boolean isVoid(Type type) {
-        final Class<?> cls = TypeFactory.defaultInstance().constructType(type).getRawClass();
-        return Void.class.isAssignableFrom(cls) || Void.TYPE.isAssignableFrom(cls);
-    }
-
-    private boolean isIgnored(String path) {
-        for (String item : getConfig().getIgnoredRoutes()) {
-            final int length = item.length();
-            if (path.startsWith(item) && (path.length() == length || path.startsWith(PATH_DELIMITER, length))) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private static boolean isValidResponse(Type type) {
-        if (type == null) {
-            return false;
-        }
-        final JavaType javaType = TypeFactory.defaultInstance().constructType(type);
-        if (isVoid(javaType)) {
-            return false;
-        }
-        final Class<?> cls = javaType.getRawClass();
-        return !javax.ws.rs.core.Response.class.isAssignableFrom(cls) && !isResourceClass(cls);
-    }
-
-    private static boolean isResourceClass(Class<?> cls) {
-        return cls.getAnnotation(Api.class) != null;
     }
 
     List<String> getPaths(Method method) {

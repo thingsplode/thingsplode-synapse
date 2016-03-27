@@ -26,7 +26,7 @@ import org.thingsplode.synapse.core.exceptions.MarshallerException;
  * @author tamas.csaba@gmail.com
  * @param <T>
  */
-public abstract class AbstractMessage<T extends Serializable> implements Serializable {
+public abstract class AbstractMessage<T> implements Serializable {
     @JsonTypeInfo(use=JsonTypeInfo.Id.CLASS, include=JsonTypeInfo.As.PROPERTY, property="@body_type")
     private T body;
 

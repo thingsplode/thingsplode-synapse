@@ -27,7 +27,6 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.cfg.ConfigFeature;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -80,7 +79,7 @@ public class JacksonSerializer implements SynapseSerializer<String> {
     }
 
     @Override
-    public String marshall(Serializable object) throws SerializationException {
+    public String marshall(Object object) throws SerializationException {
         try {
             if (object != null) {
                 return mapper.writeValueAsString(object);

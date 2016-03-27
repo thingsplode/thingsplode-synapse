@@ -20,8 +20,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.netty.handler.codec.http.HttpResponseStatus;
-import java.io.Serializable;
-import javafx.scene.media.Media;
 import org.thingsplode.synapse.endpoint.serializers.jackson.adapters.HttpResponseStatusDeserializer;
 import org.thingsplode.synapse.endpoint.serializers.jackson.adapters.HttpResponseStatusSerializer;
 
@@ -30,7 +28,7 @@ import org.thingsplode.synapse.endpoint.serializers.jackson.adapters.HttpRespons
  * @author tamas.csaba@gmail.com
  * @param <T>
  */
-public class Response<T extends Serializable> extends AbstractMessage<T> {
+public class Response<T> extends AbstractMessage<T> {
 
     private ResponseHeader header;
 

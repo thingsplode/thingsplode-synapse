@@ -29,6 +29,6 @@ public class ExecutionException extends SynapseException {
     }
 
     public ExecutionException(Request.RequestHeader header, Exception e) {
-        super("Service execution error on path: " + header.getUri().getPath() + " and method: " + header.getMethod() + " with error -> " + e.getMessage() + ". Exception Type: " + e.getClass(), HttpStatus.INTERNAL_SERVER_ERROR);
+        super("Service execution error on path: " + header.getUri().getPath() + " and method: " + header.getMethod() + " with error -> " + e.getMessage() + ". Exception Type: " + e.getClass(), HttpStatus.INTERNAL_SERVER_ERROR, e);
     }
 }

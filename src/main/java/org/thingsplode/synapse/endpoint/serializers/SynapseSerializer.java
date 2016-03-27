@@ -15,7 +15,6 @@
  */
 package org.thingsplode.synapse.endpoint.serializers;
 
-import java.io.Serializable;
 import org.thingsplode.synapse.core.domain.MediaRange;
 import org.thingsplode.synapse.core.exceptions.SerializationException;
 
@@ -28,7 +27,7 @@ public interface SynapseSerializer<WIREFORMAT> {
 
     public MediaRange getSupportedMediaRange();
     
-    WIREFORMAT marshall(Serializable object) throws SerializationException;
+    WIREFORMAT marshall(Object object) throws SerializationException;
 
     <T> T unMarshall(Class<T> objectType, WIREFORMAT wirecontent) throws SerializationException;
 }
