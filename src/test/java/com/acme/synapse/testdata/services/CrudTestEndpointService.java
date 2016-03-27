@@ -19,6 +19,7 @@ import com.acme.synapse.testdata.services.core.Address;
 import com.acme.synapse.testdata.services.core.Device;
 import com.acme.synapse.testdata.services.core.Tuple;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.swagger.annotations.Api;
 import java.util.ArrayList;
 import java.util.Calendar;
 import org.thingsplode.synapse.core.annotations.PathVariable;
@@ -33,6 +34,7 @@ import org.thingsplode.synapse.core.domain.Response;
  * @author tamas.csaba@gmail.com
  */
 @Service("/{userid}/devices/")
+//@Api()
 public class CrudTestEndpointService {
 
     public Response<ArrayList<Device>> listAll() {
@@ -66,14 +68,14 @@ public class CrudTestEndpointService {
         return new Response<>(new Response.ResponseHeader(HttpResponseStatus.OK), d);
     }
 
-    @RequestMapping("owner")
+    @RequestMapping(value = "owner", method = {RequestMethod.GET})
     public Response<Device> getByOwner() {
         Device d = createDevice();
         d.setLogicalName("owner");
         return new Response<>(new Response.ResponseHeader(HttpResponseStatus.OK), d);
     }
 
-    @RequestMapping("owner")
+    @RequestMapping(value = "owner", method = {RequestMethod.POST})
     public Response<Device> getByOwner(Long deviceId) {
         Device d = createDevice();
         d.setId(deviceId);

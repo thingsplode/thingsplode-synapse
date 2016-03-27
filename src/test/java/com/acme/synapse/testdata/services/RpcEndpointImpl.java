@@ -19,6 +19,7 @@ import java.io.Serializable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import com.acme.synapse.testdata.services.core.Filter;
+import org.thingsplode.synapse.core.exceptions.MethodNotFoundException;
 
 /**
  *
@@ -45,7 +46,7 @@ public class RpcEndpointImpl implements RpcEndpoint {
     //todo: make and test required false tests
     
     @Override
-    public Serializable getInfo() {
+    public Serializable getInfo() throws MethodNotFoundException {
         return new Filter("some query", 10, 100);
     }
 

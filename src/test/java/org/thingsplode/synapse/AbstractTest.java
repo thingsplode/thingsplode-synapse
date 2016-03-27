@@ -30,6 +30,7 @@ import com.acme.synapse.testdata.services.core.Address;
 import java.io.FileNotFoundException;
 import org.thingsplode.synapse.core.domain.Event;
 import org.thingsplode.synapse.endpoint.AbstractEventSink;
+import org.thingsplode.synapse.endpoint.swagger.ApiListingJson;
 
 /**
  *
@@ -61,6 +62,7 @@ public abstract class AbstractTest {
                         .publish(new EndpointTesterService())
                         .publish(new CrudTestEndpointService())
                         .publish(new DummyMarkedEndpoint())
+                        .publish(new ApiListingJson())
                         .publish("/default/", new AbstractEventSink<Address>(Address.class) {
                             @Override
                             protected void eventReceived(Event<Address> event) {

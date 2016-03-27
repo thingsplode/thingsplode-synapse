@@ -18,16 +18,19 @@ package com.acme.synapse.testdata.services;
 import com.acme.synapse.testdata.services.core.Filter;
 import java.io.Serializable;
 import org.thingsplode.synapse.core.SynapseEndpointServiceMarker;
+import org.thingsplode.synapse.core.exceptions.MethodNotFoundException;
 
 /**
  *
  * @author tamas.csaba@gmail.com
  */
 public interface RpcEndpoint extends SynapseEndpointServiceMarker {
-    
+
     public void ping();
+
     public String echo(String message);
-    public Serializable getInfo();
+
+    public Serializable getInfo() throws MethodNotFoundException;
     public Serializable filter(Filter filter);
-    
+
 }
