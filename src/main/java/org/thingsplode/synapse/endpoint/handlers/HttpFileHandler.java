@@ -27,7 +27,6 @@ import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpChunkedInput;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
-import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpUtil;
@@ -76,7 +75,7 @@ public class HttpFileHandler extends SimpleChannelInboundHandler<FileRequest> {
         File f = new File(webroot);
         if (f.exists() && f.isDirectory() && f.canRead()) {
             this.webroot = f;
-            logger.info("Webroot initialized at ["+f.getAbsolutePath()+"]");
+            logger.info("Web root initialized at ["+f.getAbsolutePath()+"]");
         } else {
             throw new FileNotFoundException("The folder " + webroot + " cannot be found, not a directory or cannot be read;");
         }

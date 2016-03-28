@@ -18,6 +18,7 @@ package org.thingsplode.synapse.core.domain;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import io.swagger.annotations.ApiModel;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -29,6 +30,7 @@ import org.thingsplode.synapse.endpoint.serializers.jackson.adapters.ParameterWr
  * @author tamas.csaba@gmail.com
  */
 @JsonDeserialize(using = ParameterWrapperDeserializer.class)
+@ApiModel(value = "arameterWrapper", description = "A method parameter wrapper object for the RPC use-case")
 public class ParameterWrapper implements Serializable {
 
     private final ArrayList<Parameter> params = new ArrayList<>();

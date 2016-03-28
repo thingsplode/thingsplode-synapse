@@ -34,7 +34,7 @@ import org.thingsplode.synapse.core.domain.Response;
  * @author tamas.csaba@gmail.com
  */
 @Service("/{userid}/devices/")
-//@Api()
+@Api(consumes = "application/json",produces = "application/json")
 public class CrudTestEndpointService {
 
     public Response<ArrayList<Device>> listAll() {

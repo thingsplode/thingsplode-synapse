@@ -15,45 +15,31 @@
  */
 package io.swagger.jaxrs;
 
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.type.TypeFactory;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.Authorization;
 import io.swagger.annotations.AuthorizationScope;
-import io.swagger.annotations.ResponseHeader;
 import io.swagger.annotations.SwaggerDefinition;
-import io.swagger.converter.ModelConverters;
 import io.swagger.jaxrs.config.ReaderConfig;
 import io.swagger.jaxrs.config.ReaderListener;
 import io.swagger.jaxrs.ext.SwaggerExtension;
 import io.swagger.jaxrs.ext.SwaggerExtensions;
 import io.swagger.jaxrs.utils.ReaderUtils;
-import io.swagger.models.Model;
 import io.swagger.models.Operation;
 import io.swagger.models.Path;
-import io.swagger.models.Response;
 import io.swagger.models.Scheme;
 import io.swagger.models.SecurityRequirement;
 import io.swagger.models.Swagger;
 import io.swagger.models.Tag;
 import io.swagger.models.parameters.Parameter;
-import io.swagger.models.properties.Property;
-import io.swagger.models.properties.RefProperty;
 import io.swagger.util.BaseReaderUtils;
-import io.swagger.util.ParameterProcessor;
 import io.swagger.util.PathUtils;
 import io.swagger.util.ReflectionUtils;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -66,6 +52,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.thingsplode.synapse.core.SynapseEndpointServiceMarker;
+import org.thingsplode.synapse.core.annotations.RequestBody;
 import org.thingsplode.synapse.core.annotations.RequestMapping;
 import org.thingsplode.synapse.core.annotations.Service;
 
@@ -86,7 +73,7 @@ public class SynapseReader extends Reader {
 
         Map<Class<?>, ReaderListener> listeners = new HashMap<>();
 
-        classes.stream().filter((cls) -> (ReaderListener.class.isAssignableFrom(cls) && !listeners.containsKey(cls))).forEach((cls) -> {
+        classes.stream().filter(cls -> (ReaderListener.class.isAssignableFrom(cls) && !listeners.containsKey(cls))).forEach((cls) -> {
             try {
                 listeners.put(cls, (ReaderListener) cls.newInstance());
             } catch (InstantiationException | IllegalAccessException e) {
@@ -430,12 +417,25 @@ public class SynapseReader extends Reader {
         } else if (method.getAnnotation(RequestMapping.class) != null) {
             List<String> l = Arrays.asList(method.getAnnotation(RequestMapping.class).method()).stream().map(rm -> rm.toString().toLowerCase()).collect(Collectors.toList());
             if (l.isEmpty()) {
-                l.add("get");
+                if (method.getParameterCount() > 0 && (method.getAnnotations().length == 0 || method.getAnnotation(RequestBody.class) != null)) {
+                    //if there are parameters but not annotated at all or the RequestBody annotation is used
+                    l.add("put");
+                } else if (method.getParameterCount() == 0 && !method.getReturnType().equals(Void.TYPE)) {
+                    //if there are no parameters but there's a return type
+                    l.add("get");
+                } else {
+                    //if there are no parameters and no return type (void method)
+                    l.add("post");
+                }
             }
             return l;
         } else if (SynapseEndpointServiceMarker.class.isAssignableFrom(method.getDeclaringClass())
                 || method.getDeclaringClass().getAnnotation(Service.class) != null) {
-            a.add("get");
+            if (method.getParameterCount() > 0) {
+                a.add("post");
+            } else {
+                a.add("get");
+            }
             //todo: enable this when the service registry will support this differentiation
             //if (method.getReturnType().equals(Void.TYPE)) {
             //    a.add("post");

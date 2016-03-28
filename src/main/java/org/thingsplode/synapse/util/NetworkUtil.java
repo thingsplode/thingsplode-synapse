@@ -15,8 +15,10 @@
  */
 package org.thingsplode.synapse.util;
 
+import com.google.common.base.Optional;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.InterfaceAddress;
 import java.net.NetworkInterface;
 import java.net.ServerSocket;
 import java.net.SocketException;
@@ -25,6 +27,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.net.ssl.SSLServerSocket;
 
 /**
@@ -81,6 +85,12 @@ public class NetworkUtil {
         }
     }
 
+    public enum IPVersionFilter {
+        IPV4,
+        IPV6,
+        BOTH
+    }
+
     /**
      * It returns the first INET Address available on the given interface. Using
      * this method you can define which type of address you would like to
@@ -88,26 +98,49 @@ public class NetworkUtil {
      *
      * @param iface the interface from which you want to read the first
      * available INET address
-     * @param ipv4 if true it will return only IPV4 address (if any), if false
-     * it will return only IPV6 address
+     * @param ipvFilter if IPV4 it will return only IPV4 address (if any), if
+     * IPV6 it will return only IPV6 address, if BOTH, it will return all
+     * configured interfaces
      * @return the IPV4 or IPV6 address available on the interface or null if
      * none is found (or the combination is not found: ip4 is true, but there's
      * no IPV4 address).
      * @throws SocketException
      */
-    public static InetAddress getInetAddressByInterface(NetworkInterface iface, boolean ipv4) throws SocketException {
-        if (iface != null) {
+    public static InetAddress getInetAddressByInterface(NetworkInterface iface, IPVersionFilter ipvFilter) throws SocketException {
+        if (iface == null) {
+            return null;
+        } else {
             Enumeration<InetAddress> inetAddresses = iface.getInetAddresses();
             for (InetAddress inetAddress : Collections.list(inetAddresses)) {
-                if (inetAddress.getAddress().length == 4 && ipv4) {
+                if (inetAddress.getAddress().length == 4 && ipvFilter == IPVersionFilter.IPV4) {
                     return inetAddress;
-                } else if (inetAddress.getAddress().length == 16 && !ipv4) {
+                } else if (inetAddress.getAddress().length == 16 && ipvFilter == IPVersionFilter.IPV6) {
+                    return inetAddress;
+                } else if ((inetAddress.getAddress().length == 4 || inetAddress.getAddress().length == 16) && ipvFilter == IPVersionFilter.BOTH) {
                     return inetAddress;
                 }
             }
             return null;
-        } else {
-            return null;
+        }
+    }
+
+    public static Optional<String> getFirstConfiguredHostAddress() {
+        try {
+            Enumeration<NetworkInterface> nets = NetworkInterface.getNetworkInterfaces();
+            for (NetworkInterface netIf : Collections.list(nets)) {
+                if (isNetworkInterfaceConfigured(netIf)) {
+                    if (!netIf.isLoopback()) {
+                        for (InterfaceAddress ia : netIf.getInterfaceAddresses()) {
+                            if (ia.getAddress().getAddress().length == 4) {
+                                return Optional.fromNullable(ia.getAddress().getHostName());
+                            }
+                        }
+                    }
+                }
+            }
+            return Optional.absent();
+        } catch (SocketException ex) {
+            return Optional.of("Socket Error: " + ex.getMessage());
         }
     }
 
@@ -241,13 +274,12 @@ public class NetworkUtil {
     /**
      *
      * @param networkInterface
-     * @param ipv4
      * @return true if network interface is up and an IPv4 or IPv6 address is
      * assigned
      * @throws SocketException
      */
-    public static boolean isNetworkInterfaceConfigured(NetworkInterface networkInterface, boolean ipv4) throws SocketException {
-        return networkInterface.isUp() && getInetAddressByInterface(networkInterface, ipv4) != null;
+    public static boolean isNetworkInterfaceConfigured(NetworkInterface networkInterface) throws SocketException {
+        return networkInterface.isUp() && getInetAddressByInterface(networkInterface, IPVersionFilter.BOTH) != null;
     }
 
     /**

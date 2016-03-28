@@ -44,6 +44,7 @@ import java.net.SocketAddress;
 import java.net.SocketException;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
@@ -52,6 +53,7 @@ import org.thingsplode.synapse.endpoint.handlers.HttpFileHandler;
 import org.thingsplode.synapse.endpoint.handlers.HttpRequestHandler;
 import org.thingsplode.synapse.endpoint.handlers.HttpResponseHandler;
 import org.thingsplode.synapse.endpoint.handlers.RequestHandler;
+import org.thingsplode.synapse.endpoint.swagger.EndpointApiGenerator;
 import org.thingsplode.synapse.util.NetworkUtil;
 
 /**
@@ -65,6 +67,8 @@ public class Endpoint {
     public static final String HTTP_DECODER = "http_decoder";
     public static final String REQUEST_HANDLER = "request_handler";
     public static final String ALL_CHANNEL_GROUP_NAME = "all-open-channels";
+    public static final String HTTP_FILE_HANDLER = "http_file_handler";
+    public static final String HTTP_RESPONSE_HANDLER = "http_response_handler";
     private static int TERMINATION_TIMEOUT = 60;//number of seconds to wait after the worker threads are shutted down and until those are finishing the last bit of the execution.
     private EventLoopGroup masterGroup = null;//the eventloop group used for the server socket
     private EventLoopGroup workerGroup = null;//the event loop group used for the connected clients
@@ -79,6 +83,7 @@ public class Endpoint {
     private HttpFileHandler fileHandler = null;
     private EventExecutorGroup evtExecutorGroup = new DefaultEventExecutorGroup(10);
     private ServiceRegistry serviceRegistry = new ServiceRegistry();
+    private EndpointApiGenerator apiGenerator = null;
 
     private enum Lifecycle {
         UNITIALIZED,
@@ -122,9 +127,9 @@ public class Endpoint {
                                 p.addLast("aggregator", new HttpObjectAggregator(65536));
                                 p.addLast(evtExecutorGroup, "http_request_handler", new HttpRequestHandler(endpointId, serviceRegistry));
                                 if (fileHandler != null) {
-                                    p.addLast(evtExecutorGroup, "http_file_handler", fileHandler);
+                                    p.addLast(evtExecutorGroup, HTTP_FILE_HANDLER, fileHandler);
                                 }
-                                p.addLast("http_response_handler", new HttpResponseHandler());
+                                p.addLast(HTTP_RESPONSE_HANDLER, new HttpResponseHandler());
                                 p.addLast(evtExecutorGroup, "handler", new RequestHandler());
                             }
                         });
@@ -215,6 +220,9 @@ public class Endpoint {
     }
 
     public Endpoint publish(Object serviceInstance) {
+        if (apiGenerator != null && !(serviceInstance instanceof EndpointApiGenerator)) {
+            apiGenerator.addPackageToBeScanned(serviceInstance.getClass().getPackage().getName());
+        }
         this.publish(null, serviceInstance);
         return this;
     }
@@ -252,7 +260,7 @@ public class Endpoint {
             for (String iface : interfaceNames) {
                 InetAddress inetAddress;
                 try {
-                    inetAddress = NetworkUtil.getInetAddressByInterface(NetworkUtil.getInterfaceByName(iface), true);
+                    inetAddress = NetworkUtil.getInetAddressByInterface(NetworkUtil.getInterfaceByName(iface), NetworkUtil.IPVersionFilter.BOTH);
                 } catch (SocketException ex) {
                     throw new RuntimeException(ex);
                 }
@@ -277,8 +285,40 @@ public class Endpoint {
         }
     }
 
+    /**
+     *
+     * @param version
+     * @param hostname the host name (ip address) under the endpoints are available. If null, the first IPV4 address will be taken from the first configured non-loopback interface.
+     * @return
+     * @throws FileNotFoundException
+     */
+    public Endpoint enableSwagger(String version, String hostname) throws FileNotFoundException {
+
+        if (fileHandler == null) {
+            fileHandler = new HttpFileHandler("/tmp/endpoints");
+        }
+        //fileHandler.addWebroot();
+        if (hostname == null) {
+            Optional<String> firstHost = connections.getSocketAddresses().stream().map(sa -> {
+                if (sa instanceof InetSocketAddress) {
+                    String hostName = ((InetSocketAddress) sa).getHostName();
+                    return (hostName.equalsIgnoreCase("0.0.0.0") ? NetworkUtil.getFirstConfiguredHostAddress().get() : hostName) + ":" + ((InetSocketAddress) sa).getPort();
+                } else {
+                    return "";
+                }
+            }).findFirst();
+            hostname = firstHost.get();
+        }
+        apiGenerator = new EndpointApiGenerator(version, hostname);
+        this.publish(apiGenerator);
+        return this;
+    }
+
     public Endpoint enableFileHandler(String webroot) throws FileNotFoundException {
-        fileHandler = new HttpFileHandler(webroot);
+        if (fileHandler == null) {
+            fileHandler = new HttpFileHandler(webroot);
+        }
+        //fileHandler.addWebroot(webroot);
         return this;
     }
 

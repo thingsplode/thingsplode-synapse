@@ -30,7 +30,6 @@ import com.acme.synapse.testdata.services.core.Address;
 import java.io.FileNotFoundException;
 import org.thingsplode.synapse.core.domain.Event;
 import org.thingsplode.synapse.endpoint.AbstractEventSink;
-import org.thingsplode.synapse.endpoint.swagger.ApiListingJson;
 
 /**
  *
@@ -57,12 +56,12 @@ public abstract class AbstractTest {
                         .logLevel(LogLevel.TRACE)
                         .protocol(Endpoint.Protocol.JSON)
                         .transportType(Endpoint.TransportType.HTTP_REST)
-                        .enableFileHandler("./")
+                        .enableFileHandler(System.getProperty("java.io.tmpdir"))
+                        .enableSwagger("1.0", null)
                         .publish(new RpcEndpointImpl())
                         .publish(new EndpointTesterService())
                         .publish(new CrudTestEndpointService())
                         .publish(new DummyMarkedEndpoint())
-                        .publish(new ApiListingJson())
                         .publish("/default/", new AbstractEventSink<Address>(Address.class) {
                             @Override
                             protected void eventReceived(Event<Address> event) {

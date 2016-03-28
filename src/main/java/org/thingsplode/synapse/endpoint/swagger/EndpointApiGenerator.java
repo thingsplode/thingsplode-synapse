@@ -18,7 +18,6 @@ package org.thingsplode.synapse.endpoint.swagger;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.swagger.config.SwaggerConfig;
-import io.swagger.jaxrs.Reader;
 import io.swagger.jaxrs.SynapseReader;
 import io.swagger.jaxrs.config.BeanConfig;
 import io.swagger.jaxrs.config.ReaderConfig;
@@ -28,6 +27,7 @@ import io.swagger.models.Swagger;
 import io.swagger.util.Yaml;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,24 +37,35 @@ import org.thingsplode.synapse.core.domain.MediaType;
 import org.thingsplode.synapse.core.domain.Response;
 
 /**
+ * A swagger scanner to list the endpoint information;
  *
  * @author tamas.csaba@gmail.com
  */
-@Service("/swagger")
-public class ApiListingJson {
+@Service("/endpoints")
+public class EndpointApiGenerator {
 
-    private final Logger logger = LoggerFactory.getLogger(ApiListingJson.class);
+    private final Logger logger = LoggerFactory.getLogger(EndpointApiGenerator.class);
     static boolean initialized = false;
     static Swagger swaggerModel;
+    final private Set<String> packages = new HashSet<>();
+    final private String apiVersion;
+    final private String host;
 
-    public ApiListingJson() {
+    /**
+     *
+     * @param apiVersion the API version
+     * @param host the host to which the endpoints are exposed
+     */
+    public EndpointApiGenerator(String apiVersion, String host) {
+        this.apiVersion = apiVersion;
+        this.host = host;
     }
 
     protected synchronized void scan() {
         BeanConfig bcScanner = new SynapseBeanConfig();
-        bcScanner.setResourcePackage("com.acme"); //use comma separated list
-        bcScanner.setVersion("1.0.0");
-        bcScanner.setHost("loclahost:8080");
+        bcScanner.setResourcePackage(this.packages.stream().reduce((base, elm) -> base + "," + elm).get()); //generate comma separated list
+        bcScanner.setVersion(this.apiVersion);
+        bcScanner.setHost(this.host);
         bcScanner.setBasePath("/");
         bcScanner.setScan(true);
 
@@ -104,6 +115,10 @@ public class ApiListingJson {
         }
 
         abstract void addBody(Response response) throws JsonProcessingException;
+    }
+
+    public void addPackageToBeScanned(String pack) {
+        this.packages.add(pack);
     }
 
     @RequestMapping("/json")

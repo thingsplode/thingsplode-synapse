@@ -102,12 +102,12 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
                 //https://github.com/jwboardman/khs-stockticker/blob/master/src/main/java/com/khs/stockticker/StockTickerServerHandler.java
                 //https://keyholesoftware.com/2015/03/16/netty-a-different-kind-of-websocket-server/
                 //http://microservices.io/patterns/microservices.html
-                ctx.fireChannelRead(response);
                 if (response.getHeader().getResponseCode() == HttpResponseStatus.NOT_FOUND) {
                     //http://netty.io/4.0/api/io/netty/channel/ChannelPipeline.html
                     FileRequest fr = new FileRequest(header);
                     ctx.fireChannelRead(fr);
                 }
+                ctx.fireChannelRead(response);
             }
         } catch (Exception ex) {
             logger.error("Channel read error: " + ex.getMessage(), ex);

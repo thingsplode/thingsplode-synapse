@@ -15,6 +15,7 @@
  */
 package org.thingsplode.synapse.endpoint.serializers.jackson;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -47,7 +48,7 @@ public class JacksonSerializer implements SynapseSerializer<String> {
 
     private JacksonSerializer() {
         mapper = new ObjectMapper();
-        module = new SimpleModule("CustomeModule", new com.fasterxml.jackson.core.Version(1, 0, 0, null, null, null));
+        module = new SimpleModule("CustomModule", new com.fasterxml.jackson.core.Version(1, 0, 0, null, null, null));
         //module.addDeserializer(ParameterWrapper.class, new ParameterWrapperDeserializer(ParameterWrapper.class));
         //mapper.registerModule(module);
     }
@@ -65,6 +66,7 @@ public class JacksonSerializer implements SynapseSerializer<String> {
         //allowedFeatures.add(SerializationFeature.WRAP_ROOT_VALUE);
         allowedFeatures.add(SerializationFeature.WRITE_EMPTY_JSON_ARRAYS);
         mapper.enable(JsonParser.Feature.ALLOW_SINGLE_QUOTES);
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
         init(prettyPrint, allowedFeatures, disabledFeatures, PropertyNamingStrategy.SNAKE_CASE);
     }
 
