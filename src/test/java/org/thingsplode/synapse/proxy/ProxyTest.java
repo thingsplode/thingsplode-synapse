@@ -56,7 +56,7 @@ public class ProxyTest extends AbstractTest {
         }
     }
 
-    @Test()
+    //@Test()
     public void baseTest() throws InterruptedException {
         while (true) {
             Thread.sleep(50000L);

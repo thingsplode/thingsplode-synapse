@@ -47,6 +47,7 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.thingsplode.synapse.endpoint.handlers.HttpFileHandler;
@@ -63,6 +64,7 @@ import org.thingsplode.synapse.util.NetworkUtil;
 public class Endpoint {
 
     private Logger logger = LoggerFactory.getLogger(Endpoint.class);
+    public static final String ENDPOINT_URL_PATERN = "/endpoints|/endpoints/";
     public static final String HTTP_ENCODER = "http_encoder";
     public static final String HTTP_DECODER = "http_decoder";
     public static final String REQUEST_HANDLER = "request_handler";
@@ -159,12 +161,16 @@ public class Endpoint {
      * @throws InterruptedException
      */
     private void startInternal() throws InterruptedException {
+        lifecycle = Lifecycle.STARTED;
         for (SocketAddress addr : connections.getSocketAddresses()) {
             ChannelFuture channelFuture = bootstrap.bind(addr).sync();
             Channel channel = channelFuture.await().channel();
             channelRegistry.add(channel);
+            channelFuture.channel().closeFuture().sync();
         }
-        lifecycle = Lifecycle.STARTED;
+        
+        
+        
     }
 
     public void stop() {
@@ -295,9 +301,9 @@ public class Endpoint {
     public Endpoint enableSwagger(String version, String hostname) throws FileNotFoundException {
 
         if (fileHandler == null) {
-            fileHandler = new HttpFileHandler("/tmp/endpoints");
+            fileHandler = new HttpFileHandler();
         }
-        //fileHandler.addWebroot();
+        fileHandler.addRedirect(Pattern.compile(ENDPOINT_URL_PATERN), "/endpoints/index.html?jurl=http://{Host}/endpoints/json");
         if (hostname == null) {
             Optional<String> firstHost = connections.getSocketAddresses().stream().map(sa -> {
                 if (sa instanceof InetSocketAddress) {
@@ -317,8 +323,9 @@ public class Endpoint {
     public Endpoint enableFileHandler(String webroot) throws FileNotFoundException {
         if (fileHandler == null) {
             fileHandler = new HttpFileHandler(webroot);
+        } else {
+            fileHandler.setWebroot(webroot);
         }
-        //fileHandler.addWebroot(webroot);
         return this;
     }
 

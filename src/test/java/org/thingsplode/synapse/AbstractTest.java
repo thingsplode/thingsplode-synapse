@@ -50,7 +50,6 @@ public abstract class AbstractTest {
             @Override
             protected void before() throws InterruptedException, FileNotFoundException {
                 System.out.println("\n\n BEFORE METHOD CALLED\n\n");
-                ConnectionProvider c;
                 BasicConfigurator.configure();
                 this.ep = Endpoint.create("test", new ConnectionProvider(new InetSocketAddress("0.0.0.0", 8080)))
                         .logLevel(LogLevel.TRACE)

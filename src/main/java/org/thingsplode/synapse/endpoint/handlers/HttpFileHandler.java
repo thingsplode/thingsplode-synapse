@@ -46,12 +46,17 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.TimeZone;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.activation.MimetypesFileTypeMap;
+import org.thingsplode.synapse.endpoint.swagger.Loader;
 import org.thingsplode.synapse.core.domain.FileRequest;
+import org.thingsplode.synapse.core.domain.Request;
 import org.thingsplode.synapse.core.domain.Request.RequestHeader;
 import org.thingsplode.synapse.util.Util;
 
@@ -60,8 +65,8 @@ import org.thingsplode.synapse.util.Util;
  * @author tamas.csaba@gmail.com
  */
 @Sharable
-public class HttpFileHandler extends SimpleChannelInboundHandler<FileRequest> {
-
+public final class HttpFileHandler extends SimpleChannelInboundHandler<FileRequest> {
+    private final Pattern urlParamPattern = Pattern.compile("\\{(.*?)\\}", Pattern.CASE_INSENSITIVE);
     private static final String HTTP_DATE_FORMAT = "EEE, dd MMM yyyy HH:mm:ss zzz";
     private static final String HTTP_DATE_GMT_TIMEZONE = "GMT";
     private static final int HTTP_CACHE_SECONDS = 60;
@@ -69,9 +74,15 @@ public class HttpFileHandler extends SimpleChannelInboundHandler<FileRequest> {
     private static final String MIME_TYPES_FILE = "/META-INF/server.mime.types";
     private static MimetypesFileTypeMap MIME_TYPES_MAP;
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(HttpFileHandler.class);
-    private final File webroot;
+    private File webroot = null;
+    private final HashMap<Pattern,String> redirects = new HashMap<>();
 
     public HttpFileHandler(String webroot) throws FileNotFoundException {
+        this();
+        setWebroot(webroot);
+    }
+
+    public void setWebroot(String webroot) throws FileNotFoundException {
         File f = new File(webroot);
         if (f.exists() && f.isDirectory() && f.canRead()) {
             this.webroot = f;
@@ -79,6 +90,11 @@ public class HttpFileHandler extends SimpleChannelInboundHandler<FileRequest> {
         } else {
             throw new FileNotFoundException("The folder " + webroot + " cannot be found, not a directory or cannot be read;");
         }
+    }
+
+
+    
+    public HttpFileHandler() throws FileNotFoundException {
         synchronized (this) {
             if (MIME_TYPES_MAP == null) {
                 InputStream is = this.getClass().getResourceAsStream(MIME_TYPES_FILE);
@@ -90,59 +106,92 @@ public class HttpFileHandler extends SimpleChannelInboundHandler<FileRequest> {
             }
         }
     }
+    
+    public void addRedirect(Pattern p, String url){
+        this.redirects.put(p, url);
+    }
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, FileRequest req) throws Exception {
-        Optional<File> pathOpt = getSanitizedPath(req.getHeader().getUri().getPath());
-        if (!pathOpt.isPresent()) {
+        
+        Optional<String> uri = getSanitizedPath(req.getHeader().getUri().getPath());
+        if (!uri.isPresent()) {
             HttpResponseHandler.sendError(ctx, HttpResponseStatus.FORBIDDEN, "Path is not available.");
             return;
         }
+        
+        if (!this.redirects.isEmpty()){
+            for (Entry<Pattern,String> e : this.redirects.entrySet()){
+                if (e.getKey().matcher(uri.get()).matches()){
+                    System.out.println("Matched for redirect: " + uri.get());
+                    HttpResponseHandler.sendRedirect(ctx, createRedirectUrl(req.getHeader(), e.getValue()));
+                    break;
+                }
+            }   
+        }
+        
+        if (uri.get().endsWith("/")){
+            HttpResponseHandler.sendRedirect(ctx, uri.get() + "index.html");
+        }
 
-        File file = pathOpt.get();
+        File file =  null;
+        if (webroot != null){
+            file = new File(webroot, uri.get());
+        }
         //if ((!file.exists()) && "/index.html".equals(msg.getHeader().getUri().getPath())) {
         //    file = new File(sanitizeUri("/index.html"));
         //}
 
-        if (!file.exists() || file.isHidden() || !file.exists() || file.isDirectory()) {
+        
+        RandomAccessFile raf = null;
+        if (file == null || !file.exists() || file.isHidden() || file.isDirectory()) {
+            raf = Loader.extractResource(uri.get());
+            if (raf == null){
+                HttpResponseHandler.sendError(ctx, HttpResponseStatus.NOT_FOUND, "File not found.");
+                return;
+            }
+        }
+
+        if (file == null && raf == null){
             HttpResponseHandler.sendError(ctx, HttpResponseStatus.NOT_FOUND, "File not found.");
             return;
         }
-
-        if (!file.isFile()) {
+        
+        if (raf == null && !file.isFile()) {
             HttpResponseHandler.sendError(ctx, HttpResponseStatus.FORBIDDEN, "Is not a file.");
             return;
         }
         
         String contentType = MIME_TYPES_MAP.getContentType(file.getPath());
-       
+        try {
+            if (raf == null){
+                raf = new RandomAccessFile(file, "r");
+            }
+        } catch (FileNotFoundException ex) {
+          HttpResponseHandler.sendError(ctx, HttpResponseStatus.NOT_FOUND, ex.getMessage());
+           return;
+        }
         //don't send apps
         //if ("application/octet-stream".equals(contentType)) {
         //    file = new File(sanitizeUri("/index.html"));
         //}
 
       // Cache Validation
-      Optional<String> ifModifiedSinceOpt = req.getHeader().getRequestProperty(HttpHeaderNames.IF_MODIFIED_SINCE.toString());
-      if (ifModifiedSinceOpt.isPresent() && !Util.isEmpty(ifModifiedSinceOpt.get())) {
-         SimpleDateFormat dateFormatter = new SimpleDateFormat(HTTP_DATE_FORMAT, Locale.US);
-         Date ifModifiedSinceDate = dateFormatter.parse(ifModifiedSinceOpt.get());
+      if (file.exists()){
+        Optional<String> ifModifiedSinceOpt = req.getHeader().getRequestProperty(HttpHeaderNames.IF_MODIFIED_SINCE.toString());
+        if (ifModifiedSinceOpt.isPresent() && !Util.isEmpty(ifModifiedSinceOpt.get())) {
+           SimpleDateFormat dateFormatter = new SimpleDateFormat(HTTP_DATE_FORMAT, Locale.US);
+           Date ifModifiedSinceDate = dateFormatter.parse(ifModifiedSinceOpt.get());
 
-         // Only compare up to the second because the datetime format we send to the client
-         // does not have milliseconds
-         long ifModifiedSinceDateSeconds = ifModifiedSinceDate.getTime() / 1000;
-         long fileLastModifiedSeconds = file.lastModified() / 1000;
-         if (ifModifiedSinceDateSeconds == fileLastModifiedSeconds) {
-            sendNotModified(ctx);
-            return;
-         }
-      }
-      
-            RandomAccessFile raf;
-      try {
-         raf = new RandomAccessFile(file, "r");
-      } catch (FileNotFoundException ex) {
-        HttpResponseHandler.sendError(ctx, HttpResponseStatus.NOT_FOUND, ex.getMessage());
-         return;
+           // Only compare up to the second because the datetime format we send to the client
+           // does not have milliseconds
+           long ifModifiedSinceDateSeconds = ifModifiedSinceDate.getTime() / 1000;
+           long fileLastModifiedSeconds = file.lastModified() / 1000;
+           if (ifModifiedSinceDateSeconds == fileLastModifiedSeconds) {
+              sendNotModified(ctx);
+              return;
+           }
+        }
       }
       
       long fileLength = raf.length();
@@ -168,7 +217,24 @@ public class HttpFileHandler extends SimpleChannelInboundHandler<FileRequest> {
                          ctx.newProgressivePromise());
          // HttpChunkedInput will write the end marker (LastHttpContent) for us.
          lastContentFuture = sendFileFuture;
+     }
+      
     }
+    
+    private String createRedirectUrl(Request.RequestHeader header, String originalPath){
+        Matcher m = urlParamPattern.matcher(originalPath);
+        System.out.println("orig path: " + originalPath);
+        if (m.find()){
+            for (int i = 0; i < m.groupCount(); i++){
+                String matchedValue = m.group(i);
+                String headerIdentifier = matchedValue.substring(1,matchedValue.length()-1);
+                Optional<String> propOpt = header.getRequestProperty(headerIdentifier);
+                if (propOpt.isPresent()){
+                    originalPath = originalPath.replaceAll("\\{"+headerIdentifier+"\\}", propOpt.get());
+                }
+            }
+        } 
+        return originalPath;
     }
 
     private boolean isKeepAlive(RequestHeader header) {
@@ -184,7 +250,7 @@ public class HttpFileHandler extends SimpleChannelInboundHandler<FileRequest> {
 //        }
         return true;
     }
-
+    
     /**
      * When file timestamp is the same as what the browser is sending up, send a
      * "304 Not Modified"
@@ -244,7 +310,7 @@ public class HttpFileHandler extends SimpleChannelInboundHandler<FileRequest> {
                 HttpHeaderNames.LAST_MODIFIED, dateFormatter.format(new Date(fileToCache.lastModified())));
     }
 
-    private Optional<File> getSanitizedPath(String uri) {
+    private Optional<String> getSanitizedPath(String uri) {
         // Decode the path.
         try {
             uri = URLDecoder.decode(uri, "UTF-8");
@@ -268,7 +334,7 @@ public class HttpFileHandler extends SimpleChannelInboundHandler<FileRequest> {
                 || INSECURE_URI_PATTERN.matcher(uri).matches()) {
             return Optional.empty();
         }
-        return Optional.of(new File(webroot, uri));
+        return Optional.of(uri);
     }
 
 }

@@ -25,6 +25,9 @@ import java.util.regex.Pattern;
 class MethodParam<T> {
 
     ParameterSource source;
+    /**
+     * the unique id of the parameter (usually the value of the HeaderParam/PathVariable/RequestParam annotation
+     */
     String paramId;
     Parameter parameter;
     Object defaultValue;
@@ -40,6 +43,7 @@ class MethodParam<T> {
 
     enum ParameterSource {
         PATH_VARIABLE,
+        HEADER_PARAM,
         QUERY_PARAM,
         BODY,
         PARAMETER_WRAPPER

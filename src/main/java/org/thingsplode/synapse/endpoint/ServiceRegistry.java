@@ -39,6 +39,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.thingsplode.synapse.core.SynapseEndpointServiceMarker;
+import org.thingsplode.synapse.core.annotations.HeaderParam;
 import org.thingsplode.synapse.core.domain.Uri;
 import org.thingsplode.synapse.core.annotations.PathVariable;
 import org.thingsplode.synapse.core.annotations.RequestBody;
@@ -220,7 +221,7 @@ public class ServiceRegistry {
         //todo: make validation to expose Request Mapping or Path Varibale types where conversion from String to method parameter type is possible
         Class<?> srvClass = serviceInstance.getClass();
         String rootContext;
-        List<Class> markedInterfaces = Reflector.filterInterfaces(Reflector.extractInterfaces(srvClass), SynapseEndpointServiceMarker.class);                
+        List<Class> markedInterfaces = Reflector.filterInterfaces(Reflector.extractInterfaces(srvClass), SynapseEndpointServiceMarker.class);
         Set<Method> methods = new HashSet<>();
         if (!srvClass.isAnnotationPresent(Service.class)) {
             if ((markedInterfaces == null || markedInterfaces.isEmpty())) {
@@ -251,7 +252,7 @@ public class ServiceRegistry {
         if (Util.isEmpty(rootContext)) {
             rootContext = "/";
         }
-        logger.debug("Registering [" + serviceInstance.getClass().getSimpleName() + "] at: " + rootContext);
+        logger.debug("Registering [" + serviceInstance.getClass().getName() + "] at: " + rootContext);
         populateMethods(rootContext, serviceInstance, methods);
     }
 
@@ -295,6 +296,9 @@ public class ServiceRegistry {
                         required = p.getAnnotation(RequestBody.class).required();
                     } else if (p.isAnnotationPresent(PathVariable.class)) {
                         mp = new MethodParam(p, MethodParam.ParameterSource.PATH_VARIABLE, p.getAnnotation(PathVariable.class).value());
+                    } else if (p.isAnnotationPresent(HeaderParam.class)) {
+                        mp = new MethodParam(p, MethodParam.ParameterSource.HEADER_PARAM, p.getAnnotation(HeaderParam.class).value());
+                        required = p.getAnnotation(HeaderParam.class).required();
                     } else if (AbstractMessage.class.isAssignableFrom(p.getType())) {
                         mp = new MethodParam(p, MethodParam.ParameterSource.BODY, p.getName());
                     } else {
@@ -318,8 +322,6 @@ public class ServiceRegistry {
         Optional<Class<?>> result = Arrays.asList(array).stream().filter(c -> AbstractMessage.class.isAssignableFrom(c)).findFirst();
         return result.isPresent();
     }
-
-
 
     private Object generateValueFromString(Class type, String sValue) {
         if (sValue == null || Util.isEmpty(sValue)) {
@@ -384,6 +386,15 @@ public class ServiceRegistry {
                         methodParams.add(value);
                         break;
                     }
+                    case HEADER_PARAM: {
+                        Optional<String> headerValueOpt = header.getRequestProperty(p.paramId);
+                        if (!headerValueOpt.isPresent() && p.required) {
+                            throw new MissingParameterException("Header Value", p.paramId);
+                        } else {
+                            methodParams.add(headerValueOpt.get());
+                        }
+                        break;
+                    }
                     case PATH_VARIABLE: {
                         Matcher m = p.pathVariableMatcher.matcher(header.getUri().getPath());
                         if (m.find()) {
@@ -407,7 +418,7 @@ public class ServiceRegistry {
             String exp = "";
             boolean first = true;
             for (MethodParam p : parameters) {
-                boolean skip = p.parameter.isAnnotationPresent(PathVariable.class) || p.source == MethodParam.ParameterSource.BODY || p.source == MethodParam.ParameterSource.PARAMETER_WRAPPER;
+                boolean skip = p.parameter.isAnnotationPresent(PathVariable.class) || p.source == MethodParam.ParameterSource.BODY || p.source == MethodParam.ParameterSource.PARAMETER_WRAPPER || p.source == MethodParam.ParameterSource.HEADER_PARAM;
                 if (!skip) {
                     String pid = p.required ? p.paramId : "[" + p.paramId + "]";
                     exp = exp + (first ? "?" + pid : "&" + pid);

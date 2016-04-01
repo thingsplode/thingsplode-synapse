@@ -31,17 +31,20 @@ import java.util.HashSet;
 import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.thingsplode.synapse.core.annotations.HeaderParam;
 import org.thingsplode.synapse.core.annotations.RequestMapping;
 import org.thingsplode.synapse.core.annotations.Service;
 import org.thingsplode.synapse.core.domain.MediaType;
 import org.thingsplode.synapse.core.domain.Response;
+import org.thingsplode.synapse.endpoint.Endpoint;
+import org.thingsplode.synapse.util.Util;
 
 /**
  * A swagger scanner to list the endpoint information;
  *
  * @author tamas.csaba@gmail.com
  */
-@Service("/endpoints")
+@Service(Endpoint.ENDPOINT_URL_PATERN)
 public class EndpointApiGenerator {
 
     private final Logger logger = LoggerFactory.getLogger(EndpointApiGenerator.class);
@@ -63,7 +66,8 @@ public class EndpointApiGenerator {
 
     protected synchronized void scan() {
         BeanConfig bcScanner = new SynapseBeanConfig();
-        bcScanner.setResourcePackage(this.packages.stream().reduce((base, elm) -> base + "," + elm).get()); //generate comma separated list
+        //todo: read more content from the META-INF/manifest and add it to the service/endpoint description
+        bcScanner.setResourcePackage(this.packages.size() > 0 ? this.packages.stream().reduce((base, elm) -> base + "," + elm).get() : "."); //generate comma separated list
         bcScanner.setVersion(this.apiVersion);
         bcScanner.setHost(this.host);
         bcScanner.setBasePath("/");
@@ -122,11 +126,15 @@ public class EndpointApiGenerator {
     }
 
     @RequestMapping("/json")
-    public Response getListingJson() {
+    public Response getListingJson(@HeaderParam("Host") String host) {
         Template t = new Template() {
             @Override
             void addBody(Response response) throws JsonProcessingException {
                 response.getHeader().setContentType(new MediaType("application/json"));
+                if (!Util.isEmpty(host)) {
+                    //todo: this method overwrites the original host value (which might not be a big problem)
+                    swaggerModel.setHost(host);
+                }
                 response.setBody(swaggerModel);
             }
         };
@@ -134,11 +142,15 @@ public class EndpointApiGenerator {
     }
 
     @RequestMapping("/yaml")
-    public Response getListingYaml() {
+    public Response getListingYaml(@HeaderParam("Host") String host) {
         Template t = new Template() {
             @Override
             void addBody(Response response) throws JsonProcessingException {
                 response.getHeader().setContentType(new MediaType("text/plain"));
+                if (!Util.isEmpty(host)) {
+                    //todo: this method overwrites the original host value (which might not be a big problem)
+                    swaggerModel.setHost(host);
+                }
                 response.setBody(Yaml.mapper().writeValueAsString(swaggerModel));
             }
         };

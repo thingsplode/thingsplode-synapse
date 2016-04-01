@@ -21,13 +21,16 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
+import io.netty.handler.codec.http.EmptyHttpHeaders;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.util.CharsetUtil;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
+import org.omg.PortableInterceptor.LOCATION_FORWARD;
 import org.thingsplode.synapse.core.domain.MediaType;
 import org.thingsplode.synapse.core.domain.Response;
 import org.thingsplode.synapse.endpoint.serializers.SerializationService;
@@ -40,6 +43,7 @@ import org.thingsplode.synapse.endpoint.serializers.SynapseSerializer;
 public class HttpResponseHandler extends SimpleChannelInboundHandler<Response> {
 
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(HttpResponseHandler.class);
+
     private final SerializationService serializationService = new SerializationService();
 
     @Override
@@ -67,6 +71,14 @@ public class HttpResponseHandler extends SimpleChannelInboundHandler<Response> {
                 HttpVersion.HTTP_1_1, status, Unpooled.copiedBuffer("Failure: " + errorMsg + "\r\n", CharsetUtil.UTF_8));
         response.headers().set(HttpHeaderNames.CONTENT_TYPE, "text/plain; charset=UTF-8");
         // Close the connection as soon as the error message is sent.
+        ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+    }
+
+    static void sendRedirect(ChannelHandlerContext ctx, String newUrl) {
+        logger.debug("Redirecting request to {}", newUrl);
+        FullHttpResponse response = new DefaultFullHttpResponse(
+                HttpVersion.HTTP_1_1, HttpResponseStatus.TEMPORARY_REDIRECT, Unpooled.copiedBuffer("redirect to index.html", CharsetUtil.UTF_8));
+        response.headers().set(HttpHeaderNames.LOCATION, newUrl);
         ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
     }
 

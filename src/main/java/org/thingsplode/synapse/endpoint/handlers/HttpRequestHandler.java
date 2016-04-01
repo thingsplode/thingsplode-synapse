@@ -58,6 +58,7 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest httpRequest) throws Exception {
+        ///endpoints/json?api_key=565656
         try {
             // Handle a bad request.
             if (!httpRequest.decoderResult().isSuccess()) {
@@ -98,6 +99,7 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
                     HttpResponseHandler.sendError(ctx, HttpResponseStatus.BAD_REQUEST, ex.getClass().getSimpleName() + ": " + ex.getMessage());
                 }
                 Response response = handleREST(ctx, header, httpRequest.content());
+                //todo: cleanup the content from below
                 //https://github.com/RestExpress/RestExpress/blob/master/core/src/test/java/org/restexpress/contenttype/MediaTypeParserTest.java
                 //https://github.com/jwboardman/khs-stockticker/blob/master/src/main/java/com/khs/stockticker/StockTickerServerHandler.java
                 //https://keyholesoftware.com/2015/03/16/netty-a-different-kind-of-websocket-server/
@@ -106,8 +108,9 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
                     //http://netty.io/4.0/api/io/netty/channel/ChannelPipeline.html
                     FileRequest fr = new FileRequest(header);
                     ctx.fireChannelRead(fr);
+                } else {
+                    ctx.fireChannelRead(response);
                 }
-                ctx.fireChannelRead(response);
             }
         } catch (Exception ex) {
             logger.error("Channel read error: " + ex.getMessage(), ex);
