@@ -83,7 +83,9 @@ public abstract class AbstractTest {
 
             @Override
             protected void after() {
-                ep.stop();
+                if (ep != null) {
+                    ep.stop();
+                }
             }
         };
     }

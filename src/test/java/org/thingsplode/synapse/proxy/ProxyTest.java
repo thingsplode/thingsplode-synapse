@@ -63,7 +63,7 @@ public class ProxyTest extends AbstractTest {
     @Test()
     public void baseTest() throws InterruptedException, URISyntaxException, SSLException, UnsupportedEncodingException {
         System.out.println("Start Test");
-
+        Thread.sleep(1000);
         EndpointProxy ep = EndpointProxy.create("http://localhost:8080/").start();
         Dispatcher defaultDispatcher = ep.acquireDispatcher();
         defaultDispatcher.broadcast(Request.create("/com/acme/synapse/testdata/services/RpcEndpointImpl/ping", Request.RequestHeader.RequestMethod.GET));

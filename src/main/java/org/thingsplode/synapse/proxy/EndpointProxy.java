@@ -120,14 +120,14 @@ public class EndpointProxy {
 
     public Dispatcher acquireDispatcher() throws SSLException, InterruptedException {
         int port = 0;
-        boolean ssl = true;
+        boolean ssl = false;
         if (this.connectionUri.getPort() == -1) {
             if (this.connectionUri.getScheme() != null) {
                 if ("http".equalsIgnoreCase(this.connectionUri.getScheme()) || "ws".equalsIgnoreCase(this.connectionUri.getScheme())) {
                     port = 80;
-                    ssl = false;
                 } else if ("https".equalsIgnoreCase(this.connectionUri.getScheme()) || "wss".equalsIgnoreCase(this.connectionUri.getScheme())) {
                     port = 443;
+                    ssl = true;
                 } else {
                     port = 8000;
                     ssl = false;
@@ -135,6 +135,9 @@ public class EndpointProxy {
             }
         } else {
             port = this.connectionUri.getPort();
+        }
+        if ("https".equalsIgnoreCase(this.connectionUri.getScheme()) || "wss".equalsIgnoreCase(this.connectionUri.getScheme())) {
+            ssl = true;
         }
         if (ssl) {
             //todo: extends beyond prototype quality

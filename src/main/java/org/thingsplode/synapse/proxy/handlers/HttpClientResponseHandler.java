@@ -27,7 +27,7 @@ public class HttpClientResponseHandler extends SimpleChannelInboundHandler<HttpR
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, HttpResponse msg) throws Exception {
-        System.out.println("msg -----> \n\n\n:" + msg);
+        System.out.println("HttpClientResponseHandler -----> \n\n\n:" + msg);
     }
 
 }

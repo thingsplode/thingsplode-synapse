@@ -35,7 +35,6 @@ import org.thingsplode.synapse.core.annotations.RequestMapping;
 import org.thingsplode.synapse.core.annotations.Service;
 import org.thingsplode.synapse.core.domain.MediaType;
 import org.thingsplode.synapse.core.domain.Response;
-import org.thingsplode.synapse.endpoint.Endpoint;
 import org.thingsplode.synapse.util.Util;
 import org.thingsplode.synapse.core.annotations.RequestProperty;
 
@@ -44,7 +43,7 @@ import org.thingsplode.synapse.core.annotations.RequestProperty;
  *
  * @author Csaba Tamas
  */
-@Service(Endpoint.ENDPOINT_URL_PATERN)
+@Service("/services/")
 public class EndpointApiGenerator {
 
     private final Logger logger = LoggerFactory.getLogger(EndpointApiGenerator.class);

@@ -50,7 +50,7 @@ public class HttpRequestIntrospector extends SimpleChannelInboundHandler<HttpReq
                 content.retain();
                 payloadAsSring = new String(dst, Charset.forName("UTF-8"));
             }
-            logger.debug("Message received: \n\n"
+            logger.debug("Message received @Endpoint: \n\n"
                     + "Uri: " + msg.uri() + "\n"
                     + "Method: " + msg.method() + "\n"
                     + hb.toString() + "\n" + "Payload: " + (!Util.isEmpty(payloadAsSring) ? payloadAsSring + "\n" : "EMPTY\n"));
