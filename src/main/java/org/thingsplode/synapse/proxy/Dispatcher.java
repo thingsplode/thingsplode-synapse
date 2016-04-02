@@ -18,14 +18,10 @@ package org.thingsplode.synapse.proxy;
 import io.netty.channel.Channel;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
-import java.io.UnsupportedEncodingException;
-import java.net.URI;
 import java.util.HashSet;
 import org.slf4j.LoggerFactory;
-import org.thingsplode.synapse.core.domain.Event;
 import org.thingsplode.synapse.core.domain.Request;
 import org.thingsplode.synapse.core.domain.Response;
-import org.thingsplode.synapse.core.domain.Uri;
 
 /**
  *
@@ -35,40 +31,43 @@ public class Dispatcher {
 
     private org.slf4j.Logger logger = LoggerFactory.getLogger(Dispatcher.class);
     private final Channel ch;
-    private final URI uri;
+    private final String hostExpression;
     private final HashSet<RequestDecorator> decorators;
 
-    public Dispatcher(Channel ch, URI uri) {
-        this(ch, uri, null);
+    public Dispatcher(Channel ch, String hostExpression) {
+        this(ch, hostExpression, null);
     }
 
-    public Dispatcher(Channel ch, URI u, HashSet<RequestDecorator> decorators) {
+    public Dispatcher(Channel ch, String he, HashSet<RequestDecorator> decorators) {
         this.ch = ch;
-        this.uri = u;
+        this.hostExpression = he;
         if (decorators != null) {
             this.decorators = decorators;
         } else {
             this.decorators = new HashSet<>();
         }
         this.decorators.add((RequestDecorator) (Request request) -> {
-            try {
-                //basic data decorator
-                request.getHeader().addRequestProperty(HttpHeaderNames.HOST.toString(), this.uri.getHost());
-                request.getHeader().addRequestProperty(HttpHeaderNames.CONNECTION.toString(), HttpHeaderValues.KEEP_ALIVE.toString());
-                request.getHeader().addRequestProperty(HttpHeaderNames.ACCEPT_ENCODING.toString(), HttpHeaderValues.GZIP.toString());
-                request.getHeader().setUri(new Uri(this.uri.getRawPath()));
-            } catch (UnsupportedEncodingException ex) {
-                logger.error("Error while configuring default dispatcher decorator: " + ex.getMessage(), ex);
-            }
+            //basic data decorator
+            request.getHeader().addRequestProperty(HttpHeaderNames.HOST.toString(), hostExpression);
+            request.getHeader().addRequestProperty(HttpHeaderNames.CONNECTION.toString(), HttpHeaderValues.KEEP_ALIVE.toString());
+            request.getHeader().addRequestProperty(HttpHeaderNames.ACCEPT_ENCODING.toString(), HttpHeaderValues.GZIP.toString());
+            request.getHeader().addRequestProperty(HttpHeaderNames.ACCEPT.toString(), "*/*");
+            request.getHeader().addRequestProperty(HttpHeaderNames.USER_AGENT.toString(), "synapse");
         });
     }
 
-    public void broadcast(Event event) {
+    public void broadcast(Request event) {
+        decorate(event);
         ch.writeAndFlush(event);
     }
 
     public Response dispatch(Request request) {
+        decorate(request);
         return null;
+    }
+
+    private void decorate(Request req) {
+        decorators.forEach(d -> d.decorate(req));
     }
 
     public <T> T createStub(String servicePath, Class<T> aClass) {

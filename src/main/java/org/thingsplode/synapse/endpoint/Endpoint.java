@@ -51,7 +51,7 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.thingsplode.synapse.endpoint.handlers.HttpFileHandler;
-import org.thingsplode.synapse.endpoint.handlers.HttpMessageIntrospector;
+import org.thingsplode.synapse.endpoint.handlers.HttpRequestIntrospector;
 import org.thingsplode.synapse.endpoint.handlers.HttpRequestHandler;
 import org.thingsplode.synapse.endpoint.handlers.HttpResponseHandler;
 import org.thingsplode.synapse.endpoint.handlers.RequestHandler;
@@ -65,7 +65,7 @@ import org.thingsplode.synapse.util.NetworkUtil;
 public class Endpoint {
 
     private Logger logger = LoggerFactory.getLogger(Endpoint.class);
-    public static final String ENDPOINT_URL_PATERN = "/endpoints|/endpoints/";
+    public static final String ENDPOINT_URL_PATERN = "/services|/services/";
     public static final String HTTP_ENCODER = "http_encoder";
     public static final String HTTP_DECODER = "http_decoder";
     public static final String REQUEST_HANDLER = "request_handler";
@@ -130,7 +130,7 @@ public class Endpoint {
                                 p.addLast(HTTP_DECODER, new HttpRequestDecoder());
                                 p.addLast("aggregator", new HttpObjectAggregator(1048576));
                                 if (introspection) {
-                                    p.addLast(new HttpMessageIntrospector());
+                                    p.addLast(new HttpRequestIntrospector());
                                 }
                                 p.addLast(evtExecutorGroup, "http_request_handler", new HttpRequestHandler(endpointId, serviceRegistry));
                                 if (fileHandler != null) {
@@ -154,7 +154,7 @@ public class Endpoint {
         } finally {
             this.logger.debug("Adding shutdown hook for the endpoint.");
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                this.logger.info("Stopping endpoint [%s].", endpointId);
+                this.logger.info("Stopping endpoint [{}].", endpointId);
                 this.stop();
             }));
         }
@@ -313,7 +313,7 @@ public class Endpoint {
         if (fileHandler == null) {
             fileHandler = new HttpFileHandler();
         }
-        fileHandler.addRedirect(Pattern.compile(ENDPOINT_URL_PATERN), "/endpoints/index.html?jurl=http://{Host}/endpoints/json");
+        fileHandler.addRedirect(Pattern.compile(ENDPOINT_URL_PATERN), "/services/index.html?jurl=http://{Host}/services/json");
         if (hostname == null) {
             Optional<String> firstHost = connections.getSocketAddresses().stream().map(sa -> {
                 if (sa instanceof InetSocketAddress) {

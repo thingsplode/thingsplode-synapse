@@ -15,12 +15,16 @@
  */
 package org.thingsplode.synapse.proxy;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URISyntaxException;
+import javax.net.ssl.SSLException;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.thingsplode.synapse.AbstractTest;
+import org.thingsplode.synapse.core.domain.Request;
 
 /**
  *
@@ -57,12 +61,25 @@ public class ProxyTest extends AbstractTest {
     }
 
     @Test()
-    public void baseTest() throws InterruptedException {
-//        while (true) {
-//            Thread.sleep(50000L);
-//        }
+    public void baseTest() throws InterruptedException, URISyntaxException, SSLException, UnsupportedEncodingException {
+        System.out.println("Start Test");
+
+        EndpointProxy ep = EndpointProxy.create("http://localhost:8080/").start();
+        Dispatcher defaultDispatcher = ep.acquireDispatcher();
+        defaultDispatcher.broadcast(Request.create("/com/acme/synapse/testdata/services/RpcEndpointImpl/ping", Request.RequestHeader.RequestMethod.GET));
+        ep.stop();
         
-        
+//        EndpointProxy ep = EndpointProxy.create("http://www.mocky.io").start().enableIntrospection();
+//        Dispatcher defaultDispatcher = ep.acquireDispatcher();
+//        defaultDispatcher.broadcast(Request.create("v2/56fff4171200009d00770992", Request.RequestHeader.RequestMethod.PUT));
+//        ep.stop();
+
+        //http://www.mocky.io/v2/5185415ba171ea3a00704eed
+
+        while (true) {
+            Thread.sleep(50000L);
+        }
+
 //        EndpointProxy proxy = EndpointProxy.init().endpoints().defaultPolicy().start();
 //        TestEndpoint testEp = proxy.createStub("test_service", TestEndpoint.class);
 //        testEp.ping();

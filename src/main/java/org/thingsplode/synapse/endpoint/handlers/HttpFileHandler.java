@@ -223,6 +223,13 @@ public final class HttpFileHandler extends SimpleChannelInboundHandler<FileReque
       
     }
     
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+        
+        logger.error("Error while serving File Request: " + cause.getMessage(), cause);
+        HttpResponseHandler.sendError(ctx, HttpResponseStatus.INTERNAL_SERVER_ERROR, cause.getClass().getSimpleName() + ": " + cause.getMessage());
+    }
+    
     private String createRedirectUrl(Request.RequestHeader header, String originalPath){
         Matcher m = urlParamPattern.matcher(originalPath);
         System.out.println("orig path: " + originalPath);

@@ -36,6 +36,7 @@ import org.thingsplode.synapse.core.domain.Response;
 import org.thingsplode.synapse.core.domain.Uri;
 import org.thingsplode.synapse.core.exceptions.SynapseException;
 import org.thingsplode.synapse.endpoint.ServiceRegistry;
+import static org.thingsplode.synapse.endpoint.handlers.HttpResponseHandler.sendError;
 import org.thingsplode.synapse.util.Util;
 
 /**
@@ -116,6 +117,12 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
             logger.error("Channel read error: " + ex.getMessage(), ex);
             HttpResponseHandler.sendError(ctx, HttpResponseStatus.INTERNAL_SERVER_ERROR, ex.getClass().getSimpleName() + ": " + ex.getMessage());
         }
+    }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+        logger.error("Error while processing HTTP request: " + cause.getMessage(), cause);
+        sendError(ctx, HttpResponseStatus.INTERNAL_SERVER_ERROR, cause.getClass().getSimpleName() + ": " + cause.getMessage());
     }
 
     private Response handleREST(ChannelHandlerContext ctx, Request.RequestHeader header, ByteBuf content) {

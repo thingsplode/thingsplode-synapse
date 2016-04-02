@@ -59,6 +59,7 @@ public class HttpResponseHandler extends SimpleChannelInboundHandler<Response> {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+        cause.printStackTrace();
         logger.error("Error while preparing response: " + cause.getMessage(), cause);
         sendError(ctx, HttpResponseStatus.INTERNAL_SERVER_ERROR, cause.getClass().getSimpleName() + ": " + cause.getMessage());
     }

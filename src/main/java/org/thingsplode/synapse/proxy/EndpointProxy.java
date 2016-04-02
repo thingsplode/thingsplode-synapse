@@ -22,8 +22,6 @@ import io.netty.channel.ChannelPipeline;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.handler.codec.http.HttpClientCodec;
-import io.netty.handler.codec.http.HttpContentDecompressor;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpRequestEncoder;
 import io.netty.handler.codec.http.HttpResponseDecoder;
@@ -36,7 +34,8 @@ import java.util.HashSet;
 import javax.net.ssl.SSLException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.thingsplode.synapse.endpoint.handlers.HttpResponseHandler;
+import org.thingsplode.synapse.proxy.handlers.HttpClientResponseHandler;
+import org.thingsplode.synapse.proxy.handlers.HttpResponseIntrospector;
 import org.thingsplode.synapse.proxy.handlers.RequestToHttpRequestEncoder;
 
 /**
@@ -54,6 +53,7 @@ public class EndpointProxy {
     private SslContext sslContext = null;
     private Bootstrap b = null;
     private final HashSet<Dispatcher> dispatchers = new HashSet<>();
+    private boolean introspection = false;
 
     //todo: place connection uri to the aqcuire dispatcher, so one client instance can work with many servers
     private EndpointProxy(String baseUrl) throws URISyntaxException {
@@ -66,27 +66,43 @@ public class EndpointProxy {
 
     public EndpointProxy start() {
         b = new Bootstrap();
-        b.group(group)
-                .channel(NioSocketChannel.class)
-                .handler(new ChannelInitializer() {
-                    @Override
-                    protected void initChannel(Channel ch) throws Exception {
-                        ChannelPipeline p = ch.pipeline();
-                        if (sslContext != null) {
-                            p.addLast(sslContext.newHandler(ch.alloc()));
+        try {
+            b.group(group)
+                    .channel(NioSocketChannel.class)
+                    .handler(new ChannelInitializer() {
+                        @Override
+                        protected void initChannel(Channel ch) throws Exception {
+                            ChannelPipeline p = ch.pipeline();
+                            if (sslContext != null) {
+                                p.addLast(sslContext.newHandler(ch.alloc()));
+                            }
+                            //todo: tune the values here
+                            //p.addLast(new HttpClientCodec());
+                            p.addLast(new HttpRequestEncoder());
+                            p.addLast(new HttpResponseDecoder());
+                            p.addLast(new RequestToHttpRequestEncoder());
+                            if (introspection) {
+                                p.addLast(new HttpResponseIntrospector());
+                            }
+                            //p.addLast(new HttpContentDecompressor());
+                            //todo: chose one of the two and tune it
+                            p.addLast(new HttpObjectAggregator(1048576));
+                            //p.addLast(new HttpClientHandler());
+                            p.addLast(new HttpClientResponseHandler());
                         }
-                        //todo: tune the values here
-                        p.addLast(new HttpClientCodec());
-                        //p.addLast(new HttpRequestEncoder());
-                        //p.addLast(new HttpResponseDecoder());
-                        p.addLast(new HttpContentDecompressor());
-                        //todo: chose one of the two and tune it
-                        p.addLast(new HttpObjectAggregator(1048576));
-                        p.addLast(new RequestToHttpRequestEncoder());
-                        //p.addLast(new HttpClientHandler());
-                        p.addLast(new HttpResponseHandler());
-                    }
-                });
+                    });
+        } finally {
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                this.logger.info("Stopping client.");
+                this.stop();
+            }));
+        }
+        return this;
+
+    }
+
+    public EndpointProxy enableIntrospection() {
+        this.introspection = true;
         return this;
     }
 
@@ -117,6 +133,8 @@ public class EndpointProxy {
                     ssl = false;
                 }
             }
+        } else {
+            port = this.connectionUri.getPort();
         }
         if (ssl) {
             //todo: extends beyond prototype quality
@@ -124,11 +142,9 @@ public class EndpointProxy {
         }
 
         Channel ch = b.connect(this.connectionUri.getHost(), port).sync().channel();
-        Dispatcher d = new Dispatcher(ch, this.connectionUri);
+        Dispatcher d = new Dispatcher(ch, this.connectionUri.getHost() + ":" + this.connectionUri.getPort());
         dispatchers.add(d);
         return d;
     }
-
- 
 
 }

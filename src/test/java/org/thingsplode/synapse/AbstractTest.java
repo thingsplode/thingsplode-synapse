@@ -28,6 +28,7 @@ import org.thingsplode.synapse.endpoint.Endpoint.ConnectionProvider;
 import com.acme.synapse.testdata.services.RpcEndpointImpl;
 import com.acme.synapse.testdata.services.core.Address;
 import java.io.FileNotFoundException;
+import org.slf4j.LoggerFactory;
 import org.thingsplode.synapse.core.domain.Event;
 import org.thingsplode.synapse.endpoint.AbstractEventSink;
 
@@ -37,6 +38,7 @@ import org.thingsplode.synapse.endpoint.AbstractEventSink;
  */
 public abstract class AbstractTest {
 
+    private org.slf4j.Logger logger = LoggerFactory.getLogger(this.getClass());
     private Endpoint ep;
 
     @Rule
@@ -50,25 +52,33 @@ public abstract class AbstractTest {
             @Override
             protected void before() throws InterruptedException, FileNotFoundException {
                 System.out.println("\n\n BEFORE METHOD CALLED\n\n");
-                BasicConfigurator.configure();
-                this.ep = Endpoint.create("test", new ConnectionProvider(new InetSocketAddress("0.0.0.0", 8080)))
-                        .logLevel(LogLevel.TRACE)
-                        .protocol(Endpoint.Protocol.JSON)
-                        .transportType(Endpoint.TransportType.HTTP_REST)
-                        .enableFileHandler(System.getProperty("java.io.tmpdir"))
-                        .enableSwagger("1.0", null)
-                        .enableIntrospection()
-                        .publish(new RpcEndpointImpl())
-                        .publish(new EndpointTesterService())
-                        .publish(new CrudTestEndpointService())
-                        .publish(new DummyMarkedEndpoint())
-                        .publish("/default/", new AbstractEventSink<Address>(Address.class) {
-                            @Override
-                            protected void eventReceived(Event<Address> event) {
-                                System.out.println("Event Received: " + event.getBody());
-                            }
-                        });
-                this.ep.start();
+
+                Thread t = new Thread(() -> {
+                    try {
+                        BasicConfigurator.configure();
+                        ep = Endpoint.create("test", new ConnectionProvider(new InetSocketAddress("0.0.0.0", 8080)))
+                                .logLevel(LogLevel.TRACE)
+                                .protocol(Endpoint.Protocol.JSON)
+                                .transportType(Endpoint.TransportType.HTTP_REST)
+                                .enableFileHandler(System.getProperty("java.io.tmpdir"))
+                                .enableSwagger("1.0", null)
+                                .enableIntrospection()
+                                .publish(new RpcEndpointImpl())
+                                .publish(new EndpointTesterService())
+                                .publish(new CrudTestEndpointService())
+                                .publish(new DummyMarkedEndpoint())
+                                .publish("/default/", new AbstractEventSink<Address>(Address.class) {
+                                    @Override
+                                    protected void eventReceived(Event<Address> event) {
+                                        System.out.println("Event Received: " + event.getBody());
+                                    }
+                                });
+                        ep.start();
+                    } catch (InterruptedException | FileNotFoundException ex) {
+                        logger.error("Error while initializing test: " + ex.getMessage(), ex);
+                    }
+                });
+                t.start();
             }
 
             @Override

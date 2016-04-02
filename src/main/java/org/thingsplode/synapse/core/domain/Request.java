@@ -19,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.netty.handler.codec.http.HttpMethod;
 import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -55,6 +56,14 @@ public class Request<T extends Serializable> extends AbstractMessage<T> {
         return new Request(new RequestHeader(msgId, uri, method));
     }
 
+    public static Request<?> create(Uri uri, RequestMethod method) {
+        return new Request(new RequestHeader(uri, method));
+    }
+
+    public static Request<?> create(String uri, RequestMethod method) throws UnsupportedEncodingException {
+        return new Request(new RequestHeader(new Uri(uri), method));
+    }
+
     public RequestHeader getHeader() {
         return header;
     }
@@ -72,6 +81,10 @@ public class Request<T extends Serializable> extends AbstractMessage<T> {
         private Uri uri;
         private RequestMethod method;
         private final HashMap<String, String> requestProperties = new HashMap<>();
+
+        public RequestHeader(Uri uri, RequestMethod method) {
+            this(null, uri, method);
+        }
 
         @JsonCreator
         public RequestHeader(@JsonProperty("msgId") String msgId, @JsonProperty("uri") Uri uri, @JsonProperty("method") RequestMethod method) {

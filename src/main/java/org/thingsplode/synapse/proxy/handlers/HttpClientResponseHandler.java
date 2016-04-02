@@ -17,17 +17,17 @@ package org.thingsplode.synapse.proxy.handlers;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.handler.codec.http.FullHttpResponse;
+import io.netty.handler.codec.http.HttpResponse;
 
 /**
  *
  * @author Csaba Tamas
  */
-public class HttpResponseHandler extends SimpleChannelInboundHandler<FullHttpResponse> {
+public class HttpClientResponseHandler extends SimpleChannelInboundHandler<HttpResponse> {
 
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, FullHttpResponse msg) throws Exception {
-        System.out.println("msg");
+    protected void channelRead0(ChannelHandlerContext ctx, HttpResponse msg) throws Exception {
+        System.out.println("msg -----> \n\n\n:" + msg);
     }
-    
+
 }

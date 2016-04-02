@@ -19,34 +19,50 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.FullHttpRequest;
+import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.HttpResponseStatus;
 import java.nio.charset.Charset;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import static org.thingsplode.synapse.endpoint.handlers.HttpResponseHandler.sendError;
 import org.thingsplode.synapse.util.Util;
 
 /**
  *
  * @author Csaba Tamas
  */
-public class HttpMessageIntrospector extends SimpleChannelInboundHandler<FullHttpRequest> {
-    private Logger logger = LoggerFactory.getLogger(HttpMessageIntrospector.class);
+public class HttpRequestIntrospector extends SimpleChannelInboundHandler<HttpRequest> {
+
+    private Logger logger = LoggerFactory.getLogger(HttpRequestIntrospector.class);
+
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest msg) throws Exception {
-        if (msg != null){
+    protected void channelRead0(ChannelHandlerContext ctx, HttpRequest msg) throws Exception {
+        if (msg != null) {
             final StringBuilder hb = new StringBuilder();
             msg.headers().entries().forEach(e -> {
                 hb.append(e.getKey()).append(" : ").append(e.getValue()).append("\n");
             });
-            ByteBuf content = msg.content();
-            byte[] dst = new byte[content.capacity()];
-            content.getBytes(0, dst);
-            String payloadAsSring = new String(dst, Charset.forName("UTF-8"));
-            logger.debug("Message received: \n"
+            String payloadAsSring = null;
+            if (msg instanceof FullHttpRequest) {
+                ByteBuf content = ((FullHttpRequest) msg).content();
+                byte[] dst = new byte[content.capacity()];
+                content.copy().getBytes(0, dst);
+                content.retain();
+                payloadAsSring = new String(dst, Charset.forName("UTF-8"));
+            }
+            logger.debug("Message received: \n\n"
                     + "Uri: " + msg.uri() + "\n"
                     + "Method: " + msg.method() + "\n"
-                    + hb.toString() + "\n" + "Payload: " + (!Util.isEmpty(payloadAsSring) ? payloadAsSring : "EMPTY"));
+                    + hb.toString() + "\n" + "Payload: " + (!Util.isEmpty(payloadAsSring) ? payloadAsSring + "\n" : "EMPTY\n"));
         }
         ctx.fireChannelRead(msg);
+    }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+
+        logger.error("Error while introspecting HTTP request: " + cause.getMessage(), cause);
+        sendError(ctx, HttpResponseStatus.INTERNAL_SERVER_ERROR, cause.getClass().getSimpleName() + ": " + cause.getMessage());
     }
 
 }

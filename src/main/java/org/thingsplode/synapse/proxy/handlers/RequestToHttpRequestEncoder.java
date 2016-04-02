@@ -42,8 +42,9 @@ public class RequestToHttpRequestEncoder extends MessageToMessageEncoder<Request
     private final SerializationService serializationService = new SerializationService();
 
     @Override
-    protected void encode(ChannelHandlerContext ctx, Request msg, List<Object> out) throws Exception {
-        out.add(convert(msg));
+    protected void encode(ChannelHandlerContext ctx, Request in, List<Object> out) throws Exception {
+        HttpRequest outMsg = convert(in);
+        out.add(outMsg);
     }
 
     private HttpRequest convert(Request in) throws SerializationException {
@@ -66,6 +67,7 @@ public class RequestToHttpRequestEncoder extends MessageToMessageEncoder<Request
             MediaType mt = contentTypeOpt.isPresent() ? new MediaType(contentTypeOpt.get()) : new MediaType(MediaType.APPLICATION_JSON);
             byte[] payload = serializationService.getSerializer(mt).marshall(in.getBody());
             out = new DefaultFullHttpRequest(HttpVersion.HTTP_1_0, m, in.getHeader().getUri().getPath(), Unpooled.wrappedBuffer(payload));
+            out.headers().add(HttpHeaderNames.CONTENT_LENGTH, payload.length);
         } else {
             out = new DefaultHttpRequest(HttpVersion.HTTP_1_1, m, in.getHeader().getUri().getPath());
         }
