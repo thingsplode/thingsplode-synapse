@@ -23,14 +23,32 @@ import java.lang.annotation.Target;
 import org.thingsplode.synapse.core.domain.Request.RequestHeader.RequestMethod;
 
 /**
- *
- * @author tamas.csaba@gmail.com
+ * An optional annotation for methods, which provides the possibility to define:<br>
+ * <ul>
+ * <li> the exact public name of the method
+ * <li> the request method itself
+ * </ul>
+ * If this annotation is missing:<br>
+ * <ul>
+ * <li>the java method name will be used
+ * <li>the methods will react of GET if return value is provided and there's no need for Request Body, POST will be favored in case of request or path variables are used or request body is required.
+ * </ul>
+ * @author Csaba Tamas
  */
 @Documented
 @Target({ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface RequestMapping {
 
+    /**
+     * The names under which this java method should be published;
+     * @return
+     */
     String[] value() default {};
+    
+    /**
+     * The Rest Methods to which this java method should be invoked
+     * @return
+     */
     RequestMethod[] method() default {};
 }

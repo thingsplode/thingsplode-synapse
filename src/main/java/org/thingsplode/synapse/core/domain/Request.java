@@ -27,7 +27,7 @@ import org.thingsplode.synapse.core.domain.Request.RequestHeader.RequestMethod;
 
 /**
  *
- * @author tamas.csaba@gmail.com
+ * @author Csaba Tamas
  * @param <T>
  */
 public class Request<T extends Serializable> extends AbstractMessage<T> {
@@ -62,11 +62,15 @@ public class Request<T extends Serializable> extends AbstractMessage<T> {
     public void setHeader(RequestHeader header) {
         this.header = header;
     }
-    
+
+    public Optional<String> getRequestHeaderProperty(String propertyKey) {
+        return this.header != null ? this.header.getRequestProperty(propertyKey) : Optional.empty();
+    }
+
     public static class RequestHeader extends AbstractMessage.MessageHeader {
 
-        private final Uri uri;
-        private final RequestMethod method;
+        private Uri uri;
+        private RequestMethod method;
         private final HashMap<String, String> requestProperties = new HashMap<>();
 
         @JsonCreator
@@ -80,18 +84,28 @@ public class Request<T extends Serializable> extends AbstractMessage<T> {
             return uri;
         }
 
+        public void setUri(Uri uri) {
+            this.uri = uri;
+        }
+
+        public void setMethod(RequestMethod method) {
+            this.method = method;
+        }
+
         public RequestMethod getMethod() {
             return method;
         }
 
         public void addRequestProperty(String key, String value) {
-
             requestProperties.put(key, value);
-
         }
 
         public Optional<String> getRequestProperty(String propertyKey) {
             return Optional.ofNullable(requestProperties.get(propertyKey));
+        }
+
+        public HashMap<String, String> getRequestProperties() {
+            return requestProperties;
         }
 
         public void addAllRequestProperties(Iterable<Map.Entry<String, String>> iterable) {

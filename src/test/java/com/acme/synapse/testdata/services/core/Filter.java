@@ -19,7 +19,7 @@ import java.io.Serializable;
 
 /**
  *
- * @author tamas.csaba@gmail.com
+ * @author Csaba Tamas
  */
 public class Filter implements Serializable {
     

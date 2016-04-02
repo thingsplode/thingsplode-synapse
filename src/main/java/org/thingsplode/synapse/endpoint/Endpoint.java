@@ -51,6 +51,7 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.thingsplode.synapse.endpoint.handlers.HttpFileHandler;
+import org.thingsplode.synapse.endpoint.handlers.HttpMessageIntrospector;
 import org.thingsplode.synapse.endpoint.handlers.HttpRequestHandler;
 import org.thingsplode.synapse.endpoint.handlers.HttpResponseHandler;
 import org.thingsplode.synapse.endpoint.handlers.RequestHandler;
@@ -59,7 +60,7 @@ import org.thingsplode.synapse.util.NetworkUtil;
 
 /**
  *
- * @author tamas.csaba@gmail.com //todo: add basic authorization
+ * @author Csaba Tamas //todo: add basic authorization
  */
 public class Endpoint {
 
@@ -86,6 +87,7 @@ public class Endpoint {
     private EventExecutorGroup evtExecutorGroup = new DefaultEventExecutorGroup(10);
     private ServiceRegistry serviceRegistry = new ServiceRegistry();
     private EndpointApiGenerator apiGenerator = null;
+    private boolean introspection = false;
 
     private enum Lifecycle {
         UNITIALIZED,
@@ -126,7 +128,10 @@ public class Endpoint {
                                 ChannelPipeline p = ch.pipeline();
                                 p.addLast(HTTP_ENCODER, new HttpResponseEncoder());
                                 p.addLast(HTTP_DECODER, new HttpRequestDecoder());
-                                p.addLast("aggregator", new HttpObjectAggregator(65536));
+                                p.addLast("aggregator", new HttpObjectAggregator(1048576));
+                                if (introspection) {
+                                    p.addLast(new HttpMessageIntrospector());
+                                }
                                 p.addLast(evtExecutorGroup, "http_request_handler", new HttpRequestHandler(endpointId, serviceRegistry));
                                 if (fileHandler != null) {
                                     p.addLast(evtExecutorGroup, HTTP_FILE_HANDLER, fileHandler);
@@ -168,9 +173,7 @@ public class Endpoint {
             channelRegistry.add(channel);
             channelFuture.channel().closeFuture().sync();
         }
-        
-        
-        
+
     }
 
     public void stop() {
@@ -291,10 +294,17 @@ public class Endpoint {
         }
     }
 
+    public Endpoint enableIntrospection() {
+        this.introspection = true;
+        return this;
+    }
+
     /**
      *
      * @param version
-     * @param hostname the host name (ip address) under the endpoints are available. If null, the first IPV4 address will be taken from the first configured non-loopback interface.
+     * @param hostname the host name (ip address) under the endpoints are
+     * available. If null, the first IPV4 address will be taken from the first
+     * configured non-loopback interface.
      * @return
      * @throws FileNotFoundException
      */

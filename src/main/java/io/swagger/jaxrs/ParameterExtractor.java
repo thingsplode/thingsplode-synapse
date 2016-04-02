@@ -36,17 +36,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.thingsplode.synapse.core.SynapseEndpointServiceMarker;
-import org.thingsplode.synapse.core.annotations.HeaderParam;
 import org.thingsplode.synapse.core.annotations.PathVariable;
 import org.thingsplode.synapse.core.annotations.RequestBody;
 import org.thingsplode.synapse.core.annotations.RequestParam;
 import org.thingsplode.synapse.core.annotations.Service;
 import org.thingsplode.synapse.core.domain.ParameterWrapper;
 import org.thingsplode.synapse.core.domain.Request;
+import org.thingsplode.synapse.core.annotations.RequestProperty;
 
 /**
  *
- * @author tamas.csaba@gmail.com
+ * @author Csaba Tamas
  */
 public class ParameterExtractor {
 
@@ -104,8 +104,8 @@ public class ParameterExtractor {
                 }
                 annotated = true;
                 params.add(ParameterProcessor.applyAnnotations(swagger, pp, type, annotations));
-            } else if (annotation instanceof HeaderParam) {
-                HeaderParam param = (HeaderParam) annotation;
+            } else if (annotation instanceof RequestProperty) {
+                RequestProperty param = (RequestProperty) annotation;
                 HeaderParameter hp = new HeaderParameter()
                         .name(param.value());
                 Property schema = createProperty(type);

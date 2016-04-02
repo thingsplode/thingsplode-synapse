@@ -31,18 +31,18 @@ import java.util.HashSet;
 import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.thingsplode.synapse.core.annotations.HeaderParam;
 import org.thingsplode.synapse.core.annotations.RequestMapping;
 import org.thingsplode.synapse.core.annotations.Service;
 import org.thingsplode.synapse.core.domain.MediaType;
 import org.thingsplode.synapse.core.domain.Response;
 import org.thingsplode.synapse.endpoint.Endpoint;
 import org.thingsplode.synapse.util.Util;
+import org.thingsplode.synapse.core.annotations.RequestProperty;
 
 /**
  * A swagger scanner to list the endpoint information;
  *
- * @author tamas.csaba@gmail.com
+ * @author Csaba Tamas
  */
 @Service(Endpoint.ENDPOINT_URL_PATERN)
 public class EndpointApiGenerator {
@@ -126,7 +126,7 @@ public class EndpointApiGenerator {
     }
 
     @RequestMapping("/json")
-    public Response getListingJson(@HeaderParam("Host") String host) {
+    public Response getListingJson(@RequestProperty("Host") String host) {
         Template t = new Template() {
             @Override
             void addBody(Response response) throws JsonProcessingException {
@@ -142,7 +142,7 @@ public class EndpointApiGenerator {
     }
 
     @RequestMapping("/yaml")
-    public Response getListingYaml(@HeaderParam("Host") String host) {
+    public Response getListingYaml(@RequestProperty("Host") String host) {
         Template t = new Template() {
             @Override
             void addBody(Response response) throws JsonProcessingException {

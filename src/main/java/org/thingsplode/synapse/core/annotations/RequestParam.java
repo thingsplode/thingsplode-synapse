@@ -22,8 +22,15 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- *
- * @author tamas.csaba@gmail.com
+ * When using this annotation on method parameters, the request part of the path will processed and the request parameters will be passed to the method.<br>
+ * Example: 
+ * <pre>
+ * {@code 
+ * public Response<Integer> sum(@RequestParam("a") Integer a, @RequestParam("b") Integer b) {}
+ * }
+ * </pre>
+ * will expect the following request: /some_service_root/some_service/sum?a=2&b=10
+ * @author Csaba Tamas
  */
 @Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)

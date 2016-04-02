@@ -19,7 +19,7 @@ import org.thingsplode.synapse.core.SynapseEndpointServiceMarker;
 
 /**
  *
- * @author tamas.csaba@gmail.com
+ * @author Csaba Tamas
  */
 public class DummyMarkedEndpoint implements SynapseEndpointServiceMarker {
 

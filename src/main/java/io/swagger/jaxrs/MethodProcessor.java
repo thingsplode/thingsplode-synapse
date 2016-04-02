@@ -47,7 +47,7 @@ import org.apache.commons.lang3.StringUtils;
 
 /**
  *
- * @author tamas.csaba@gmail.com
+ * @author Csaba Tamas
  */
 public class MethodProcessor {
 

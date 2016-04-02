@@ -23,7 +23,7 @@ import org.thingsplode.synapse.util.Util;
 
 /**
  *
- * @author tamas.csaba@gmail.com
+ * @author Csaba Tamas
  */
 public class MediaRange {
 

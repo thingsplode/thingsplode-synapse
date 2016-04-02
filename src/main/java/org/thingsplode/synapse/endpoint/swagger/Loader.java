@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
 
 /**
  *
- * @author tamas.csaba@gmail.com
+ * @author Csaba Tamas
  */
 public class Loader {
 

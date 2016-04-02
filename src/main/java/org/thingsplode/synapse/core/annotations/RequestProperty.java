@@ -20,16 +20,21 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import org.thingsplode.synapse.core.domain.Request;
 
 /**
- *
- * @author tamas.csaba@gmail.com
+ * The value of the method parameter is delivered via a Request Property (the HTTP headers are converted to Request Properties in the {@link Request.RequestHeader});<br>
+ * For example: in case the value is "Host" and the request header contains a key/value property [Host : localhost:8080], the string "localhost:8080" will be passed to the method parameter;
+ * @author Csaba Tamas
  */
 @Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-public @interface HeaderParam {
+public @interface RequestProperty {
 
+    /**
+     * The request property key, which contains the desired value
+     */
     String value();
 
     /**

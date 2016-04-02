@@ -22,8 +22,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- *
- * @author tamas.csaba@gmail.com
+ * Is a marker annotation. In case it used, the payload of the PUT/POST method will be de-serialized and passed to the method parameter;
+ * @author Csaba Tamas
  */
 @Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)

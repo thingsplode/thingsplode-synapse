@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsplode.synapse.endpoint.serializers.jackson.adapters;
+package org.thingsplode.synapse.serializers.jackson.adapters;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
@@ -30,7 +30,7 @@ import org.thingsplode.synapse.core.domain.ParameterWrapper;
 
 /**
  *
- * @author tamas.csaba@gmail.com
+ * @author Csaba Tamas
  */
 public class ParameterWrapperDeserializer extends StdDeserializer<ParameterWrapper> {
 

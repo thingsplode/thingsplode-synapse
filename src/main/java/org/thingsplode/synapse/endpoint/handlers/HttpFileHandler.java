@@ -62,8 +62,10 @@ import org.thingsplode.synapse.util.Util;
 
 /**
  *
- * @author tamas.csaba@gmail.com
+ * @author Csaba Tamas
  */
+//todo: concurrent large file support
+//todo: file upload
 @Sharable
 public final class HttpFileHandler extends SimpleChannelInboundHandler<FileRequest> {
     private final Pattern urlParamPattern = Pattern.compile("\\{(.*?)\\}", Pattern.CASE_INSENSITIVE);

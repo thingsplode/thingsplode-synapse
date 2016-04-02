@@ -20,12 +20,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.netty.handler.codec.http.HttpResponseStatus;
-import org.thingsplode.synapse.endpoint.serializers.jackson.adapters.HttpResponseStatusDeserializer;
-import org.thingsplode.synapse.endpoint.serializers.jackson.adapters.HttpResponseStatusSerializer;
+import org.thingsplode.synapse.serializers.jackson.adapters.HttpResponseStatusDeserializer;
+import org.thingsplode.synapse.serializers.jackson.adapters.HttpResponseStatusSerializer;
 
 /**
  *
- * @author tamas.csaba@gmail.com
+ * @author Csaba Tamas
  * @param <T>
  */
 public class Response<T> extends AbstractMessage<T> {

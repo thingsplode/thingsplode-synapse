@@ -22,6 +22,7 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.swagger.annotations.Api;
 import java.util.ArrayList;
 import java.util.Calendar;
+import javax.ws.rs.QueryParam;
 import org.thingsplode.synapse.core.annotations.PathVariable;
 import org.thingsplode.synapse.core.annotations.RequestBody;
 import org.thingsplode.synapse.core.annotations.RequestMapping;
@@ -31,7 +32,7 @@ import org.thingsplode.synapse.core.domain.Response;
 
 /**
  *
- * @author tamas.csaba@gmail.com
+ * @author Csaba Tamas
  */
 @Service("/{userid}/devices/")
 @Api(consumes = "application/json",produces = "application/json")
@@ -76,14 +77,14 @@ public class CrudTestEndpointService {
     }
 
     @RequestMapping(value = "owner", method = {RequestMethod.POST})
-    public Response<Device> getByOwner(Long deviceId) {
+    public Response<Device> getByOwner(@QueryParam("arg0") Long deviceId) {
         Device d = createDevice();
         d.setId(deviceId);
         return new Response<>(new Response.ResponseHeader(HttpResponseStatus.OK), d);
     }
 
     @RequestMapping("owner")
-    public Response<Device> getByOwner(Long deviceId, Integer treshold) {
+    public Response<Device> getByOwner(@QueryParam("arg0") Long deviceId,@QueryParam("arg1") Integer treshold) {
         Device d = createDevice();
         d.setId(deviceId);
         d.setTreshold(treshold);

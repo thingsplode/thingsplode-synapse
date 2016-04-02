@@ -21,7 +21,7 @@ import org.thingsplode.synapse.core.domain.Event;
 
 /**
  *
- * @author tamas.csaba@gmail.com
+ * @author Csaba Tamas
  * @param <T>
  */
 //todo: build common event handling logic

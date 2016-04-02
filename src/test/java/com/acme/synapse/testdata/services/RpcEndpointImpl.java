@@ -23,7 +23,7 @@ import org.thingsplode.synapse.core.exceptions.MethodNotFoundException;
 
 /**
  *
- * @author tamas.csaba@gmail.com
+ * @author Csaba Tamas
  */
 
 public class RpcEndpointImpl implements RpcEndpoint {

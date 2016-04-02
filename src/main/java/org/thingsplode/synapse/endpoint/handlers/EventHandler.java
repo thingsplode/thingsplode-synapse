@@ -17,7 +17,7 @@ package org.thingsplode.synapse.endpoint.handlers;
 
 /**
  *
- * @author tamas.csaba@gmail.com
+ * @author Csaba Tamas
  */
 public class EventHandler {
     

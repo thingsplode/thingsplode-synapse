@@ -23,11 +23,11 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import org.thingsplode.synapse.endpoint.serializers.jackson.adapters.ParameterWrapperDeserializer;
+import org.thingsplode.synapse.serializers.jackson.adapters.ParameterWrapperDeserializer;
 
 /**
  *
- * @author tamas.csaba@gmail.com
+ * @author Csaba Tamas
  */
 @JsonDeserialize(using = ParameterWrapperDeserializer.class)
 @ApiModel(value = "arameterWrapper", description = "A method parameter wrapper object for the RPC use-case")

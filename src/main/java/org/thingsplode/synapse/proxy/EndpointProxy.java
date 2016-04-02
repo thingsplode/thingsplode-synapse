@@ -15,34 +15,120 @@
  */
 package org.thingsplode.synapse.proxy;
 
-import org.thingsplode.synapse.core.domain.Event;
-import org.thingsplode.synapse.core.domain.Request;
-import org.thingsplode.synapse.core.domain.Response;
+import io.netty.bootstrap.Bootstrap;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelPipeline;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.codec.http.HttpClientCodec;
+import io.netty.handler.codec.http.HttpContentDecompressor;
+import io.netty.handler.codec.http.HttpObjectAggregator;
+import io.netty.handler.codec.http.HttpRequestEncoder;
+import io.netty.handler.codec.http.HttpResponseDecoder;
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.HashSet;
+import javax.net.ssl.SSLException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.thingsplode.synapse.endpoint.handlers.HttpResponseHandler;
+import org.thingsplode.synapse.proxy.handlers.RequestToHttpRequestEncoder;
 
 /**
  *
- * @author tamas.csaba@gmail.com
+ * @author Csaba Tamas
  */
+//todo: remove this -> http://netty.io/4.0/xref/io/netty/example/http/snoop/package-summary.html
+//todo: support for basic authentication (//todo: support for basic authentication )
+//todo: dispatching strategy (worker pool, ringbuffer, single threaded)
 public class EndpointProxy {
 
-    private EndpointProxy() {
+    private Logger logger = LoggerFactory.getLogger(EndpointProxy.class);
+    private final URI connectionUri;
+    private EventLoopGroup group = new NioEventLoopGroup();
+    private SslContext sslContext = null;
+    private Bootstrap b = null;
+    private final HashSet<Dispatcher> dispatchers = new HashSet<>();
+
+    //todo: place connection uri to the aqcuire dispatcher, so one client instance can work with many servers
+    private EndpointProxy(String baseUrl) throws URISyntaxException {
+        this.connectionUri = new URI(baseUrl);
     }
 
-    public static final EndpointProxy init() {
-        return new EndpointProxy();
+    public static final EndpointProxy create(String baseUrl) throws URISyntaxException {
+        return new EndpointProxy(baseUrl);
     }
 
-    public <T> T createStub(String test_service, Class<T> aClass) {
-        throw new UnsupportedOperationException("Not supported yet."); 
+    public EndpointProxy start() {
+        b = new Bootstrap();
+        b.group(group)
+                .channel(NioSocketChannel.class)
+                .handler(new ChannelInitializer() {
+                    @Override
+                    protected void initChannel(Channel ch) throws Exception {
+                        ChannelPipeline p = ch.pipeline();
+                        if (sslContext != null) {
+                            p.addLast(sslContext.newHandler(ch.alloc()));
+                        }
+                        //todo: tune the values here
+                        p.addLast(new HttpClientCodec());
+                        //p.addLast(new HttpRequestEncoder());
+                        //p.addLast(new HttpResponseDecoder());
+                        p.addLast(new HttpContentDecompressor());
+                        //todo: chose one of the two and tune it
+                        p.addLast(new HttpObjectAggregator(1048576));
+                        p.addLast(new RequestToHttpRequestEncoder());
+                        //p.addLast(new HttpClientHandler());
+                        p.addLast(new HttpResponseHandler());
+                    }
+                });
+        return this;
     }
-    
-    public void broadcast(Event event){
-        throw new UnsupportedOperationException("Not supported yet."); 
+
+    public void stop() {
+        dispatchers.forEach(d -> {
+            try {
+                dispatchers.remove(d);
+                d.destroy();
+            } catch (InterruptedException ex) {
+                logger.warn("Interrupted while destroying duspatcher: " + ex.getMessage());
+            }
+        });
+        group.shutdownGracefully();
     }
-    
-    public Response dispatch(Request request){
-        throw new UnsupportedOperationException("Not supported yet."); 
+
+    public Dispatcher acquireDispatcher() throws SSLException, InterruptedException {
+        int port = 0;
+        boolean ssl = true;
+        if (this.connectionUri.getPort() == -1) {
+            if (this.connectionUri.getScheme() != null) {
+                if ("http".equalsIgnoreCase(this.connectionUri.getScheme()) || "ws".equalsIgnoreCase(this.connectionUri.getScheme())) {
+                    port = 80;
+                    ssl = false;
+                } else if ("https".equalsIgnoreCase(this.connectionUri.getScheme()) || "wss".equalsIgnoreCase(this.connectionUri.getScheme())) {
+                    port = 443;
+                } else {
+                    port = 8000;
+                    ssl = false;
+                }
+            }
+        }
+        if (ssl) {
+            //todo: extends beyond prototype quality
+            sslContext = SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build();
+        }
+
+        Channel ch = b.connect(this.connectionUri.getHost(), port).sync().channel();
+        Dispatcher d = new Dispatcher(ch, this.connectionUri);
+        dispatchers.add(d);
+        return d;
     }
-    
-    
+
+ 
+
 }

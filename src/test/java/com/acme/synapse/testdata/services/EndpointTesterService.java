@@ -28,7 +28,7 @@ import org.thingsplode.synapse.core.annotations.RequestParam;
 
 /**
  *
- * @author tamas.csaba@gmail.com
+ * @author Csaba Tamas
  */
 @Service("/test/{user}/messages/")
 public class EndpointTesterService {

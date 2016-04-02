@@ -19,7 +19,7 @@ import java.io.Serializable;
 
 /**
  *
- * @author tamas.csaba@gmail.com
+ * @author Csaba Tamas
  * @param <T>
  */
 public class Event<T extends Serializable> extends Request<T> {

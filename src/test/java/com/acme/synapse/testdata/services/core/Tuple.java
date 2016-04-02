@@ -21,7 +21,7 @@ import java.io.Serializable;
 
 /**
  *
- * @author tamas.csaba@gmail.com
+ * @author Csaba Tamas
  * @param <X>
  * @param <Y>
  */

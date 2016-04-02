@@ -23,10 +23,14 @@ import java.util.regex.Pattern;
 
 /**
  *
- * @author tamas.csaba@gmail.com
+ * @author Csaba Tamas
  */
 public class MediaType {
 
+    /**
+     * "application/json; charset=UTF-8"
+     */
+    public static final String APPLICATION_JSON = "application/json; charset=UTF-8";
     private static final String MEDIA_TYPE_REGEX = "(\\S+?|\\*)/(\\S+?|\\*)";
     private static final Pattern MEDIA_TYPE_PATTERN = Pattern.compile(MEDIA_TYPE_REGEX);
     private static final String PARAMETER_REGEX = "(\\w+?)(?:\\s*?=\\s*?(\\S+?))";

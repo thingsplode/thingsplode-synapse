@@ -24,7 +24,7 @@ import org.thingsplode.synapse.core.domain.HttpStatus;
 
 /**
  *
- * @author tamas.csaba@gmail.com
+ * @author Csaba Tamas
  */
 @Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)

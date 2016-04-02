@@ -20,14 +20,20 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import org.thingsplode.synapse.core.SynapseEndpointServiceMarker;
 
 /**
- *
- * @author tamas.csaba@gmail.com
+ * One way of marking services for being published as an endpoint; The alternative is to implement the {@link SynapseEndpointServiceMarker} interface.
+ * @author Csaba Tamas
  */
 @Documented
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Service {
+
+    /**
+     * The endpoint path under the Service should be published (eg. /some_root/service_name
+     * @return
+     */
     String value();
 }

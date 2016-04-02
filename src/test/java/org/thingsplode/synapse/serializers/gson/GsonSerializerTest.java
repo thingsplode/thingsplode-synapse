@@ -13,16 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsplode.synapse.endpoint.handlers.internal;
+package org.thingsplode.synapse.serializers.gson;
 
-import java.util.HashMap;
-import java.util.regex.Pattern;
+import org.thingsplode.synapse.serializers.gson.GsonSerializer;
+import org.thingsplode.synapse.serializers.AbstractParserTest;
+import org.thingsplode.synapse.serializers.SynapseSerializer;
 
 /**
  *
- * @author tamas.csaba@gmail.com
+ * @author Csaba Tamas
  */
-public class FileHandler {
-    private HashMap<Pattern, String> directories;
-    
+//public class GsonSerializerTest extends AbstractParserTest {
+public class GsonSerializerTest {
+
+    private final GsonSerializer serializer = new GsonSerializer(true, null, null);
+
+    //@Override
+    public SynapseSerializer<String> getSerializer() {
+        return serializer;
+    }
+
 }

@@ -24,7 +24,7 @@ import org.junit.Test;
 
 /**
  *
- * @author tamas.csaba@gmail.com
+ * @author Csaba Tamas
  */
 public class MediaRangeTest {
 

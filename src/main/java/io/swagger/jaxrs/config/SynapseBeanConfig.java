@@ -29,7 +29,7 @@ import org.thingsplode.synapse.core.annotations.Service;
 
 /**
  *
- * @author tamas.csaba@gmail.com
+ * @author Csaba Tamas
  */
 public class SynapseBeanConfig extends BeanConfig {
 

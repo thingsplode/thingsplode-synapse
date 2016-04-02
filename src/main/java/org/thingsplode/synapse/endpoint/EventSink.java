@@ -22,7 +22,7 @@ import org.thingsplode.synapse.core.domain.Event;
 
 /**
  *
- * @author tamas.csaba@gmail.com
+ * @author Csaba Tamas
  * @param <T>
  */
 public interface EventSink<T extends Serializable> extends SynapseEndpointServiceMarker {

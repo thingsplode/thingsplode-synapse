@@ -23,7 +23,7 @@ import org.thingsplode.synapse.core.exceptions.MarshallerException;
 
 /**
  *
- * @author tamas.csaba@gmail.com
+ * @author Csaba Tamas
  * @param <T>
  */
 public abstract class AbstractMessage<T> implements Serializable {

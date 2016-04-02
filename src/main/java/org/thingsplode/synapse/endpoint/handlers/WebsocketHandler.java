@@ -21,7 +21,7 @@ import io.netty.handler.codec.http.websocketx.WebSocketFrame;
 
 /**
  *
- * @author tamas.csaba@gmail.com
+ * @author Csaba Tamas
  */
 public class WebsocketHandler extends SimpleChannelInboundHandler<WebSocketFrame> {
 

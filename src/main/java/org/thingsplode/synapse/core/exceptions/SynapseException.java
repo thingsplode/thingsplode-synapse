@@ -19,7 +19,7 @@ import org.thingsplode.synapse.core.domain.HttpStatus;
 
 /**
  *
- * @author tamas.csaba@gmail.com
+ * @author Csaba Tamas
  */
 public class SynapseException extends Exception {
 

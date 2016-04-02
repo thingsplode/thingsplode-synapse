@@ -17,7 +17,7 @@ package org.thingsplode.synapse.core.domain;
 
 /**
  *
- * @author tamas.csaba@gmail.com
+ * @author Csaba Tamas
  */
 public class PushNotification extends AbstractMessage {
     

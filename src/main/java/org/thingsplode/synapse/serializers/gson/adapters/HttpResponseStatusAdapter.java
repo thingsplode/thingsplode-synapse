@@ -13,35 +13,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsplode.synapse.endpoint.serializers.gson.adapters;
+package org.thingsplode.synapse.serializers.gson.adapters;
 
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
+import io.netty.handler.codec.http.HttpResponseStatus;
 import java.lang.reflect.Type;
 
 /**
  *
- * @author tamas.csaba@gmail.com
+ * @author Csaba Tamas
  */
-public class ClassTypeAdapter implements JsonSerializer<Class>, JsonDeserializer<Class> {
+public class HttpResponseStatusAdapter implements JsonSerializer<HttpResponseStatus>, JsonDeserializer<HttpResponseStatus> {
 
-    @Override
-    public JsonElement serialize(Class src, Type typeOfSrc, JsonSerializationContext context) {
-        return new JsonPrimitive(src.getCanonicalName());
+    public HttpResponseStatusAdapter() {
     }
 
     @Override
-    public Class deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
-        try {
-            return Class.forName(json.getAsString());
-        } catch (ClassNotFoundException ex) {
-            throw new JsonParseException("Could not deserialize json element [" + json.getAsString() + "] because of: " + ex.getMessage(), ex);
-        }
+    public JsonElement serialize(HttpResponseStatus src, Type typeOfSrc, JsonSerializationContext context) {
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.add("code", new JsonPrimitive(src.code()));
+        jsonObject.add("reason", new JsonPrimitive(src.reasonPhrase()));
+        return jsonObject;
+    }
+
+    @Override
+    public HttpResponseStatus deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+        return new HttpResponseStatus(json.getAsJsonObject().get("code").getAsInt(), json.getAsJsonObject().get("reason").getAsString());
+
     }
 
 }

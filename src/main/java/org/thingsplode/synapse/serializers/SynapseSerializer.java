@@ -13,25 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsplode.synapse.endpoint.serializers;
+package org.thingsplode.synapse.serializers;
 
 import org.thingsplode.synapse.core.domain.MediaRange;
-import org.thingsplode.synapse.core.domain.MediaType;
-import org.thingsplode.synapse.endpoint.serializers.jackson.JacksonSerializer;
+import org.thingsplode.synapse.core.exceptions.SerializationException;
 
 /**
  *
- * @author tamas.csaba@gmail.com
+ * @author Csaba Tamas
+ * @param <WIREFORMAT>
  */
-public class SerializationService {
+public interface SynapseSerializer<WIREFORMAT> {
 
-    private final JacksonSerializer jacksonSerializer = new JacksonSerializer(true);
+    public MediaRange getSupportedMediaRange();
+    
+    WIREFORMAT marshallToWireformat(Object object) throws SerializationException;
+    
+    byte[] marshall(Object object) throws SerializationException;
 
-    public SynapseSerializer<String> getPreferredSerializer(MediaRange mediaRange) {
-        return jacksonSerializer;
-    }
-
-    public SynapseSerializer<String> getSerializer(MediaType contentType) {
-        return jacksonSerializer;
-    }
+    <T> T unMarshall(Class<T> objectType, WIREFORMAT wirecontent) throws SerializationException;
 }

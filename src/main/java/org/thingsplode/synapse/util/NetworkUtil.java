@@ -33,7 +33,7 @@ import javax.net.ssl.SSLServerSocket;
 
 /**
  *
- * @author tamas.csaba@gmail.com
+ * @author Csaba Tamas
  */
 public class NetworkUtil {
 

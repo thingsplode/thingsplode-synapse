@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 
 /**
  *
- * @author tamas.csaba@gmail.com
+ * @author Csaba Tamas
  */
 public class Reflector {
 

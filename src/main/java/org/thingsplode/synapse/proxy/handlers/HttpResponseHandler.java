@@ -13,22 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsplode.synapse.core.exceptions;
+package org.thingsplode.synapse.proxy.handlers;
 
-import org.thingsplode.synapse.core.domain.HttpStatus;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.handler.codec.http.FullHttpResponse;
 
 /**
  *
  * @author Csaba Tamas
  */
-public class MarshallerException extends SynapseException {
+public class HttpResponseHandler extends SimpleChannelInboundHandler<FullHttpResponse> {
 
-    public MarshallerException(String msg, HttpStatus status) {
-        super(msg, status);
+    @Override
+    protected void channelRead0(ChannelHandlerContext ctx, FullHttpResponse msg) throws Exception {
+        System.out.println("msg");
     }
-
-    public MarshallerException(String message, HttpStatus status, Throwable throwable) {
-        super(message, status, throwable);
-    }
-
+    
 }

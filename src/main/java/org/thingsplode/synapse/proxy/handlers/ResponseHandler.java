@@ -13,22 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsplode.synapse.core.exceptions;
-
-import org.thingsplode.synapse.core.domain.HttpStatus;
+package org.thingsplode.synapse.proxy.handlers;
 
 /**
  *
  * @author Csaba Tamas
  */
-public class MarshallerException extends SynapseException {
-
-    public MarshallerException(String msg, HttpStatus status) {
-        super(msg, status);
-    }
-
-    public MarshallerException(String message, HttpStatus status, Throwable throwable) {
-        super(message, status, throwable);
-    }
-
+public class ResponseHandler {
+    
 }

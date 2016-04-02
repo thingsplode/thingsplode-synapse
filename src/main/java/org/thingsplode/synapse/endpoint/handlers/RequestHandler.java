@@ -21,7 +21,7 @@ import org.thingsplode.synapse.core.domain.Request;
 
 /**
  *
- * @author tamas.csaba@gmail.com
+ * @author Csaba Tamas
  */
 public class RequestHandler extends SimpleChannelInboundHandler<Request> {
 

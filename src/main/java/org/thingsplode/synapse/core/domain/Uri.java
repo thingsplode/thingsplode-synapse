@@ -27,9 +27,10 @@ import org.thingsplode.synapse.util.Util;
 /**
  * Processes URIs in the following way:
  * /context/service/method/{path_variable}?parameter=1&parameter=2
- *
- * @author tamas.csaba@gmail.com
+ * 
+ * @author Csaba Tamas
  */
+//todo: merge&cobine with the java.net.URI
 public class Uri {
 
     private final String path;

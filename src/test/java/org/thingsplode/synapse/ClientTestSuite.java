@@ -24,7 +24,7 @@ import org.junit.runners.Suite;
 
 /**
  *
- * @author tamas.csaba@gmail.com
+ * @author Csaba Tamas
  */
 @RunWith(Suite.class)
 @Suite.SuiteClasses({})

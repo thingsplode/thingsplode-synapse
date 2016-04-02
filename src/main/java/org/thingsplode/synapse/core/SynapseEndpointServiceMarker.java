@@ -16,8 +16,8 @@
 package org.thingsplode.synapse.core;
 
 /**
- *
- * @author tamas.csaba@gmail.com
+ * One way to mark services as Endpoints for publishing is to implement this marker interface.
+ * @author Csaba Tamas
  */
 public interface SynapseEndpointServiceMarker {
     

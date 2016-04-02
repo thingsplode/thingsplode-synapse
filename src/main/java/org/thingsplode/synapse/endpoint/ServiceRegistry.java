@@ -39,7 +39,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.thingsplode.synapse.core.SynapseEndpointServiceMarker;
-import org.thingsplode.synapse.core.annotations.HeaderParam;
 import org.thingsplode.synapse.core.domain.Uri;
 import org.thingsplode.synapse.core.annotations.PathVariable;
 import org.thingsplode.synapse.core.annotations.RequestBody;
@@ -57,13 +56,14 @@ import org.thingsplode.synapse.core.exceptions.ExecutionException;
 import org.thingsplode.synapse.core.exceptions.MethodNotFoundException;
 import org.thingsplode.synapse.core.exceptions.MissingParameterException;
 import org.thingsplode.synapse.core.exceptions.SerializationException;
-import org.thingsplode.synapse.endpoint.serializers.SerializationService;
+import org.thingsplode.synapse.serializers.SerializationService;
 import org.thingsplode.synapse.util.Reflector;
 import org.thingsplode.synapse.util.Util;
+import org.thingsplode.synapse.core.annotations.RequestProperty;
 
 /**
  *
- * @author tamas.csaba@gmail.com
+ * @author Csaba Tamas
  */
 public class ServiceRegistry {
 
@@ -296,9 +296,9 @@ public class ServiceRegistry {
                         required = p.getAnnotation(RequestBody.class).required();
                     } else if (p.isAnnotationPresent(PathVariable.class)) {
                         mp = new MethodParam(p, MethodParam.ParameterSource.PATH_VARIABLE, p.getAnnotation(PathVariable.class).value());
-                    } else if (p.isAnnotationPresent(HeaderParam.class)) {
-                        mp = new MethodParam(p, MethodParam.ParameterSource.HEADER_PARAM, p.getAnnotation(HeaderParam.class).value());
-                        required = p.getAnnotation(HeaderParam.class).required();
+                    } else if (p.isAnnotationPresent(RequestProperty.class)) {
+                        mp = new MethodParam(p, MethodParam.ParameterSource.HEADER_PARAM, p.getAnnotation(RequestProperty.class).value());
+                        required = p.getAnnotation(RequestProperty.class).required();
                     } else if (AbstractMessage.class.isAssignableFrom(p.getType())) {
                         mp = new MethodParam(p, MethodParam.ParameterSource.BODY, p.getName());
                     } else {

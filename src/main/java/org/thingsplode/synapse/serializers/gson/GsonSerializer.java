@@ -13,25 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsplode.synapse.endpoint.serializers.gson;
+package org.thingsplode.synapse.serializers.gson;
 
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import io.netty.handler.codec.http.HttpResponseStatus;
-import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.List;
 import org.thingsplode.synapse.core.domain.MediaRange;
 import org.thingsplode.synapse.core.exceptions.SerializationException;
-import org.thingsplode.synapse.endpoint.serializers.SynapseSerializer;
-import org.thingsplode.synapse.endpoint.serializers.gson.adapters.ClassTypeAdapter;
-import org.thingsplode.synapse.endpoint.serializers.gson.adapters.HttpResponseStatusAdapter;
+import org.thingsplode.synapse.serializers.SynapseSerializer;
+import org.thingsplode.synapse.serializers.gson.adapters.ClassTypeAdapter;
+import org.thingsplode.synapse.serializers.gson.adapters.HttpResponseStatusAdapter;
 
 /**
  *
- * @author tamas.csaba@gmail.com
+ * @author Csaba Tamas
  */
 public class GsonSerializer implements SynapseSerializer<String> {
 
@@ -57,13 +57,26 @@ public class GsonSerializer implements SynapseSerializer<String> {
     }
 
     @Override
-    public String marshall(Object src) throws SerializationException {
+    public String marshallToWireformat(Object src) throws SerializationException {
         try {
             //Type type = new TypeToken<Request<Device>>(){}.getType();
             return gson.toJson(src, src.getClass());
         } catch (Exception e) {
             throw new SerializationException("Couldn't marshall to json due to: " + e.getMessage(), e);
         }
+    }
+
+    @Override
+    public byte[] marshall(Object src) throws SerializationException {
+        if (src == null) {
+            return new byte[0];
+        }
+        try {
+            return gson.toJson(src, src.getClass()).getBytes("UTF-8");
+        } catch (UnsupportedEncodingException ex) {
+            throw new SerializationException("Could not serialize object of type [" + src.getClass().getName() + "] due to: " + ex.getMessage(), ex);
+        }
+
     }
 
     @Override

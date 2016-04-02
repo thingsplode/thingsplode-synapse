@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsplode.synapse.endpoint.serializers;
+package org.thingsplode.synapse.serializers;
 
+import org.thingsplode.synapse.serializers.SynapseSerializer;
 import com.acme.synapse.testdata.services.core.Device;
 import com.acme.synapse.testdata.services.core.Tuple;
 import io.netty.handler.codec.http.HttpMethod;
@@ -32,11 +33,11 @@ import org.thingsplode.synapse.core.domain.Request.RequestHeader.RequestMethod;
 import org.thingsplode.synapse.core.domain.Response;
 import org.thingsplode.synapse.core.domain.Uri;
 import org.thingsplode.synapse.core.exceptions.SerializationException;
-import org.thingsplode.synapse.endpoint.serializers.jackson.JacksonSerializer;
+import org.thingsplode.synapse.serializers.jackson.JacksonSerializer;
 
 /**
  *
- * @author tamas.csaba@gmail.com
+ * @author Csaba Tamas
  */
 public class AbstractParserTest {
     
@@ -55,7 +56,7 @@ public class AbstractParserTest {
     public void testBaseParameterWrapper() throws SerializationException {
         String paramid = "arg0";
         String paramValue = "something in the rain";
-        String json = getSerializer().marshall(ParameterWrapper.create().add(paramid, paramValue.getClass(), paramValue));
+        String json = getSerializer().marshallToWireformat(ParameterWrapper.create().add(paramid, paramValue.getClass(), paramValue));
         System.out.println(json);
         ParameterWrapper pw = getSerializer().unMarshall(ParameterWrapper.class, json);
         Assert.assertNotNull(pw);
@@ -70,7 +71,7 @@ public class AbstractParserTest {
         
         String paramid = "arg0";
         Device paramValue = Device.createTestDevice();
-        String json = getSerializer().marshall(ParameterWrapper.create().add(paramid, paramValue.getClass(), paramValue));
+        String json = getSerializer().marshallToWireformat(ParameterWrapper.create().add(paramid, paramValue.getClass(), paramValue));
         System.out.println(json);
         ParameterWrapper pw = getSerializer().unMarshall(ParameterWrapper.class, json);
         Assert.assertNotNull(pw);
@@ -83,7 +84,7 @@ public class AbstractParserTest {
     
     @Test
     public void testPrimitivemarshalling() throws SerializationException {
-        String json = getSerializer().marshall(Long.parseLong("1"));
+        String json = getSerializer().marshallToWireformat(Long.parseLong("1"));
         System.out.println(json);
         Long number = getSerializer().unMarshall(Long.class, json);
         Assert.assertNotNull(number);
@@ -92,7 +93,7 @@ public class AbstractParserTest {
     
     @Test
     public void testMarshallingComplexObject() throws SerializationException {
-        String json = getSerializer().marshall(Device.createTestDevice());
+        String json = getSerializer().marshallToWireformat(Device.createTestDevice());
         System.out.println(json);
         Device d = getSerializer().unMarshall(Device.class, json);
         Assert.assertNotNull(d);
@@ -103,7 +104,7 @@ public class AbstractParserTest {
     @Test
     public void testMarshallingRequestObject() throws UnsupportedEncodingException, SerializationException {
         Request<Device> r = (Request<Device>) Request.create(UUID.randomUUID().toString(), new Uri("/1221221/devices/add"), Request.RequestHeader.RequestMethod.GET, Device.createTestDevice());
-        String json = getSerializer().marshall(r);
+        String json = getSerializer().marshallToWireformat(r);
         System.out.println(json);
         Request ur = getSerializer().unMarshall(Request.class, json);
         Assert.assertNotNull(ur);
@@ -114,7 +115,7 @@ public class AbstractParserTest {
     @Test
     public void testMarshallingResponseObjects() throws SerializationException {
         Response r = new Response<>(new Response.ResponseHeader(HttpResponseStatus.OK), new ArrayList());
-        String json = getSerializer().marshall(r);
+        String json = getSerializer().marshallToWireformat(r);
         System.out.println(json);
         Response<ArrayList> ur = getSerializer().unMarshall(Response.class, json);
         Assert.assertNotNull(ur);
@@ -127,7 +128,7 @@ public class AbstractParserTest {
     @Test
     public void testMarshallingTuple() throws UnsupportedEncodingException, SerializationException{
         Request<Tuple<Integer, Integer>> reqForMultiply = new Request<>(new Request.RequestHeader(null, new Uri("/test/user@name/messages/multiply"), RequestMethod.fromHttpMethod(HttpMethod.GET)), new Tuple<>(10, 100));
-        String json = getSerializer().marshall(reqForMultiply);
+        String json = getSerializer().marshallToWireformat(reqForMultiply);
         System.out.println(json);
         Request<Tuple<Integer, Integer>> req = getSerializer().unMarshall(Request.class, json);
         Assert.assertNotNull(req);

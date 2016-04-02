@@ -21,24 +21,21 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
-import io.netty.handler.codec.http.EmptyHttpHeaders;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaderNames;
-import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.util.CharsetUtil;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
-import org.omg.PortableInterceptor.LOCATION_FORWARD;
 import org.thingsplode.synapse.core.domain.MediaType;
 import org.thingsplode.synapse.core.domain.Response;
-import org.thingsplode.synapse.endpoint.serializers.SerializationService;
-import org.thingsplode.synapse.endpoint.serializers.SynapseSerializer;
+import org.thingsplode.synapse.serializers.SerializationService;
+import org.thingsplode.synapse.serializers.SynapseSerializer;
 
 /**
  *
- * @author tamas.csaba@gmail.com
+ * @author Csaba Tamas
  */
 public class HttpResponseHandler extends SimpleChannelInboundHandler<Response> {
 
@@ -50,7 +47,7 @@ public class HttpResponseHandler extends SimpleChannelInboundHandler<Response> {
     protected void channelRead0(ChannelHandlerContext ctx, Response rsp) throws Exception {
         MediaType mt = rsp.getHeader().getContentType();
         SynapseSerializer<String> serializer = serializationService.getSerializer(mt);
-        ByteBuf rspBuf = Unpooled.copiedBuffer(serializer.marshall(rsp.getBody()), CharsetUtil.UTF_8);
+        ByteBuf rspBuf = Unpooled.copiedBuffer(serializer.marshallToWireformat(rsp.getBody()), CharsetUtil.UTF_8);
         FullHttpResponse response = new DefaultFullHttpResponse(
                 HttpVersion.HTTP_1_1, rsp.getHeader().getResponseCode(), rspBuf);
         response.headers().set(HttpHeaderNames.CONTENT_TYPE, mt != null ? mt.getName() : "application/json; charset=UTF-8");

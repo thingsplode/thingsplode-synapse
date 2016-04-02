@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsplode.synapse.endpoint.serializers.jackson;
+package org.thingsplode.synapse.serializers.jackson;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonParser;
@@ -31,14 +31,16 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.thingsplode.synapse.core.domain.MediaRange;
 import org.thingsplode.synapse.core.exceptions.SerializationException;
-import org.thingsplode.synapse.endpoint.serializers.SynapseSerializer;
+import org.thingsplode.synapse.serializers.SynapseSerializer;
 import org.thingsplode.synapse.util.Util;
 
 /**
  *
- * @author tamas.csaba@gmail.com
+ * @author Csaba Tamas
  */
 public class JacksonSerializer implements SynapseSerializer<String> {
 
@@ -81,7 +83,7 @@ public class JacksonSerializer implements SynapseSerializer<String> {
     }
 
     @Override
-    public String marshall(Object object) throws SerializationException {
+    public String marshallToWireformat(Object object) throws SerializationException {
         try {
             if (object != null) {
                 return mapper.writeValueAsString(object);
@@ -90,6 +92,18 @@ public class JacksonSerializer implements SynapseSerializer<String> {
             }
         } catch (JsonProcessingException ex) {
             throw new SerializationException("Could not serialize object of type [" + object.getClass().getSimpleName() + "] due to: " + ex.getMessage(), ex);
+        }
+    }
+
+    @Override
+    public byte[] marshall(Object object) throws SerializationException {
+        if (object == null) {
+            return new byte[0];
+        }
+        try {
+            return mapper.writeValueAsBytes(object);
+        } catch (JsonProcessingException ex) {
+            throw new SerializationException("Could not serialize object of type [" + object.getClass().getName() + "] due to: " + ex.getMessage(), ex);
         }
     }
 
@@ -109,7 +123,6 @@ public class JacksonSerializer implements SynapseSerializer<String> {
     private void init(boolean prettyPrint, List<ConfigFeature> allowedFeatures, List<ConfigFeature> disabledFeatures, PropertyNamingStrategy propNaming) {
         //mapper.enableDefaultTyping(ObjectMapper.DefaultTyping.JAVA_LANG_OBJECT);
         //mapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
-        
 
         if (prettyPrint) {
             mapper.enable(SerializationFeature.INDENT_OUTPUT);
@@ -127,16 +140,16 @@ public class JacksonSerializer implements SynapseSerializer<String> {
         //registerHandlers(serializers, deSerializers);
     }
 
-    public void addSerializer(JsonSerializer serializer){
+    public void addSerializer(JsonSerializer serializer) {
         module.addSerializer(serializer);
     }
-    
-    public void addDeserializer(Class clazz, JsonDeserializer deserializer){
+
+    public void addDeserializer(Class clazz, JsonDeserializer deserializer) {
         module.addDeserializer(clazz, deserializer);
     }
-    
+
     private void registerHandlers(List<JsonSerializer> serializers, HashMap<Class, JsonDeserializer> deSerializers) {
-        
+
         if (serializers != null && !serializers.isEmpty()) {
             serializers.forEach(s -> module.addSerializer(s));
         }

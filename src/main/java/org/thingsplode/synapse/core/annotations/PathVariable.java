@@ -22,8 +22,15 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- *
- * @author tamas.csaba@gmail.com
+ * It is used when the value of the method parameter is transported via the request path;<br>
+ * In the following example: 
+ * <ul>
+ *  <li> the value of this annotation is "user"
+ *  <li> the Service is annotated with path: "/root/{user}/service"
+ *  <li> the request path is: /root/some.user/service
+ * </ul>
+ * the "some.user" string will be passed as a value to the method parameter;
+ * @author Csaba Tamas
  */
 @Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)

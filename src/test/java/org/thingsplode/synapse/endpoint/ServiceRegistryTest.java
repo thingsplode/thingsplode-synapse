@@ -48,7 +48,7 @@ import org.thingsplode.synapse.core.exceptions.SerializationException;
 
 /**
  *
- * @author tamas.csaba@gmail.com
+ * @author Csaba Tamas
  */
 public class ServiceRegistryTest {
 
@@ -218,11 +218,10 @@ public class ServiceRegistryTest {
         Assert.assertTrue(rsp1.getHeader().getResponseCode() == HttpResponseStatus.OK);
         Assert.assertTrue(rsp1.getBody().getLogicalName().equalsIgnoreCase("owner"));
 
-        Optional<ServiceRegistry.MethodContext> elOpt2 = registry.getMethodContext(new Request.RequestHeader(null, new Uri("/222/devices/owner?arg0=222"), RequestMethod.GET));
-        Assert.assertTrue(elOpt2.isPresent());
+        Optional<ServiceRegistry.MethodContext> elOpt2 = registry.getMethodContext(new Request.RequestHeader(null, new Uri("/222/devices/owner?arg0=222"), RequestMethod.POST));
+        Assert.assertTrue("Method context should be found", elOpt2.isPresent());
 
-        Response<Device> rsp2 = registry.invokeWithJavaObject(new Request.RequestHeader(null, new Uri("/222/devices/owner?arg0=222"), RequestMethod.GET), null);
-        Optional<ServiceRegistry.MethodContext> opt1 = registry.getMethodContext(new Request.RequestHeader(null, new Uri("/test/user.name/messages/add?a=1231434&b=212112"), RequestMethod.GET));
+        Response<Device> rsp2 = registry.invokeWithJavaObject(new Request.RequestHeader(null, new Uri("/222/devices/owner?arg0=222"), RequestMethod.POST), null);
         Assert.assertTrue(rsp2.getHeader().getResponseCode() == HttpResponseStatus.OK);
         Assert.assertTrue(rsp2.getBody().getLogicalName().equalsIgnoreCase("some device"));
         Assert.assertTrue(rsp2.getBody().getId() == 222);

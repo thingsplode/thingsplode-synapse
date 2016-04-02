@@ -33,7 +33,7 @@ import org.thingsplode.synapse.endpoint.AbstractEventSink;
 
 /**
  *
- * @author tamas.csaba@gmail.com
+ * @author Csaba Tamas
  */
 public abstract class AbstractTest {
 
@@ -57,6 +57,7 @@ public abstract class AbstractTest {
                         .transportType(Endpoint.TransportType.HTTP_REST)
                         .enableFileHandler(System.getProperty("java.io.tmpdir"))
                         .enableSwagger("1.0", null)
+                        .enableIntrospection()
                         .publish(new RpcEndpointImpl())
                         .publish(new EndpointTesterService())
                         .publish(new CrudTestEndpointService())

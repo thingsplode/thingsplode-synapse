@@ -22,13 +22,13 @@ import org.apache.log4j.BasicConfigurator;
 
 /**
  *
- * @author tamas.csaba@gmail.com
+ * @author Csaba Tamas
  */
-public class Bootstrap {
+public class EndpointBootstrap {
 
     private Endpoint ep;
 
-    public Bootstrap() throws InterruptedException, FileNotFoundException {
+    public EndpointBootstrap() throws InterruptedException, FileNotFoundException {
         BasicConfigurator.configure();
         this.ep = Endpoint.create("test", new Endpoint.ConnectionProvider(new InetSocketAddress("0.0.0.0", 8080)))
                 .logLevel(LogLevel.TRACE)
@@ -55,7 +55,7 @@ public class Bootstrap {
      * @throws java.io.FileNotFoundException
      */
     public static void main(String[] args) throws InterruptedException, FileNotFoundException {
-        Bootstrap endpointExampleMain = new Bootstrap();
+        EndpointBootstrap endpointExampleMain = new EndpointBootstrap();
     }
 
 }

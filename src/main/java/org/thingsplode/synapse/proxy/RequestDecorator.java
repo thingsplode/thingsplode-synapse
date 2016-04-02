@@ -13,23 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsplode.synapse.endpoint.serializers.gson;
+package org.thingsplode.synapse.proxy;
 
-import org.thingsplode.synapse.endpoint.serializers.AbstractParserTest;
-import org.thingsplode.synapse.endpoint.serializers.SynapseSerializer;
+import org.thingsplode.synapse.core.domain.Request;
 
 /**
  *
- * @author tamas.csaba@gmail.com
+ * @author Csaba Tamas
  */
-//public class GsonSerializerTest extends AbstractParserTest {
-public class GsonSerializerTest {
+public interface RequestDecorator {
 
-    private final GsonSerializer serializer = new GsonSerializer(true, null, null);
-
-    //@Override
-    public SynapseSerializer<String> getSerializer() {
-        return serializer;
-    }
-
+    public void decorate(Request request);
 }
