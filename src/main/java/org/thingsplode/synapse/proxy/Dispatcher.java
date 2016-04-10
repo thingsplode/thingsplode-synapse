@@ -53,9 +53,9 @@ public class Dispatcher {
     }
 
     public CompletableFuture<Response> dispatch(Request request, long requestTimeout) {
-        request.getHeader().addRequestProperty(AbstractMessage.MESSAGE_ID, UUID.randomUUID().toString());
-        DispatchedMsgWrapper<Request, Response> responseFuture = new DispatchedMsgWrapper<>(request, requestTimeout);
-        ChannelFuture cf = ch.writeAndFlush(responseFuture);
+        request.getHeader().addMessageProperty(AbstractMessage.MESSAGE_ID, UUID.randomUUID().toString());
+        DispatcherFuture<Request, Response> responseFuture = new DispatcherFuture<>(request, requestTimeout);
+        ChannelFuture cf = ch.writeAndFlush(request);
         cf.addListener((ChannelFutureListener) new ChannelFutureListener() {
             @Override
             public void operationComplete(ChannelFuture future) throws Exception {
@@ -65,11 +65,14 @@ public class Dispatcher {
                     responseFuture.completeExceptionally(future.cause());
                     future.channel().close();
                 } else {
-                    correlatorService.register(request.getHeader().getRequestProperty(AbstractMessage.MESSAGE_ID).get(), responseFuture);
+                    correlatorService.register(request.getHeader().getMessageProperty(AbstractMessage.MESSAGE_ID).get(), responseFuture);
+                    if (logger.isDebugEnabled()){
+                        correlatorService.debugStatuses();
+                    }
                 }
             }
         });
-        return null;
+        return responseFuture;
     }
 
     public <T> T createStub(String servicePath, Class<T> aClass) {

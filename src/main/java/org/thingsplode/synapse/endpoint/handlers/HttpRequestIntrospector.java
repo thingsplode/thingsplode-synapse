@@ -39,7 +39,7 @@ public class HttpRequestIntrospector extends SimpleChannelInboundHandler<HttpReq
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, HttpRequest msg) throws Exception {
-        if (msg != null) {
+        if (msg != null && logger.isDebugEnabled()) {
             final StringBuilder hb = new StringBuilder();
             msg.headers().entries().forEach(e -> {
                 hb.append(e.getKey()).append(" : ").append(e.getValue()).append("\n");
@@ -56,6 +56,8 @@ public class HttpRequestIntrospector extends SimpleChannelInboundHandler<HttpReq
                     + "Uri: " + msg.uri() + "\n"
                     + "Method: " + msg.method() + "\n"
                     + hb.toString() + "\n" + "Payload: " + (!Util.isEmpty(payloadAsSring) ? payloadAsSring + "\n" : "EMPTY\n"));
+        } else {
+            logger.warn("Message@Endpoint received: NULL");
         }
         ctx.fireChannelRead(msg);
     }

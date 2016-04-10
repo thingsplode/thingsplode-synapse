@@ -23,12 +23,12 @@ import java.util.concurrent.CompletableFuture;
  * @param <REQ>
  * @param <RSP>
  */
-public class DispatchedMsgWrapper<REQ, RSP> extends CompletableFuture<RSP> {
+public class DispatcherFuture<REQ, RSP> extends CompletableFuture<RSP> {
     private final REQ request;
     private long timeout = 0;//a default request timeout which shall be overriden
     private long requestFiredTime = -1;//when was the message successfully dispatched
 
-    public DispatchedMsgWrapper(REQ req, long timeout) {
+    public DispatcherFuture(REQ req, long timeout) {
         this.request = req;
         this.timeout = timeout;
     }

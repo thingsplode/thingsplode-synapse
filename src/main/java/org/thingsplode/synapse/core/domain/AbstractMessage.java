@@ -18,6 +18,9 @@ package org.thingsplode.synapse.core.domain;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import java.io.Serializable;
 import java.net.InetSocketAddress;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import org.thingsplode.synapse.core.exceptions.MarshallerException;
 
@@ -48,6 +51,7 @@ public abstract class AbstractMessage<T> implements Serializable {
         private String protocolVersion;
         private InetSocketAddress callerAddress;
         private Set<Parameter> parameters;
+        private final HashMap<String, String> messageProperties = new HashMap<>();
 
         public MessageHeader() {
         }
@@ -86,6 +90,24 @@ public abstract class AbstractMessage<T> implements Serializable {
 
         public void setParameters(Set<Parameter> parameters) {
             this.parameters = parameters;
+        }
+        
+        public void addMessageProperty(String key, String value) {
+            messageProperties.put(key, value);
+        }
+
+        public Optional<String> getMessageProperty(String propertyKey) {
+            return Optional.ofNullable(messageProperties.get(propertyKey));
+        }
+
+        public HashMap<String, String> getMessageProperties() {
+            return messageProperties;
+        }
+
+        public void addAllMessageProperties(Iterable<Map.Entry<String, String>> iterable) {
+            if (iterable != null) {
+                iterable.forEach(e -> messageProperties.put(e.getKey(), e.getValue()));
+            }
         }
     }
 

@@ -15,12 +15,17 @@
  */
 package org.thingsplode.synapse.endpoint.handlers;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.ChannelPromise;
+import io.netty.handler.codec.http.FullHttpResponse;
+import io.netty.handler.codec.http.HttpResponse;
+import java.nio.charset.Charset;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.thingsplode.synapse.util.Util;
 
 /**
  *
@@ -28,13 +33,31 @@ import org.slf4j.LoggerFactory;
  */
 @ChannelHandler.Sharable
 public class HttpResponseIntrospector extends ChannelOutboundHandlerAdapter {
-
+    
     private Logger logger = LoggerFactory.getLogger(HttpRequestIntrospector.class);
-
+    
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
-        logger.debug("Message@Endpoint to be sent: \n\n"
-                + "->" + msg.toString() + "\n\n");
+        if (msg != null && msg instanceof HttpResponse && logger.isDebugEnabled()) {
+            final StringBuilder hb = new StringBuilder();
+            ((HttpResponse) msg).headers().entries().forEach(e -> {
+                hb.append(e.getKey()).append(" : ").append(e.getValue()).append("\n");
+            });
+            String payloadAsSring = null;
+            if (msg instanceof FullHttpResponse) {
+                ByteBuf content = ((FullHttpResponse) msg).content();
+                byte[] dst = new byte[content.capacity()];
+                content.copy().getBytes(0, dst);
+                content.retain();
+                payloadAsSring = new String(dst, Charset.forName("UTF-8"));
+            }
+            logger.debug("Message@Endpoint to be sent: \n\n"
+                    + "Status: " + ((HttpResponse) msg).status() + "\n"
+                    + hb.toString() + "\n" + "Payload: " + (!Util.isEmpty(payloadAsSring) ? payloadAsSring + "\n" : "EMPTY\n"));
+        } else {
+            logger.warn("Message@Endpoint to be sent: not instance of HTTPResponse or NULL.");
+        }
+        
         ctx.write(msg, promise);
     }
 }

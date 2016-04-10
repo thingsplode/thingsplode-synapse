@@ -40,11 +40,11 @@ public class RequestHandler extends MessageToMessageEncoder<Request> {
         }
         this.decorators.add((RequestDecorator) (Request request) -> {
             //basic data decorator
-            request.getHeader().addRequestProperty(HttpHeaderNames.HOST.toString(), hostExpression);
-            request.getHeader().addRequestProperty(HttpHeaderNames.CONNECTION.toString(), HttpHeaderValues.KEEP_ALIVE.toString());
-            request.getHeader().addRequestProperty(HttpHeaderNames.ACCEPT_ENCODING.toString(), HttpHeaderValues.GZIP.toString());
-            request.getHeader().addRequestProperty(HttpHeaderNames.ACCEPT.toString(), "*/*");
-            request.getHeader().addRequestProperty(HttpHeaderNames.USER_AGENT.toString(), "synapse");
+            request.getHeader().addMessageProperty(HttpHeaderNames.HOST.toString(), hostExpression);
+            request.getHeader().addMessageProperty(HttpHeaderNames.CONNECTION.toString(), HttpHeaderValues.KEEP_ALIVE.toString());
+            request.getHeader().addMessageProperty(HttpHeaderNames.ACCEPT_ENCODING.toString(), HttpHeaderValues.GZIP.toString());
+            request.getHeader().addMessageProperty(HttpHeaderNames.ACCEPT.toString(), "*/*");
+            request.getHeader().addMessageProperty(HttpHeaderNames.USER_AGENT.toString(), "synapse");
         });
     }
 

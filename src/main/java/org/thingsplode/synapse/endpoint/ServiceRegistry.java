@@ -66,24 +66,24 @@ import org.thingsplode.synapse.core.annotations.RequestProperty;
  * @author Csaba Tamas
  */
 public class ServiceRegistry {
-
+    
     private Routes routes;
     private Pattern urlParamPattern = Pattern.compile("\\{(.*?)\\}", Pattern.CASE_INSENSITIVE);
     private SerializationService serializationService = new SerializationService();
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(ServiceRegistry.class);
-
+    
     public ServiceRegistry() {
         routes = new Routes();
     }
-
+    
     public Set<String> getRouteExpressions() {
         return routes.rootCtxes.keySet();
     }
-
+    
     public Set<String> getAllSupportedPaths() {
         return routes.paths;
     }
-
+    
     private enum WrapFlag {
         NONE, REQUEST, EVENT
     }
@@ -101,12 +101,12 @@ public class ServiceRegistry {
      * @throws org.thingsplode.synapse.core.exceptions.SerializationException
      */
     public Response invokeWithParseable(Request.RequestHeader header, Object requestBody) throws ExecutionException, MissingParameterException, SerializationException {
-
+        
         Optional<MethodContext> mcOpt = getMethodContext(header);
         if (!mcOpt.isPresent()) {
             return new Response(new Response.ResponseHeader(header, HttpResponseStatus.NOT_FOUND, new MediaType("text/plain; charset=UTF-8")));
         }
-
+        
         Object requestBodyObject = null;
         if ((requestBody instanceof String) && !Util.isEmpty((String) requestBody)) {
             Optional<MethodParam> mpo = mcOpt.get().getMethodParamForRequestBody();
@@ -132,7 +132,7 @@ public class ServiceRegistry {
                         }
                     }
                 }
-
+                
                 requestBodyObject = serializationService.getPreferredSerializer(null).unMarshall(clazz, (String) requestBody);
                 if (wrapBodyFlag == WrapFlag.REQUEST) {
                     requestBodyObject = new Request(header, (Serializable) requestBodyObject);
@@ -143,17 +143,18 @@ public class ServiceRegistry {
         }
         return invoke(header, mcOpt.get(), requestBodyObject);
     }
-
+    
     Response invokeWithJavaObject(Request.RequestHeader header, Object requestBody) throws MethodNotFoundException, ExecutionException, MissingParameterException, SerializationException {
         return invoke(header, getMethodContextOrThrowException(header), requestBody);
     }
-
+    
     Response invoke(Request.RequestHeader header, MethodContext mc, Object requestBodyObject) throws MissingParameterException, ExecutionException {
         try {
             Object result = mc.method.invoke(mc.serviceInstance, mc.extractInvocationArguments(header, requestBodyObject));
             if (result == null) {
                 return new Response(new Response.ResponseHeader(header, HttpResponseStatus.OK));
             } else if (result instanceof Response) {
+                ((Response) result).getHeader().setCorrelationId(header.getMsgId());
                 return (Response) result;
             } else if (result instanceof Serializable) {
                 return new Response(new Response.ResponseHeader(header, HttpResponseStatus.OK), (Serializable) result);
@@ -164,7 +165,7 @@ public class ServiceRegistry {
             throw new ExecutionException(header, ex);
         }
     }
-
+    
     private MethodContext getMethodContextOrThrowException(Request.RequestHeader header) throws MethodNotFoundException {
         Optional<MethodContext> mcOpt = getMethodContext(header);
         if (!mcOpt.isPresent()) {
@@ -172,7 +173,7 @@ public class ServiceRegistry {
         }
         return mcOpt.get();
     }
-
+    
     Optional<MethodContext> getMethodContext(Request.RequestHeader header) {
         String methodIdentifierPattern = null;
         String pattern = null;
@@ -190,9 +191,9 @@ public class ServiceRegistry {
         if (Util.isEmpty(methodIdentifierPattern)) {
             return Optional.empty();
         }
-
+        
         methodIdentifierPattern = methodIdentifierPattern + header.getUri().createParameterExpression();
-
+        
         SortedMap<String, MethodContext> methods = routes.rootCtxes.get(pattern);
         MethodContext mc = methods.get(methodIdentifierPattern);
         if (mc == null) {
@@ -213,10 +214,10 @@ public class ServiceRegistry {
         if (mc == null || (!mc.requestMethods.isEmpty() && !mc.requestMethods.contains(header.getMethod()))) {
             return Optional.empty();
         }
-
+        
         return Optional.of(mc);
     }
-
+    
     public void register(String path, Object serviceInstance) {
         //todo: make validation to expose Request Mapping or Path Varibale types where conversion from String to method parameter type is possible
         Class<?> srvClass = serviceInstance.getClass();
@@ -245,7 +246,7 @@ public class ServiceRegistry {
                     })
                     .collect(Collectors.toList()));
         }
-
+        
         if (rootContext.endsWith("/")) {
             rootContext = rootContext.substring(0, rootContext.length() - 1);
         }
@@ -255,27 +256,27 @@ public class ServiceRegistry {
         logger.debug("Registering [" + serviceInstance.getClass().getName() + "] at: " + rootContext);
         populateMethods(rootContext, serviceInstance, methods);
     }
-
+    
     private void populateMethods(String rootCtx, Object serviceInstance, Set<Method> methods) {
-
+        
         methods.stream().forEach((m) -> {
             MethodContext mc;
             mc = new MethodContext(rootCtx, serviceInstance, m);
             mc.parameters.addAll(processParameters(serviceInstance, m));
-
+            
             if (m.isAnnotationPresent(RequestMapping.class)) {
                 RequestMapping rm = m.getAnnotation(RequestMapping.class);
                 Arrays.asList(rm.value()).forEach(ru -> {
                     mc.requestMethods.addAll(Arrays.asList(rm.method()));
                     routes.put(rootCtx, ru, mc);
-
+                    
                 });
             } else {
                 routes.put(rootCtx, m.getName(), mc);
             }
         });
     }
-
+    
     private List<MethodParam> processParameters(Object serviceInstance, Method m) {
         List<MethodParam> mps = new ArrayList<>();
         if (m.getParameterCount() > 0) {
@@ -317,12 +318,12 @@ public class ServiceRegistry {
         }
         return mps;
     }
-
+    
     private boolean containsMessageClass(Class<?>[] array) {
         Optional<Class<?>> result = Arrays.asList(array).stream().filter(c -> AbstractMessage.class.isAssignableFrom(c)).findFirst();
         return result.isPresent();
     }
-
+    
     private Object generateValueFromString(Class type, String sValue) {
         if (sValue == null || Util.isEmpty(sValue)) {
             return null;
@@ -337,22 +338,22 @@ public class ServiceRegistry {
         }
         return null;
     }
-
+    
     class MethodContext {
-
+        
         String rootCtx;
         Method method;
         Object serviceInstance;
         List<RequestMethod> requestMethods = new ArrayList<>();
         List<MethodParam> parameters = new ArrayList<>();
-
+        
         Optional<MethodParam> getMethodParamForRequestBody() {
             if (parameters.isEmpty()) {
                 return Optional.empty();
             }
             return parameters.stream().filter(p -> (p.source == MethodParam.ParameterSource.BODY || p.source == MethodParam.ParameterSource.PARAMETER_WRAPPER)).findAny();
         }
-
+        
         private Object[] extractInvocationArguments(Request.RequestHeader header, Object messageBody) throws MissingParameterException {
             final List<Object> methodParams = new ArrayList<>();
             for (MethodParam p : parameters) {
@@ -387,7 +388,7 @@ public class ServiceRegistry {
                         break;
                     }
                     case HEADER_PARAM: {
-                        Optional<String> headerValueOpt = header.getRequestProperty(p.paramId);
+                        Optional<String> headerValueOpt = header.getMessageProperty(p.paramId);
                         if (!headerValueOpt.isPresent() && p.required) {
                             throw new MissingParameterException("Header Value", p.paramId);
                         } else {
@@ -410,7 +411,7 @@ public class ServiceRegistry {
             }
             return methodParams.toArray();
         }
-
+        
         String createParameterExpression() {
             if (parameters.isEmpty()) {
                 return "";
@@ -427,7 +428,7 @@ public class ServiceRegistry {
             }
             return exp;
         }
-
+        
         private void preparePathVariableMatching(String methodName) {
             this.parameters.forEach(p -> {
                 //check for path variables on the root context or on the request map
@@ -452,14 +453,14 @@ public class ServiceRegistry {
                 }
             });
         }
-
+        
         public MethodContext(String rootCtx, Object service, Method method) {
             this.rootCtx = rootCtx;
             this.serviceInstance = service;
             this.method = method;
             this.requestMethods = new ArrayList<>();
         }
-
+        
         public MethodContext(String rootCtx, Object service, Method method, List<RequestMethod> requestMethods) {
             if (requestMethods != null) {
                 this.rootCtx = rootCtx;
@@ -471,33 +472,33 @@ public class ServiceRegistry {
                 this.method = method;
             }
         }
-
+        
         void addRequestMethod(RequestMethod rm) {
             requestMethods.add(rm);
         }
-
+        
         void addRequestMethods(List<RequestMethod> rms) {
             requestMethods.addAll(rms);
         }
-
+        
         void addRequestMethods(RequestMethod[] rms) {
             addRequestMethods(Arrays.asList(rms));
         }
     }
-
+    
     class Routes {
-
+        
         Map<String, SortedMap<String, MethodContext>> rootCtxes = new HashMap<>();
         Set<Pattern> patterns = new HashSet<>();
         Set<String> paths = new HashSet<>();
-
+        
         synchronized void put(String rootCtx, String methodName, MethodContext mc) {
-
+            
             String rootRegexp = rootCtx.replaceAll("/\\{.*\\}/", "/[^/]+/");
             methodName = methodName.startsWith("/") ? methodName.substring(1) : methodName;
             methodName = methodName + mc.createParameterExpression();
             mc.preparePathVariableMatching(methodName);
-
+            
             SortedMap<String, MethodContext> rootCtxMethods = rootCtxes.get(rootRegexp);
             if (rootCtxMethods != null) {
                 rootCtxMethods.put(methodName, mc);
@@ -510,5 +511,5 @@ public class ServiceRegistry {
             paths.add(rootCtx + "/" + methodName);
         }
     }
-
+    
 }

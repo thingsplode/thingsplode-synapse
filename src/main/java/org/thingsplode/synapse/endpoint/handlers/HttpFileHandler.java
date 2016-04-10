@@ -180,7 +180,7 @@ public final class HttpFileHandler extends SimpleChannelInboundHandler<FileReque
 
       // Cache Validation
       if (file.exists()){
-        Optional<String> ifModifiedSinceOpt = req.getHeader().getRequestProperty(HttpHeaderNames.IF_MODIFIED_SINCE.toString());
+        Optional<String> ifModifiedSinceOpt = req.getHeader().getMessageProperty(HttpHeaderNames.IF_MODIFIED_SINCE.toString());
         if (ifModifiedSinceOpt.isPresent() && !Util.isEmpty(ifModifiedSinceOpt.get())) {
            SimpleDateFormat dateFormatter = new SimpleDateFormat(HTTP_DATE_FORMAT, Locale.US);
            Date ifModifiedSinceDate = dateFormatter.parse(ifModifiedSinceOpt.get());
@@ -237,7 +237,7 @@ public final class HttpFileHandler extends SimpleChannelInboundHandler<FileReque
             for (int i = 0; i < m.groupCount(); i++){
                 String matchedValue = m.group(i);
                 String headerIdentifier = matchedValue.substring(1,matchedValue.length()-1);
-                Optional<String> propOpt = header.getRequestProperty(headerIdentifier);
+                Optional<String> propOpt = header.getMessageProperty(headerIdentifier);
                 if (propOpt.isPresent()){
                     originalPath = originalPath.replaceAll("\\{"+headerIdentifier+"\\}", propOpt.get());
                 }
@@ -247,7 +247,7 @@ public final class HttpFileHandler extends SimpleChannelInboundHandler<FileReque
     }
 
     private boolean isKeepAlive(RequestHeader header) {
-        Optional<String> connOpt = header.getRequestProperty(HttpHeaderNames.CONNECTION.toString());
+        Optional<String> connOpt = header.getMessageProperty(HttpHeaderNames.CONNECTION.toString());
         if (connOpt.isPresent() && HttpHeaderValues.CLOSE.contentEqualsIgnoreCase(connOpt.get())) {
             return false;
         }

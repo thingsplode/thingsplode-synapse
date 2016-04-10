@@ -92,6 +92,10 @@ public class Response<T> extends AbstractMessage<T> {
             return correlationId;
         }
 
+        public void setCorrelationId(String correlationId) {
+            this.correlationId = correlationId;
+        }
+
         public HttpResponseStatus getResponseCode() {
             return responseCode;
         }

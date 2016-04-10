@@ -17,6 +17,8 @@ package org.thingsplode.synapse.proxy;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import javax.net.ssl.SSLException;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -25,6 +27,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.thingsplode.synapse.AbstractTest;
 import org.thingsplode.synapse.core.domain.Request;
+import org.thingsplode.synapse.core.domain.Response;
 
 /**
  *
@@ -60,17 +63,29 @@ public class ProxyTest extends AbstractTest {
         }
     }
 
+    void display(Object r) {
+        System.out.println("->" + r);
+    }
+
     @Test()
-    public void baseTest() throws InterruptedException, URISyntaxException, SSLException, UnsupportedEncodingException {
+    public void baseTest() throws InterruptedException, URISyntaxException, SSLException, UnsupportedEncodingException, ExecutionException {
         EndpointProxy epx = EndpointProxy.create("http://localhost:8080/").start();
         Dispatcher defaultDispatcher = epx.acquireDispatcher();
-        defaultDispatcher.broadcast(Request.create("/com/acme/synapse/testdata/services/RpcEndpointImpl/ping", Request.RequestHeader.RequestMethod.GET));
-        epx.stop();
+        //defaultDispatcher.broadcast(Request.create("/com/acme/synapse/testdata/services/RpcEndpointImpl/ping", Request.RequestHeader.RequestMethod.GET));
+        CompletableFuture<Response> f = defaultDispatcher.dispatch(Request.create("/com/acme/synapse/testdata/services/RpcEndpointImpl/ping", Request.RequestHeader.RequestMethod.GET), 10000);
+        Thread.sleep(4000);
+        f.handle((rsp, ex) -> {
+            if (rsp != null) {
+                return 1;
+            } else {
+                ex.printStackTrace();
+                return -1;
+            }
+        }).get();
 
 //        while (true) {
 //            Thread.sleep(50000L);
 //        }
-
 //        EndpointProxy proxy = EndpointProxy.init().endpoints().defaultPolicy().start();
 //        TestEndpoint testEp = proxy.createStub("test_service", TestEndpoint.class);
 //        testEp.ping();

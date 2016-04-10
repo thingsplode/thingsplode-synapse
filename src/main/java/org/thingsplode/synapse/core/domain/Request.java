@@ -73,14 +73,13 @@ public class Request<T extends Serializable> extends AbstractMessage<T> {
     }
 
     public Optional<String> getRequestHeaderProperty(String propertyKey) {
-        return this.header != null ? this.header.getRequestProperty(propertyKey) : Optional.empty();
+        return this.header != null ? this.header.getMessageProperty(propertyKey) : Optional.empty();
     }
 
     public static class RequestHeader extends AbstractMessage.MessageHeader {
 
         private Uri uri;
         private RequestMethod method;
-        private final HashMap<String, String> requestProperties = new HashMap<>();
 
         public RequestHeader(Uri uri, RequestMethod method) {
             this(null, uri, method);
@@ -107,24 +106,6 @@ public class Request<T extends Serializable> extends AbstractMessage<T> {
 
         public RequestMethod getMethod() {
             return method;
-        }
-
-        public void addRequestProperty(String key, String value) {
-            requestProperties.put(key, value);
-        }
-
-        public Optional<String> getRequestProperty(String propertyKey) {
-            return Optional.ofNullable(requestProperties.get(propertyKey));
-        }
-
-        public HashMap<String, String> getRequestProperties() {
-            return requestProperties;
-        }
-
-        public void addAllRequestProperties(Iterable<Map.Entry<String, String>> iterable) {
-            if (iterable != null) {
-                iterable.forEach(e -> requestProperties.put(e.getKey(), e.getValue()));
-            }
         }
 
         public enum RequestMethod {

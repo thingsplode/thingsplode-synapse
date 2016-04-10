@@ -94,7 +94,7 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
                 String msgId = msgIdOpt.isPresent() ? msgIdOpt.get().getValue() : null;
                 try {
                     header = new Request.RequestHeader(msgId, new Uri(httpRequest.uri()), Request.RequestHeader.RequestMethod.fromHttpMethod(httpRequest.method()));
-                    header.addAllRequestProperties(httpRequest.headers());
+                    header.addAllMessageProperties(httpRequest.headers());
                 } catch (UnsupportedEncodingException ex) {
                     logger.error(ex.getMessage(), ex);
                     HttpResponseHandler.sendError(ctx, HttpResponseStatus.BAD_REQUEST, ex.getClass().getSimpleName() + ": " + ex.getMessage());

@@ -24,11 +24,13 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.util.CharsetUtil;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
+import org.thingsplode.synapse.core.domain.AbstractMessage;
 import org.thingsplode.synapse.core.domain.MediaType;
 import org.thingsplode.synapse.core.domain.Response;
 import org.thingsplode.synapse.serializers.SerializationService;
@@ -52,10 +54,18 @@ public class HttpResponseHandler extends SimpleChannelInboundHandler<Response> {
         FullHttpResponse response = new DefaultFullHttpResponse(
                 HttpVersion.HTTP_1_1, rsp.getHeader().getResponseCode(), rspBuf);
         response.headers().set(HttpHeaderNames.CONTENT_TYPE, mt != null ? mt.getName() : "application/json; charset=UTF-8");
+        decorate(rsp, response);
         //response.headers().set(HttpHeaderNames.CONTENT_LENGTH, rspBuf.array().length);
         // Close the connection as soon as the message is sent.
         ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
         //todo: keep alive?
+    }
+
+    private void decorate(Response rsp, HttpResponse httpResponse) {
+        rsp.getHeader().getMessageProperties().keySet().stream().forEach(k -> {
+            httpResponse.headers().set(k, rsp.getHeader().getMessageProperty(k));
+        });
+        httpResponse.headers().set(AbstractMessage.CORRELATION_ID, rsp.getHeader().getCorrelationId());
     }
 
     @Override
