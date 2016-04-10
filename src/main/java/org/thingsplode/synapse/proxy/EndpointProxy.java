@@ -18,6 +18,7 @@ package org.thingsplode.synapse.proxy;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -31,11 +32,15 @@ import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashSet;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.TimeUnit;
 import javax.net.ssl.SSLException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.thingsplode.synapse.core.ComponentLifecycle;
 import org.thingsplode.synapse.proxy.handlers.HttpClientResponseHandler;
 import org.thingsplode.synapse.proxy.handlers.HttpResponseIntrospector;
+import org.thingsplode.synapse.proxy.handlers.RequestHandler;
 import org.thingsplode.synapse.proxy.handlers.RequestToHttpRequestEncoder;
 
 /**
@@ -54,6 +59,9 @@ public class EndpointProxy {
     private Bootstrap b = null;
     private final HashSet<Dispatcher> dispatchers = new HashSet<>();
     private boolean introspection = false;
+    private int connectTimeout = 3000;
+    private ComponentLifecycle lifecycle = ComponentLifecycle.UNITIALIZED;
+    private ResponseCorrelatorService correlatorService = new ResponseCorrelatorService();
 
     //todo: place connection uri to the aqcuire dispatcher, so one client instance can work with many servers
     private EndpointProxy(String baseUrl) throws URISyntaxException {
@@ -81,6 +89,7 @@ public class EndpointProxy {
                             p.addLast(new HttpRequestEncoder());
                             p.addLast(new HttpResponseDecoder());
                             p.addLast(new RequestToHttpRequestEncoder());
+                            p.addLast(new RequestHandler(null, connectionUri.getHost() + ":" + connectionUri.getPort()));
                             if (introspection) {
                                 p.addLast(new HttpResponseIntrospector());
                             }
@@ -91,22 +100,44 @@ public class EndpointProxy {
                             p.addLast(new HttpClientResponseHandler());
                         }
                     });
+            b.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connectTimeout);
         } finally {
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                this.logger.info("Stopping client.");
+                this.logger.info("Stopping client...");
                 this.stop();
+                ForkJoinPool.commonPool().awaitQuiescence(5, TimeUnit.SECONDS);
             }));
         }
+        this.lifecycle = ComponentLifecycle.STARTED;
         return this;
 
     }
 
+    /**
+     *
+     * @param timeoutInMillis the default is 3000
+     * @return
+     */
+    public EndpointProxy setConnectTimeout(int timeoutInMillis) {
+        if (this.lifecycle == ComponentLifecycle.STARTED) {
+            throw new IllegalStateException("Please set this value before starting the " + EndpointProxy.class.getSimpleName());
+        }
+        this.connectTimeout = timeoutInMillis;
+        return this;
+    }
+
     public EndpointProxy enableIntrospection() {
+        if (this.lifecycle == ComponentLifecycle.STARTED) {
+            throw new IllegalStateException("Please set this value before starting the " + EndpointProxy.class.getSimpleName());
+        }
         this.introspection = true;
         return this;
     }
 
     public void stop() {
+        if (this.lifecycle == ComponentLifecycle.UNITIALIZED) {
+            throw new IllegalStateException("Please use this method afer starting the " + EndpointProxy.class.getSimpleName());
+        }
         dispatchers.forEach(d -> {
             try {
                 dispatchers.remove(d);
@@ -116,9 +147,13 @@ public class EndpointProxy {
             }
         });
         group.shutdownGracefully();
+        this.lifecycle = ComponentLifecycle.UNITIALIZED;
     }
 
     public Dispatcher acquireDispatcher() throws SSLException, InterruptedException {
+        if (this.lifecycle == ComponentLifecycle.UNITIALIZED) {
+            throw new IllegalStateException("Please set this value before starting the " + EndpointProxy.class.getSimpleName());
+        }
         int port = 0;
         boolean ssl = false;
         if (this.connectionUri.getPort() == -1) {
@@ -145,7 +180,7 @@ public class EndpointProxy {
         }
 
         Channel ch = b.connect(this.connectionUri.getHost(), port).sync().channel();
-        Dispatcher d = new Dispatcher(ch, this.connectionUri.getHost() + ":" + this.connectionUri.getPort());
+        Dispatcher d = new Dispatcher(ch, correlatorService);
         dispatchers.add(d);
         return d;
     }

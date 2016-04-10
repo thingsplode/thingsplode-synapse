@@ -16,6 +16,7 @@
 package org.thingsplode.synapse.endpoint.handlers;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.FullHttpRequest;
@@ -31,6 +32,7 @@ import org.thingsplode.synapse.util.Util;
  *
  * @author Csaba Tamas
  */
+@ChannelHandler.Sharable
 public class HttpRequestIntrospector extends SimpleChannelInboundHandler<HttpRequest> {
 
     private Logger logger = LoggerFactory.getLogger(HttpRequestIntrospector.class);
@@ -50,7 +52,7 @@ public class HttpRequestIntrospector extends SimpleChannelInboundHandler<HttpReq
                 content.retain();
                 payloadAsSring = new String(dst, Charset.forName("UTF-8"));
             }
-            logger.debug("Message received @Endpoint: \n\n"
+            logger.debug("Message@Endpoint received: \n\n"
                     + "Uri: " + msg.uri() + "\n"
                     + "Method: " + msg.method() + "\n"
                     + hb.toString() + "\n" + "Payload: " + (!Util.isEmpty(payloadAsSring) ? payloadAsSring + "\n" : "EMPTY\n"));

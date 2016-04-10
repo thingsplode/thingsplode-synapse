@@ -15,7 +15,6 @@
  */
 package org.thingsplode.synapse.serializers;
 
-import org.thingsplode.synapse.serializers.SynapseSerializer;
 import com.acme.synapse.testdata.services.core.Device;
 import com.acme.synapse.testdata.services.core.Tuple;
 import io.netty.handler.codec.http.HttpMethod;

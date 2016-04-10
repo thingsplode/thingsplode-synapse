@@ -15,6 +15,7 @@
  */
 package org.thingsplode.synapse.endpoint;
 
+import org.thingsplode.synapse.core.ComponentLifecycle;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -46,6 +47,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import org.slf4j.Logger;
@@ -54,6 +56,7 @@ import org.thingsplode.synapse.endpoint.handlers.HttpFileHandler;
 import org.thingsplode.synapse.endpoint.handlers.HttpRequestIntrospector;
 import org.thingsplode.synapse.endpoint.handlers.HttpRequestHandler;
 import org.thingsplode.synapse.endpoint.handlers.HttpResponseHandler;
+import org.thingsplode.synapse.endpoint.handlers.HttpResponseIntrospector;
 import org.thingsplode.synapse.endpoint.handlers.RequestHandler;
 import org.thingsplode.synapse.endpoint.swagger.EndpointApiGenerator;
 import org.thingsplode.synapse.util.NetworkUtil;
@@ -63,7 +66,7 @@ import org.thingsplode.synapse.util.NetworkUtil;
  * @author Csaba Tamas //todo: add basic authorization
  */
 public class Endpoint {
-
+    
     private Logger logger = LoggerFactory.getLogger(Endpoint.class);
     public static final String ENDPOINT_URL_PATERN = "/services|/services/";
     public static final String HTTP_ENCODER = "http_encoder";
@@ -82,21 +85,16 @@ public class Endpoint {
     private final ServerBootstrap bootstrap = new ServerBootstrap();
     private TransportType transportType = TransportType.DOMAIN_SOCKET;
     private Protocol protocol = Protocol.JSON;
-    private Lifecycle lifecycle = Lifecycle.UNITIALIZED;
+    private ComponentLifecycle lifecycle = ComponentLifecycle.UNITIALIZED;
     private HttpFileHandler fileHandler = null;
     private EventExecutorGroup evtExecutorGroup = new DefaultEventExecutorGroup(10);
     private ServiceRegistry serviceRegistry = new ServiceRegistry();
     private EndpointApiGenerator apiGenerator = null;
     private boolean introspection = false;
-
-    private enum Lifecycle {
-        UNITIALIZED,
-        STARTED
-    }
-
+        
     private Endpoint() {
     }
-
+    
     private Endpoint(String id, ConnectionProvider connections) {
         this.endpointId = id;
         this.connections = connections;
@@ -113,9 +111,10 @@ public class Endpoint {
         Endpoint ep = new Endpoint(endpointId, connections);
         return ep;
     }
-
+    
     public void start() throws InterruptedException {
         try {
+            logger.debug("Starting endpoint [" + endpointId + "].");
             this.initGroups();
             this.bootstrap.group(this.masterGroup, this.workerGroup);
             if (transportType.equals(TransportType.HTTP_REST)) {
@@ -130,6 +129,7 @@ public class Endpoint {
                                 p.addLast(HTTP_DECODER, new HttpRequestDecoder());
                                 p.addLast("aggregator", new HttpObjectAggregator(1048576));
                                 if (introspection) {
+                                    p.addLast(new HttpResponseIntrospector());
                                     p.addLast(new HttpRequestIntrospector());
                                 }
                                 p.addLast(evtExecutorGroup, "http_request_handler", new HttpRequestHandler(endpointId, serviceRegistry));
@@ -156,6 +156,7 @@ public class Endpoint {
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 this.logger.info("Stopping endpoint [{}].", endpointId);
                 this.stop();
+                ForkJoinPool.commonPool().awaitQuiescence(5, TimeUnit.SECONDS);
             }));
         }
         this.startInternal();
@@ -166,18 +167,19 @@ public class Endpoint {
      * @throws InterruptedException
      */
     private void startInternal() throws InterruptedException {
-        lifecycle = Lifecycle.STARTED;
         for (SocketAddress addr : connections.getSocketAddresses()) {
             ChannelFuture channelFuture = bootstrap.bind(addr).sync();
             Channel channel = channelFuture.await().channel();
             channelRegistry.add(channel);
-            channelFuture.channel().closeFuture().sync();
+            //channelFuture.channel().closeFuture().sync();
         }
-
+        lifecycle = ComponentLifecycle.STARTED;
+        logger.info("Endpoint [" + endpointId + "] started.");
     }
-
+    
     public void stop() {
-        lifecycle = Lifecycle.UNITIALIZED;
+        logger.debug("Stopping endpoint [" + endpointId + "].");
+        lifecycle = ComponentLifecycle.UNITIALIZED;
         channelRegistry.close().awaitUninterruptibly();
         if (masterGroup != null) {
             logger.debug("Closing down Master Group event-loop gracefully...");
@@ -187,25 +189,26 @@ public class Endpoint {
             logger.debug("Closing down Worker Group event-loop gracefully...");
             workerGroup.shutdownGracefully(5, TERMINATION_TIMEOUT, TimeUnit.SECONDS);
         }
+        logger.info("Endpoint [" + endpointId + "] stopped.");
     }
-
+    
     private void initGroups() throws InterruptedException {
         if (masterGroup == null && workerGroup == null) {
             masterGroup = new NioEventLoopGroup();
             workerGroup = new NioEventLoopGroup();
             return;
         }
-
+        
         if (workerGroup.isShuttingDown()) {
             logger.debug("Worker Event Loop Group is awaiting termination.");
             workerGroup.awaitTermination(TERMINATION_TIMEOUT, TimeUnit.SECONDS);
         }
-
+        
         if (masterGroup.isShuttingDown()) {
             logger.debug("Master Event Loop Group is awaiting termination.");
             masterGroup.awaitTermination(TERMINATION_TIMEOUT, TimeUnit.SECONDS);
         }
-
+        
         if (masterGroup.isShutdown()) {
             logger.debug("Creating new Master Event Loop Group.");
             masterGroup = new NioEventLoopGroup();
@@ -219,7 +222,7 @@ public class Endpoint {
             logger.debug("Worker Event Loop Group will not be reinitialized because it is not yet shut down.");
         }
     }
-
+    
     public Endpoint publish(String path, Object serviceInstance) {
         //        if (lifecycle == Lifecycle.UNITIALIZED){
         //            throw new IllegalStateException();
@@ -227,7 +230,7 @@ public class Endpoint {
         serviceRegistry.register(path, serviceInstance);
         return this;
     }
-
+    
     public Endpoint publish(Object serviceInstance) {
         if (apiGenerator != null && !(serviceInstance instanceof EndpointApiGenerator)) {
             apiGenerator.addPackageToBeScanned(serviceInstance.getClass().getPackage().getName());
@@ -235,11 +238,11 @@ public class Endpoint {
         this.publish(null, serviceInstance);
         return this;
     }
-
+    
     public enum Protocol {
         JSON
     }
-
+    
     public enum TransportType {
 
         /**
@@ -259,11 +262,11 @@ public class Endpoint {
          */
         DOMAIN_SOCKET;
     }
-
+    
     public static class ConnectionProvider {
-
+        
         private final Set<SocketAddress> socketAddresses;
-
+        
         public ConnectionProvider(int port, String... interfaceNames) {
             this.socketAddresses = new HashSet<>();
             for (String iface : interfaceNames) {
@@ -278,22 +281,22 @@ public class Endpoint {
                 } else {
                     socketAddresses.add(new InetSocketAddress(inetAddress, port));
                 }
-
+                
             }
         }
-
+        
         public ConnectionProvider(SocketAddress... addresses) {
             if (addresses == null) {
                 throw new RuntimeException("Please specify some socket addresses.");
             }
             this.socketAddresses = new HashSet<>(Arrays.asList(addresses));
         }
-
+        
         public Set<SocketAddress> getSocketAddresses() {
             return socketAddresses;
         }
     }
-
+    
     public Endpoint enableIntrospection() {
         this.introspection = true;
         return this;
@@ -309,7 +312,7 @@ public class Endpoint {
      * @throws FileNotFoundException
      */
     public Endpoint enableSwagger(String version, String hostname) throws FileNotFoundException {
-
+        
         if (fileHandler == null) {
             fileHandler = new HttpFileHandler();
         }
@@ -329,7 +332,7 @@ public class Endpoint {
         this.publish(apiGenerator);
         return this;
     }
-
+    
     public Endpoint enableFileHandler(String webroot) throws FileNotFoundException {
         if (fileHandler == null) {
             fileHandler = new HttpFileHandler(webroot);
@@ -338,26 +341,26 @@ public class Endpoint {
         }
         return this;
     }
-
+    
     public Endpoint logLevel(LogLevel logLevel) {
         this.logLevel = logLevel;
         return this;
     }
-
+    
     public Endpoint transportType(TransportType transportType) {
         this.transportType = transportType;
         return this;
     }
-
+    
     public Endpoint protocol(Protocol protocol) {
         this.protocol = protocol;
         return this;
     }
-
+    
     public Protocol getProtocol() {
         return protocol;
     }
-
+    
     public TransportType getTransportType() {
         return transportType;
     }

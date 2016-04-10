@@ -62,23 +62,14 @@ public class ProxyTest extends AbstractTest {
 
     @Test()
     public void baseTest() throws InterruptedException, URISyntaxException, SSLException, UnsupportedEncodingException {
-        System.out.println("Start Test");
-        Thread.sleep(1000);
-        EndpointProxy ep = EndpointProxy.create("http://localhost:8080/").start();
-        Dispatcher defaultDispatcher = ep.acquireDispatcher();
+        EndpointProxy epx = EndpointProxy.create("http://localhost:8080/").start();
+        Dispatcher defaultDispatcher = epx.acquireDispatcher();
         defaultDispatcher.broadcast(Request.create("/com/acme/synapse/testdata/services/RpcEndpointImpl/ping", Request.RequestHeader.RequestMethod.GET));
-        ep.stop();
-        
-//        EndpointProxy ep = EndpointProxy.create("http://www.mocky.io").start().enableIntrospection();
-//        Dispatcher defaultDispatcher = ep.acquireDispatcher();
-//        defaultDispatcher.broadcast(Request.create("v2/56fff4171200009d00770992", Request.RequestHeader.RequestMethod.PUT));
-//        ep.stop();
+        epx.stop();
 
-        //http://www.mocky.io/v2/5185415ba171ea3a00704eed
-
-        while (true) {
-            Thread.sleep(50000L);
-        }
+//        while (true) {
+//            Thread.sleep(50000L);
+//        }
 
 //        EndpointProxy proxy = EndpointProxy.init().endpoints().defaultPolicy().start();
 //        TestEndpoint testEp = proxy.createStub("test_service", TestEndpoint.class);

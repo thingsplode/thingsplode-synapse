@@ -15,10 +15,47 @@
  */
 package org.thingsplode.synapse.proxy.handlers;
 
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.MessageToMessageEncoder;
+import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpHeaderValues;
+import java.util.HashSet;
+import java.util.List;
+import org.thingsplode.synapse.core.domain.Request;
+import org.thingsplode.synapse.proxy.RequestDecorator;
+
 /**
  *
  * @author Csaba Tamas
  */
-public class RequestHandler  {
-    
+public class RequestHandler extends MessageToMessageEncoder<Request> {
+
+    private final HashSet<RequestDecorator> decorators;
+
+    public RequestHandler(HashSet<RequestDecorator> decorators, String hostExpression) {
+        if (decorators != null) {
+            this.decorators = decorators;
+        } else {
+            this.decorators = new HashSet<>();
+        }
+        this.decorators.add((RequestDecorator) (Request request) -> {
+            //basic data decorator
+            request.getHeader().addRequestProperty(HttpHeaderNames.HOST.toString(), hostExpression);
+            request.getHeader().addRequestProperty(HttpHeaderNames.CONNECTION.toString(), HttpHeaderValues.KEEP_ALIVE.toString());
+            request.getHeader().addRequestProperty(HttpHeaderNames.ACCEPT_ENCODING.toString(), HttpHeaderValues.GZIP.toString());
+            request.getHeader().addRequestProperty(HttpHeaderNames.ACCEPT.toString(), "*/*");
+            request.getHeader().addRequestProperty(HttpHeaderNames.USER_AGENT.toString(), "synapse");
+        });
+    }
+
+    @Override
+    protected void encode(ChannelHandlerContext ctx, Request msg, List<Object> out) throws Exception {
+        decorate(msg);
+        out.add(msg);
+    }
+
+    private void decorate(Request req) {
+        decorators.forEach(d -> d.decorate(req));
+    }
+
 }

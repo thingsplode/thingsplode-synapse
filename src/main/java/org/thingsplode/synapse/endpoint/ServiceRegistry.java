@@ -152,11 +152,11 @@ public class ServiceRegistry {
         try {
             Object result = mc.method.invoke(mc.serviceInstance, mc.extractInvocationArguments(header, requestBodyObject));
             if (result == null) {
-                return new Response(new Response.ResponseHeader(HttpResponseStatus.OK));
+                return new Response(new Response.ResponseHeader(header, HttpResponseStatus.OK));
             } else if (result instanceof Response) {
                 return (Response) result;
             } else if (result instanceof Serializable) {
-                return new Response(new Response.ResponseHeader(HttpResponseStatus.OK), (Serializable) result);
+                return new Response(new Response.ResponseHeader(header, HttpResponseStatus.OK), (Serializable) result);
             } else {
                 throw new ExecutionException("The servive method return type is not serializable.");
             }

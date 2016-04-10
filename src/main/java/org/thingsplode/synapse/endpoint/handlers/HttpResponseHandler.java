@@ -18,6 +18,7 @@ package org.thingsplode.synapse.endpoint.handlers;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
@@ -37,10 +38,10 @@ import org.thingsplode.synapse.serializers.SynapseSerializer;
  *
  * @author Csaba Tamas
  */
+@ChannelHandler.Sharable
 public class HttpResponseHandler extends SimpleChannelInboundHandler<Response> {
 
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(HttpResponseHandler.class);
-
     private final SerializationService serializationService = new SerializationService();
 
     @Override

@@ -62,16 +62,20 @@ public class Response<T> extends AbstractMessage<T> {
         public ResponseHeader(HttpResponseStatus responseCode) {
             this.responseCode = responseCode;
         }
-        
-        public ResponseHeader(Request.RequestHeader header, HttpResponseStatus responseCode, MediaType media){
+
+        public ResponseHeader(Request.RequestHeader header, HttpResponseStatus responseCode) {
             this(responseCode);
             this.correlationId = header.getMsgId();
+        }
+
+        public ResponseHeader(Request.RequestHeader header, HttpResponseStatus responseCode, MediaType media) {
+            this(header, responseCode);
             this.contentType = media;
         }
 
         @JsonCreator
         public ResponseHeader(@JsonProperty("msgId") String msgId, @JsonProperty("correlationId") String correlationId, @JsonProperty("responseCode") HttpResponseStatus responseCode) {
-            this(responseCode);
+            this.responseCode = responseCode;
             super.msgId = msgId;
             this.correlationId = correlationId;
         }
@@ -83,7 +87,7 @@ public class Response<T> extends AbstractMessage<T> {
         public void setContentType(MediaType contentType) {
             this.contentType = contentType;
         }
-        
+
         public String getCorrelationId() {
             return correlationId;
         }

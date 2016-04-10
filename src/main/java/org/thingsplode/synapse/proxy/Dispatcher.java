@@ -16,10 +16,13 @@
 package org.thingsplode.synapse.proxy;
 
 import io.netty.channel.Channel;
-import io.netty.handler.codec.http.HttpHeaderNames;
-import io.netty.handler.codec.http.HttpHeaderValues;
-import java.util.HashSet;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.thingsplode.synapse.core.domain.AbstractMessage;
 import org.thingsplode.synapse.core.domain.Request;
 import org.thingsplode.synapse.core.domain.Response;
 
@@ -29,45 +32,44 @@ import org.thingsplode.synapse.core.domain.Response;
  */
 public class Dispatcher {
 
-    private org.slf4j.Logger logger = LoggerFactory.getLogger(Dispatcher.class);
+    private final Logger logger = LoggerFactory.getLogger(Dispatcher.class);
     private final Channel ch;
-    private final String hostExpression;
-    private final HashSet<RequestDecorator> decorators;
+    private final ResponseCorrelatorService correlatorService;
 
-    public Dispatcher(Channel ch, String hostExpression) {
-        this(ch, hostExpression, null);
-    }
-
-    public Dispatcher(Channel ch, String he, HashSet<RequestDecorator> decorators) {
+    public Dispatcher(Channel ch, ResponseCorrelatorService correlatorService) {
         this.ch = ch;
-        this.hostExpression = he;
-        if (decorators != null) {
-            this.decorators = decorators;
-        } else {
-            this.decorators = new HashSet<>();
-        }
-        this.decorators.add((RequestDecorator) (Request request) -> {
-            //basic data decorator
-            request.getHeader().addRequestProperty(HttpHeaderNames.HOST.toString(), hostExpression);
-            request.getHeader().addRequestProperty(HttpHeaderNames.CONNECTION.toString(), HttpHeaderValues.KEEP_ALIVE.toString());
-            request.getHeader().addRequestProperty(HttpHeaderNames.ACCEPT_ENCODING.toString(), HttpHeaderValues.GZIP.toString());
-            request.getHeader().addRequestProperty(HttpHeaderNames.ACCEPT.toString(), "*/*");
-            request.getHeader().addRequestProperty(HttpHeaderNames.USER_AGENT.toString(), "synapse");
+        this.correlatorService = correlatorService;
+    }
+
+    /**
+     * It will send a request in a fire&forget fashion, not expecting a
+     * response;
+     *
+     * @param event
+     * @return
+     */
+    public ChannelFuture broadcast(Request event) {
+        return ch.writeAndFlush(event);
+    }
+
+    public CompletableFuture<Response> dispatch(Request request, long requestTimeout) {
+        request.getHeader().addRequestProperty(AbstractMessage.MESSAGE_ID, UUID.randomUUID().toString());
+        DispatchedMsgWrapper<Request, Response> responseFuture = new DispatchedMsgWrapper<>(request, requestTimeout);
+        ChannelFuture cf = ch.writeAndFlush(responseFuture);
+        cf.addListener((ChannelFutureListener) new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture future) throws Exception {
+                if (!future.isSuccess()) {
+                    //the message could not be sent
+                    //todo: build a retry mechanism?
+                    responseFuture.completeExceptionally(future.cause());
+                    future.channel().close();
+                } else {
+                    correlatorService.register(request.getHeader().getRequestProperty(AbstractMessage.MESSAGE_ID).get(), responseFuture);
+                }
+            }
         });
-    }
-
-    public void broadcast(Request event) {
-        decorate(event);
-        ch.writeAndFlush(event);
-    }
-
-    public Response dispatch(Request request) {
-        decorate(request);
         return null;
-    }
-
-    private void decorate(Request req) {
-        decorators.forEach(d -> d.decorate(req));
     }
 
     public <T> T createStub(String servicePath, Class<T> aClass) {

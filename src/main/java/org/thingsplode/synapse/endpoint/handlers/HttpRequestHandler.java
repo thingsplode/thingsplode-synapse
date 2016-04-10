@@ -29,6 +29,7 @@ import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.util.Map.Entry;
 import java.util.Optional;
+import org.thingsplode.synapse.core.domain.AbstractMessage;
 import org.thingsplode.synapse.core.domain.FileRequest;
 import org.thingsplode.synapse.core.domain.MediaType;
 import org.thingsplode.synapse.core.domain.Request;
@@ -45,7 +46,6 @@ import org.thingsplode.synapse.util.Util;
  */
 public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
 
-    public static final String MSG_ID_HEADER_KEY = "Msg-Id";
     private static final String HVALUE_UPGRADE = "Upgrade";
     private final String endpointId;
     private WebSocketServerHandshaker handshaker;
@@ -90,7 +90,7 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
                 }
             } else {
                 Request.RequestHeader header = null;
-                Optional<Entry<String, String>> msgIdOpt = httpRequest.headers().entries().stream().filter(e -> e.getKey().equalsIgnoreCase(MSG_ID_HEADER_KEY)).findFirst();
+                Optional<Entry<String, String>> msgIdOpt = httpRequest.headers().entries().stream().filter(e -> e.getKey().equalsIgnoreCase(AbstractMessage.MESSAGE_ID)).findFirst();
                 String msgId = msgIdOpt.isPresent() ? msgIdOpt.get().getValue() : null;
                 try {
                     header = new Request.RequestHeader(msgId, new Uri(httpRequest.uri()), Request.RequestHeader.RequestMethod.fromHttpMethod(httpRequest.method()));
