@@ -1,10 +1,2 @@
-/thingsplode-core/target/
-/thingsplode-agent/target/
-/thingsplode-connect/nbproject/
-/thingsplode-connect/target/
-/thingsplode-synapse/nbproject/
-/thingsplode-synapse/target/
-/swagger-ui-pack/target/
-/swagger-ui-pack/src/main/resources/WEB-INF/
-/thingsplode-synapse/src/main/resources/WEB-INF/endpoints/
 /target/
+/src/main/resources/WEB-INF/services/
