@@ -13,6 +13,7 @@
         <jackson.version>2.7.1</jackson.version>
         <gson.version>2.6.2</gson.version>
         <swagger-ui-version>2.1.4</swagger-ui-version>
+        
 <!--        <netty-version>4.1.0.Final-SNAPSHOT</netty-version>-->
         <netty-version>4.1.0.CR4</netty-version>
     </properties>

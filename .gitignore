@@ -7,3 +7,4 @@
 /swagger-ui-pack/target/
 /swagger-ui-pack/src/main/resources/WEB-INF/
 /thingsplode-synapse/src/main/resources/WEB-INF/endpoints/
+/target/
