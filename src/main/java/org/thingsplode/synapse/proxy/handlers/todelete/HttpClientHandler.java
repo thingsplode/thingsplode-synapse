@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsplode.synapse.proxy.handlers;
+package org.thingsplode.synapse.proxy.handlers.todelete;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -32,6 +32,7 @@ public class HttpClientHandler extends SimpleChannelInboundHandler<HttpObject> {
 
     @Override
     public void channelRead0(ChannelHandlerContext ctx, HttpObject msg) {
+        System.out.println("\n\n\n xoxoxoxox \n\n\n");
         if (msg instanceof HttpResponse) {
             HttpResponse response = (HttpResponse) msg;
 

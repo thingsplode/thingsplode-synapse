@@ -38,6 +38,17 @@ public class RpcEndpointImpl implements RpcEndpoint {
         }
     }
 
+    
+    @Override
+    public void pingWithTimeout(int timeout){
+        try {
+            Thread.sleep(timeout);
+            System.out.println("ping executed");
+        } catch (InterruptedException ex) {
+            Logger.getLogger(RpcEndpointImpl.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
     @Override
     public String echo(String message) {
         return message;

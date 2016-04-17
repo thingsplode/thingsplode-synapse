@@ -20,8 +20,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.netty.handler.codec.http.HttpMethod;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 import org.thingsplode.synapse.core.domain.Request.RequestHeader;
 import org.thingsplode.synapse.core.domain.Request.RequestHeader.RequestMethod;

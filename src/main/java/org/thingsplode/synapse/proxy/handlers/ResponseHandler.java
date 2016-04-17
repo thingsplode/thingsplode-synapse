@@ -15,10 +15,43 @@
  */
 package org.thingsplode.synapse.proxy.handlers;
 
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.util.internal.logging.InternalLogger;
+import io.netty.util.internal.logging.InternalLoggerFactory;
+import org.thingsplode.synapse.core.domain.Response;
+import org.thingsplode.synapse.proxy.DispatcherFuture;
+import org.thingsplode.synapse.proxy.DispatcherFutureHandler;
+
 /**
  *
  * @author Csaba Tamas
  */
-public class ResponseHandler {
+public class ResponseHandler extends SimpleChannelInboundHandler<Response> {
+    
+    private final DispatcherFutureHandler dfh;
+    private static final InternalLogger logger = InternalLoggerFactory.getInstance(ResponseHandler.class);
+
+    public ResponseHandler(DispatcherFutureHandler dfh) {
+        this.dfh = dfh;
+    }
+    
+    @Override
+    protected void channelRead0(ChannelHandlerContext ctx, Response msg) throws Exception {
+        DispatcherFuture df =dfh.removeEntry(null);
+        if (df == null) {
+            logger.error("Response received but no request token was available. Discarding message.");
+        } else {
+            df.complete(msg);
+        }
+    }
+    
+ 
+    
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+        logger.error("Excaption caught while expecting response: " + cause.getMessage());
+        dfh.removeEntry(null).completeExceptionally(cause);
+    }
     
 }

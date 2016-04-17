@@ -16,6 +16,9 @@
 package org.thingsplode.synapse.proxy;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  *
@@ -24,17 +27,24 @@ import java.util.concurrent.CompletableFuture;
  * @param <RSP>
  */
 public class DispatcherFuture<REQ, RSP> extends CompletableFuture<RSP> {
+
     private final REQ request;
     private long timeout = 0;//a default request timeout which shall be overriden
     private long requestFiredTime = -1;//when was the message successfully dispatched
 
+    /**
+     *
+     * @param req
+     * @param timeout in milliseconds
+     */
     public DispatcherFuture(REQ req, long timeout) {
         this.request = req;
         this.timeout = timeout;
     }
 
-     /**
-     * @return the timeout in milliseconds for receiving a response. If 0 means unlimited;
+    /**
+     * @return the timeout in milliseconds for receiving a response. If 0 means
+     * unlimited;
      */
     public long getTimeout() {
         return timeout;

@@ -17,6 +17,7 @@ package org.thingsplode.synapse.proxy;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.ChannelPipeline;
@@ -34,14 +35,17 @@ import java.net.URISyntaxException;
 import java.util.HashSet;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.net.ssl.SSLException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.thingsplode.synapse.core.ComponentLifecycle;
-import org.thingsplode.synapse.proxy.handlers.HttpClientResponseHandler;
+import org.thingsplode.synapse.proxy.handlers.HttpResponseHandler;
+import org.thingsplode.synapse.proxy.handlers.InboundExceptionHandler;
 import org.thingsplode.synapse.proxy.handlers.HttpResponseIntrospector;
 import org.thingsplode.synapse.proxy.handlers.RequestHandler;
 import org.thingsplode.synapse.proxy.handlers.RequestToHttpRequestEncoder;
+import org.thingsplode.synapse.proxy.handlers.ResponseHandler;
 
 /**
  *
@@ -50,26 +54,31 @@ import org.thingsplode.synapse.proxy.handlers.RequestToHttpRequestEncoder;
 //todo: remove this -> http://netty.io/4.0/xref/io/netty/example/http/snoop/package-summary.html
 //todo: support for basic authentication (//todo: support for basic authentication )
 //todo: dispatching strategy (worker pool, ringbuffer, single threaded)
+//todo: port already binded
 public class EndpointProxy {
 
     private Logger logger = LoggerFactory.getLogger(EndpointProxy.class);
     private final URI connectionUri;
-    private EventLoopGroup group = new NioEventLoopGroup();
+    private final EventLoopGroup group = new NioEventLoopGroup();
     private SslContext sslContext = null;
     private Bootstrap b = null;
     private final HashSet<Dispatcher> dispatchers = new HashSet<>();
     private boolean introspection = false;
     private int connectTimeout = 3000;
     private ComponentLifecycle lifecycle = ComponentLifecycle.UNITIALIZED;
-    private ResponseCorrelatorService correlatorService = new ResponseCorrelatorService();
+    private final Dispatcher.DispatcherPattern dispatchPattern;
+    private MsgIdRspCorrelator correlatorService;
+    private boolean retryConnection = false;
+    private AtomicInteger reconnectCounter = new AtomicInteger(0);
 
     //todo: place connection uri to the aqcuire dispatcher, so one client instance can work with many servers
-    private EndpointProxy(String baseUrl) throws URISyntaxException {
+    private EndpointProxy(String baseUrl, Dispatcher.DispatcherPattern dispatchPattern) throws URISyntaxException {
         this.connectionUri = new URI(baseUrl);
+        this.dispatchPattern = dispatchPattern;
     }
 
-    public static final EndpointProxy create(String baseUrl) throws URISyntaxException {
-        return new EndpointProxy(baseUrl);
+    public static final EndpointProxy create(String baseUrl, Dispatcher.DispatcherPattern dispatchPattern) throws URISyntaxException {
+        return new EndpointProxy(baseUrl, dispatchPattern);
     }
 
     public EndpointProxy start() {
@@ -96,8 +105,7 @@ public class EndpointProxy {
                             //p.addLast(new HttpContentDecompressor());
                             //todo: chose one of the two and tune it
                             p.addLast(new HttpObjectAggregator(1048576));
-                            //p.addLast(new HttpClientHandler());
-                            p.addLast(new HttpClientResponseHandler());
+                            p.addLast(new HttpResponseHandler());
                         }
                     });
             b.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connectTimeout);
@@ -123,6 +131,20 @@ public class EndpointProxy {
             throw new IllegalStateException("Please set this value before starting the " + EndpointProxy.class.getSimpleName());
         }
         this.connectTimeout = timeoutInMillis;
+        return this;
+    }
+
+    /**
+     *
+     * @param retryConnection if set to true, the dispatcher will try to
+     * reconnect indefinitely if the server is not available.
+     * @return
+     */
+    public EndpointProxy setRetryConnection(boolean retryConnection) {
+        if (this.lifecycle == ComponentLifecycle.STARTED) {
+            throw new IllegalStateException("Please set this value before starting the " + EndpointProxy.class.getSimpleName());
+        }
+        this.retryConnection = retryConnection;
         return this;
     }
 
@@ -154,8 +176,8 @@ public class EndpointProxy {
         if (this.lifecycle == ComponentLifecycle.UNITIALIZED) {
             throw new IllegalStateException("Please set this value before starting the " + EndpointProxy.class.getSimpleName());
         }
-        int port = 0;
         boolean ssl = false;
+        int port = 0;
         if (this.connectionUri.getPort() == -1) {
             if (this.connectionUri.getScheme() != null) {
                 if ("http".equalsIgnoreCase(this.connectionUri.getScheme()) || "ws".equalsIgnoreCase(this.connectionUri.getScheme())) {
@@ -171,6 +193,7 @@ public class EndpointProxy {
         } else {
             port = this.connectionUri.getPort();
         }
+
         if ("https".equalsIgnoreCase(this.connectionUri.getScheme()) || "wss".equalsIgnoreCase(this.connectionUri.getScheme())) {
             ssl = true;
         }
@@ -178,11 +201,66 @@ public class EndpointProxy {
             //todo: extends beyond prototype quality
             sslContext = SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build();
         }
+        //final int dirtyTrickPort = port; //needed because for some reason the compiler does not accept port and unitialized final int, even if there's an else in the if statement above.
+        final Channel ch = connect(port);
+        if (ch == null) {
+            throw new InterruptedException("Cannot connect.");
+        }
 
-        Channel ch = b.connect(this.connectionUri.getHost(), port).sync().channel();
-        Dispatcher d = new Dispatcher(ch, correlatorService);
+        Dispatcher d = null;
+        DispatcherFutureHandler dfh = null;
+        switch (this.dispatchPattern) {
+            case BLOCKING_REQUEST:
+                dfh = new BlockingRspCorrelator();
+                d = new Dispatcher(ch, dfh);
+                break;
+            case CORRELATED_ASYNC:
+                d = new Dispatcher(ch, correlatorService = correlatorService != null ? correlatorService : new MsgIdRspCorrelator());
+                break;
+            case PIPELINING:
+                d = new Dispatcher(ch, null);
+                break;
+        }
+        ResponseHandler h = new ResponseHandler(dfh);
+        InboundExceptionHandler eh = new InboundExceptionHandler(dfh);
+        ch.pipeline().addLast(h);
+        ch.pipeline().addLast(eh);
         dispatchers.add(d);
         return d;
+    }
+
+    private Channel connect(int port) throws InterruptedException {
+        try {
+            ChannelFuture cf = b.connect(this.connectionUri.getHost(), port).sync();
+            if (!cf.isSuccess()) {
+                logger.warn("Connection attempt was not successfull.");
+                return handleReconnect(port).channel();
+            } else {
+                return cf.channel();
+            }
+        } catch (Exception ex) {
+            logger.warn("Could not connect: " + ex.getMessage(), ex);
+            ChannelFuture cf2 = handleReconnect(port);
+            if (cf2 != null) {
+                return cf2.channel();
+            } else {
+                throw ex;
+            }
+        }
+    }
+
+    private ChannelFuture handleReconnect(int port) throws InterruptedException {
+        if (retryConnection) {
+            int currentReconnectCounter = reconnectCounter.incrementAndGet();
+            if (currentReconnectCounter > 5) {
+                //increasing the break between reconnects up to 5 seconds. Afterwards retrying every 5 second;
+                currentReconnectCounter = 5;
+            }
+            Thread.sleep(currentReconnectCounter);
+            return b.connect(connectionUri.getHost(), port).sync();
+        } else {
+            return null;
+        }
     }
 
 }

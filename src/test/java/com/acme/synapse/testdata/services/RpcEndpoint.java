@@ -27,7 +27,8 @@ import org.thingsplode.synapse.core.exceptions.MethodNotFoundException;
 public interface RpcEndpoint extends SynapseEndpointServiceMarker {
 
     public void ping();
-
+    public void pingWithTimeout(int timeout);
+            
     public String echo(String message);
 
     public Serializable getInfo() throws MethodNotFoundException;

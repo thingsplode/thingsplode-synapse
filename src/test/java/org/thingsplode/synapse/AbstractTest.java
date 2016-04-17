@@ -31,6 +31,10 @@ import java.io.FileNotFoundException;
 import org.slf4j.LoggerFactory;
 import org.thingsplode.synapse.core.domain.Event;
 import org.thingsplode.synapse.endpoint.AbstractEventSink;
+import org.thingsplode.synapse.proxy.BlockingProxyTest;
+import static org.thingsplode.synapse.proxy.BlockingProxyTest.defaultDispatcher;
+import org.thingsplode.synapse.proxy.Dispatcher;
+import org.thingsplode.synapse.proxy.EndpointProxy;
 
 /**
  *
@@ -79,7 +83,15 @@ public abstract class AbstractTest {
                     }
                 });
                 t.start();
-                Thread.sleep(2000);
+                Thread.sleep(4000);
+                try {
+                    EndpointProxy epx = EndpointProxy.create("http://localhost:8080/", Dispatcher.DispatcherPattern.BLOCKING_REQUEST).setRetryConnection(true).start();
+                    defaultDispatcher = epx.acquireDispatcher();
+                    Thread.sleep(4000);
+                } catch (Throwable th) {
+                    System.out.println("\n\n\nERROR while setting up: " + BlockingProxyTest.class.getSimpleName() + ". Dumping stack trace: ");
+                    th.printStackTrace();
+                }
             }
 
             @Override

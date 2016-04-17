@@ -47,7 +47,7 @@ public class HttpResponseIntrospector extends ChannelOutboundHandlerAdapter {
             if (msg instanceof FullHttpResponse) {
                 ByteBuf content = ((FullHttpResponse) msg).content();
                 byte[] dst = new byte[content.capacity()];
-                content.copy().getBytes(0, dst);
+                //content.copy().getBytes(0, dst);
                 content.retain();
                 payloadAsSring = new String(dst, Charset.forName("UTF-8"));
             }

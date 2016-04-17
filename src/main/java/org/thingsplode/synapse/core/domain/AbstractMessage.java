@@ -17,11 +17,10 @@ package org.thingsplode.synapse.core.domain;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import java.io.Serializable;
-import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import org.thingsplode.synapse.core.exceptions.MarshallerException;
 
 /**
@@ -31,8 +30,9 @@ import org.thingsplode.synapse.core.exceptions.MarshallerException;
  */
 public abstract class AbstractMessage<T> implements Serializable {
 
-    public final static String MESSAGE_ID = "Message-id";
-    public final static String CORRELATION_ID = "Correlation-id";
+    public final static String PROP_MESSAGE_ID = "Message-id";
+    public final static String PROP_CORRELATION_ID = "Correlation-id";
+    public final static String PROP_PROTOCOL_VERSION = "Protocol-Version";
     
     @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@body_type")
     private T body;
@@ -49,8 +49,7 @@ public abstract class AbstractMessage<T> implements Serializable {
 
         protected String msgId;
         private String protocolVersion;
-        private InetSocketAddress callerAddress;
-        private Set<Parameter> parameters;
+        private SocketAddress remoteAddress;
         private final HashMap<String, String> messageProperties = new HashMap<>();
 
         public MessageHeader() {
@@ -76,20 +75,12 @@ public abstract class AbstractMessage<T> implements Serializable {
             this.protocolVersion = protocolVersion;
         }
 
-        public InetSocketAddress getCallerAddress() {
-            return callerAddress;
+        public SocketAddress getRemoteAddress() {
+            return remoteAddress;
         }
 
-        public void setCallerAddress(InetSocketAddress callerAddress) {
-            this.callerAddress = callerAddress;
-        }
-
-        public Set<Parameter> getParameters() {
-            return parameters;
-        }
-
-        public void setParameters(Set<Parameter> parameters) {
-            this.parameters = parameters;
+        public void setRemoteAddress(SocketAddress callerAddress) {
+            this.remoteAddress = callerAddress;
         }
         
         public void addMessageProperty(String key, String value) {

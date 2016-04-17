@@ -17,6 +17,7 @@ package org.thingsplode.synapse.endpoint.handlers;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -65,12 +66,13 @@ public class HttpResponseHandler extends SimpleChannelInboundHandler<Response> {
         rsp.getHeader().getMessageProperties().keySet().stream().forEach(k -> {
             httpResponse.headers().set(k, rsp.getHeader().getMessageProperty(k));
         });
-        httpResponse.headers().set(AbstractMessage.CORRELATION_ID, rsp.getHeader().getCorrelationId());
+        if (rsp.getHeader().getCorrelationId() != null) {
+            httpResponse.headers().set(AbstractMessage.PROP_CORRELATION_ID, rsp.getHeader().getCorrelationId());
+        }
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        cause.printStackTrace();
         logger.error("Error while preparing response: " + cause.getMessage(), cause);
         sendError(ctx, HttpResponseStatus.INTERNAL_SERVER_ERROR, cause.getClass().getSimpleName() + ": " + cause.getMessage());
     }
@@ -80,7 +82,15 @@ public class HttpResponseHandler extends SimpleChannelInboundHandler<Response> {
                 HttpVersion.HTTP_1_1, status, Unpooled.copiedBuffer("Failure: " + errorMsg + "\r\n", CharsetUtil.UTF_8));
         response.headers().set(HttpHeaderNames.CONTENT_TYPE, "text/plain; charset=UTF-8");
         // Close the connection as soon as the error message is sent.
-        ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+        ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE).addListener((ChannelFutureListener) (ChannelFuture future) -> {
+            Throwable th = future.cause();
+            if (th != null) {
+                logger.error("Sending response from Endpoint was not successful: " + th.getMessage(), th);
+            }
+            if (logger.isDebugEnabled() && future.isSuccess()) {
+                logger.debug("Response message was succesfully dispatched at the endpoint.");
+            }
+        });
     }
 
     static void sendRedirect(ChannelHandlerContext ctx, String newUrl) {
