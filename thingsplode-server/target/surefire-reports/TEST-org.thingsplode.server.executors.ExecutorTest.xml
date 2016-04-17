@@ -1,0 +1,961 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.thingsplode.server.executors.ExecutorTest" time="0.493" tests="4" errors="1" skipped="0" failures="0">
+  <properties>
+    <property name="java.runtime.name" value="Java(TM) SE Runtime Environment"/>
+    <property name="sun.boot.library.path" value="/usr/lib/jvm/java-8-oracle/jre/lib/amd64"/>
+    <property name="java.vm.version" value="25.45-b02"/>
+    <property name="java.vm.vendor" value="Oracle Corporation"/>
+    <property name="java.vendor.url" value="http://java.oracle.com/"/>
+    <property name="path.separator" value=":"/>
+    <property name="guice.disable.misplaced.annotation.check" value="true"/>
+    <property name="java.vm.name" value="Java HotSpot(TM) 64-Bit Server VM"/>
+    <property name="file.encoding.pkg" value="sun.io"/>
+    <property name="user.country" value="US"/>
+    <property name="sun.java.launcher" value="SUN_STANDARD"/>
+    <property name="sun.os.patch.level" value="unknown"/>
+    <property name="java.vm.specification.name" value="Java Virtual Machine Specification"/>
+    <property name="user.dir" value="/home/tamas/Code/thingsplode/thingsplode-server"/>
+    <property name="java.runtime.version" value="1.8.0_45-b14"/>
+    <property name="java.awt.graphicsenv" value="sun.awt.X11GraphicsEnvironment"/>
+    <property name="java.endorsed.dirs" value="/usr/lib/jvm/java-8-oracle/jre/lib/endorsed"/>
+    <property name="os.arch" value="amd64"/>
+    <property name="java.io.tmpdir" value="/tmp"/>
+    <property name="line.separator" value="&#10;"/>
+    <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
+    <property name="os.name" value="Linux"/>
+    <property name="maven.ext.class.path" value="/home/tamas/Programs/netbeans-8.0.2/java/maven-nblib/netbeans-eventspy.jar"/>
+    <property name="classworlds.conf" value="/home/tamas/Programs/netbeans-8.0.2/java/maven/bin/m2.conf"/>
+    <property name="sun.jnu.encoding" value="UTF-8"/>
+    <property name="java.library.path" value="/usr/lib/jvm/java-8-oracle/jre/lib/amd64:/usr/lib/jvm/java-8-oracle/jre/lib/i386::/usr/java/packages/lib/amd64:/usr/lib64:/lib64:/lib:/usr/lib"/>
+    <property name="java.specification.name" value="Java Platform API Specification"/>
+    <property name="java.class.version" value="52.0"/>
+    <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
+    <property name="os.version" value="3.16.0-37-generic"/>
+    <property name="user.home" value="/home/tamas"/>
+    <property name="user.timezone" value="Europe/Vienna"/>
+    <property name="java.awt.printerjob" value="sun.print.PSPrinterJob"/>
+    <property name="file.encoding" value="UTF-8"/>
+    <property name="java.specification.version" value="1.8"/>
+    <property name="java.net.useSystemProxies" value="true"/>
+    <property name="user.name" value="tamas"/>
+    <property name="java.class.path" value="/home/tamas/Programs/netbeans-8.0.2/java/maven/boot/plexus-classworlds-2.4.jar"/>
+    <property name="java.vm.specification.version" value="1.8"/>
+    <property name="sun.arch.data.model" value="64"/>
+    <property name="java.home" value="/usr/lib/jvm/java-8-oracle/jre"/>
+    <property name="sun.java.command" value="org.codehaus.plexus.classworlds.launcher.Launcher -Dmaven.ext.class.path=/home/tamas/Programs/netbeans-8.0.2/java/maven-nblib/netbeans-eventspy.jar -Djava.net.useSystemProxies=true clean install"/>
+    <property name="java.specification.vendor" value="Oracle Corporation"/>
+    <property name="user.language" value="en"/>
+    <property name="awt.toolkit" value="sun.awt.X11.XToolkit"/>
+    <property name="java.vm.info" value="mixed mode"/>
+    <property name="java.version" value="1.8.0_45"/>
+    <property name="java.ext.dirs" value="/usr/lib/jvm/java-8-oracle/jre/lib/ext:/usr/java/packages/lib/ext"/>
+    <property name="securerandom.source" value="file:/dev/./urandom"/>
+    <property name="sun.boot.class.path" value="/usr/lib/jvm/java-8-oracle/jre/lib/resources.jar:/usr/lib/jvm/java-8-oracle/jre/lib/rt.jar:/usr/lib/jvm/java-8-oracle/jre/lib/sunrsasign.jar:/usr/lib/jvm/java-8-oracle/jre/lib/jsse.jar:/usr/lib/jvm/java-8-oracle/jre/lib/jce.jar:/usr/lib/jvm/java-8-oracle/jre/lib/charsets.jar:/usr/lib/jvm/java-8-oracle/jre/lib/jfr.jar:/usr/lib/jvm/java-8-oracle/jre/classes"/>
+    <property name="java.vendor" value="Oracle Corporation"/>
+    <property name="maven.home" value="/home/tamas/Programs/netbeans-8.0.2/java/maven"/>
+    <property name="file.separator" value="/"/>
+    <property name="java.vendor.url.bug" value="http://bugreport.sun.com/bugreport/"/>
+    <property name="sun.cpu.endian" value="little"/>
+    <property name="sun.io.unicode.encoding" value="UnicodeLittle"/>
+    <property name="sun.desktop" value="gnome"/>
+    <property name="sun.cpu.isalist" value=""/>
+  </properties>
+  <testcase name="testBootNotificationRequestWithDisabledDevice" classname="org.thingsplode.server.executors.ExecutorTest" time="0.1"/>
+  <testcase name="testBootNotificationRequest" classname="org.thingsplode.server.executors.ExecutorTest" time="0.067"/>
+  <testcase name="testBootNotificationReqyestWithNewConfigs" classname="org.thingsplode.server.executors.ExecutorTest" time="0.246"/>
+  <testcase name="testEventSync" classname="org.thingsplode.server.executors.ExecutorTest" time="0.08">
+    <error message="; nested exception is org.springframework.messaging.core.DestinationResolutionException: no output-channel or replyChannel header available" type="org.springframework.messaging.MessagingException">org.springframework.messaging.MessagingException: ; nested exception is org.springframework.messaging.core.DestinationResolutionException: no output-channel or replyChannel header available
+	at org.springframework.integration.handler.AbstractMessageProducingHandler.sendOutput(AbstractMessageProducingHandler.java:243)
+	at org.springframework.integration.handler.AbstractMessageProducingHandler.produceOutput(AbstractMessageProducingHandler.java:171)
+	at org.springframework.integration.handler.AbstractMessageProducingHandler.sendOutputs(AbstractMessageProducingHandler.java:119)
+	at org.springframework.integration.handler.AbstractReplyProducingMessageHandler.handleMessageInternal(AbstractReplyProducingMessageHandler.java:105)
+	at org.springframework.integration.handler.AbstractMessageHandler.handleMessage(AbstractMessageHandler.java:78)
+	at org.springframework.integration.dispatcher.AbstractDispatcher.tryOptimizedDispatch(AbstractDispatcher.java:116)
+	at org.springframework.integration.dispatcher.UnicastingDispatcher.doDispatch(UnicastingDispatcher.java:101)
+	at org.springframework.integration.dispatcher.UnicastingDispatcher.dispatch(UnicastingDispatcher.java:97)
+	at org.springframework.integration.channel.AbstractSubscribableChannel.doSend(AbstractSubscribableChannel.java:77)
+	at org.springframework.integration.channel.AbstractMessageChannel.send(AbstractMessageChannel.java:277)
+	at org.springframework.integration.channel.AbstractMessageChannel.send(AbstractMessageChannel.java:239)
+	at org.springframework.messaging.core.GenericMessagingTemplate.doSend(GenericMessagingTemplate.java:115)
+	at org.springframework.messaging.core.GenericMessagingTemplate.doSend(GenericMessagingTemplate.java:45)
+	at org.springframework.messaging.core.AbstractMessageSendingTemplate.send(AbstractMessageSendingTemplate.java:95)
+	at org.springframework.messaging.core.AbstractMessageSendingTemplate.send(AbstractMessageSendingTemplate.java:85)
+	at org.thingsplode.server.bus.executors.AbstractSyncExecutor.process(AbstractSyncExecutor.java:40)
+	at org.thingsplode.server.BusConfig$1.handleMessageInternal(BusConfig.java:90)
+	at org.springframework.integration.handler.AbstractMessageHandler.handleMessage(AbstractMessageHandler.java:78)
+	at org.springframework.integration.config.annotation.ServiceActivatorAnnotationPostProcessor$ReplyProducingMessageHandlerWrapper.handleRequestMessage(ServiceActivatorAnnotationPostProcessor.java:96)
+	at org.springframework.integration.handler.AbstractReplyProducingMessageHandler.handleMessageInternal(AbstractReplyProducingMessageHandler.java:99)
+	at org.springframework.integration.handler.AbstractMessageHandler.handleMessage(AbstractMessageHandler.java:78)
+	at org.springframework.integration.dispatcher.AbstractDispatcher.tryOptimizedDispatch(AbstractDispatcher.java:116)
+	at org.springframework.integration.dispatcher.UnicastingDispatcher.doDispatch(UnicastingDispatcher.java:101)
+	at org.springframework.integration.dispatcher.UnicastingDispatcher.dispatch(UnicastingDispatcher.java:97)
+	at org.springframework.integration.channel.AbstractSubscribableChannel.doSend(AbstractSubscribableChannel.java:77)
+	at org.springframework.integration.channel.AbstractMessageChannel.send(AbstractMessageChannel.java:277)
+	at org.springframework.integration.channel.AbstractMessageChannel.send(AbstractMessageChannel.java:239)
+	at org.springframework.messaging.core.GenericMessagingTemplate.doSend(GenericMessagingTemplate.java:115)
+	at org.springframework.messaging.core.GenericMessagingTemplate.doSend(GenericMessagingTemplate.java:45)
+	at org.springframework.messaging.core.AbstractMessageSendingTemplate.send(AbstractMessageSendingTemplate.java:95)
+	at org.springframework.messaging.core.AbstractMessageSendingTemplate.convertAndSend(AbstractMessageSendingTemplate.java:133)
+	at org.springframework.messaging.core.AbstractMessageSendingTemplate.convertAndSend(AbstractMessageSendingTemplate.java:125)
+	at org.springframework.integration.gateway.MessagingGatewaySupport.send(MessagingGatewaySupport.java:302)
+	at org.springframework.integration.gateway.GatewayProxyFactoryBean.invokeGatewayMethod(GatewayProxyFactoryBean.java:417)
+	at org.springframework.integration.gateway.GatewayProxyFactoryBean.doInvoke(GatewayProxyFactoryBean.java:374)
+	at org.springframework.integration.gateway.GatewayProxyFactoryBean.invoke(GatewayProxyFactoryBean.java:365)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179)
+	at org.springframework.aop.framework.JdkDynamicAopProxy.invoke(JdkDynamicAopProxy.java:207)
+	at com.sun.proxy.$Proxy89.process(Unknown Source)
+	at org.thingsplode.server.executors.ExecutorTest.testEventSync(ExecutorTest.java:214)
+</error>
+    <system-out><![CDATA[
+
+ ***** 
+ REMOVING PREVIOUS DATABASE: (/tmp/thingsplode_h2db_test.h2.db)
+ *****
+
+
+ **** WARNING: test database file was not found and not deleted. (/tmp/thingsplode_h2db_test.h2.db)
+5137 [main] DEBUG org.hibernate.jpa.criteria.CriteriaQueryImpl  - Rendered criteria query -> select generatedAlias0 from Device as generatedAlias0 where generatedAlias0.identification=:param0
+5138 [main] DEBUG org.hibernate.SQL  - 
+    select
+        device0_.id as id2_1_,
+        device0_1_.deviceClass as deviceCl3_1_,
+        device0_1_.enabledState as enabledS4_1_,
+        device0_1_.identification as identifi5_1_,
+        device0_1_.model_id as model_i10_1_,
+        device0_1_.partNumber as partNumb6_1_,
+        device0_1_.serialNumber as serialNu7_1_,
+        device0_1_.status as status8_1_,
+        device0_1_.type as type9_1_,
+        device0_.hostAddress as hostAddr1_3_,
+        device0_.lastHeartBeat as lastHear2_3_,
+        device0_.city as city3_3_,
+        device0_.country as country4_3_,
+        device0_.houseNumber as houseNum5_3_,
+        device0_.postCode as postCode6_3_,
+        device0_.state as state7_3_,
+        device0_.street as street8_3_,
+        device0_.description as descript9_3_,
+        device0_.latitude as latitud10_3_,
+        device0_.longitude as longitu11_3_,
+        device0_.startupDate as startup12_3_ 
+    from
+        DEVICES device0_ 
+    inner join
+        COMPONENT device0_1_ 
+            on device0_.id=device0_1_.id 
+    where
+        device0_1_.identification=?
+Hibernate: 
+    select
+        device0_.id as id2_1_,
+        device0_1_.deviceClass as deviceCl3_1_,
+        device0_1_.enabledState as enabledS4_1_,
+        device0_1_.identification as identifi5_1_,
+        device0_1_.model_id as model_i10_1_,
+        device0_1_.partNumber as partNumb6_1_,
+        device0_1_.serialNumber as serialNu7_1_,
+        device0_1_.status as status8_1_,
+        device0_1_.type as type9_1_,
+        device0_.hostAddress as hostAddr1_3_,
+        device0_.lastHeartBeat as lastHear2_3_,
+        device0_.city as city3_3_,
+        device0_.country as country4_3_,
+        device0_.houseNumber as houseNum5_3_,
+        device0_.postCode as postCode6_3_,
+        device0_.state as state7_3_,
+        device0_.street as street8_3_,
+        device0_.description as descript9_3_,
+        device0_.latitude as latitud10_3_,
+        device0_.longitude as longitu11_3_,
+        device0_.startupDate as startup12_3_ 
+    from
+        DEVICES device0_ 
+    inner join
+        COMPONENT device0_1_ 
+            on device0_.id=device0_1_.id 
+    where
+        device0_1_.identification=?
+5138 [main] DEBUG org.hibernate.engine.jdbc.internal.LogicalConnectionImpl  - Obtaining JDBC connection
+5138 [main] DEBUG org.hibernate.engine.jdbc.internal.LogicalConnectionImpl  - Obtained JDBC connection
+5138 [main] TRACE org.hibernate.type.descriptor.sql.BasicBinder  - binding parameter [1] as [VARCHAR] - [test_device_1]
+5138 [main] DEBUG org.hibernate.loader.Loader  - Result set row: 0
+5138 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([id2_1_] : [BIGINT]) - [1]
+5138 [main] DEBUG org.hibernate.loader.Loader  - Result row: EntityKey[org.thingsplode.core.entities.Device#1]
+5138 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([deviceCl3_1_] : [VARCHAR]) - [null]
+5138 [main] TRACE org.hibernate.type.EnumType  - Returning [ENABLED] as column [enabledS4_1_]
+5138 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([identifi5_1_] : [VARCHAR]) - [test_device_1]
+5138 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([model_i10_1_] : [BIGINT]) - [1]
+5138 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([partNumb6_1_] : [VARCHAR]) - [123]
+5138 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([serialNu7_1_] : [VARCHAR]) - [1231234235]
+5138 [main] TRACE org.hibernate.type.EnumType  - Returning [ONLINE] as column [status8_1_]
+5138 [main] TRACE org.hibernate.type.EnumType  - Returning [HARDWARE] as column [type9_1_]
+5138 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([hostAddr1_3_] : [VARCHAR]) - [111.111.111.111]
+5143 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([lastHear2_3_] : [TIMESTAMP]) - [java.util.GregorianCalendar[time=1431202828803,areFieldsSet=true,areAllFieldsSet=true,lenient=true,zone=sun.util.calendar.ZoneInfo[id="Europe/Vienna",offset=3600000,dstSavings=3600000,useDaylight=true,transitions=139,lastRule=java.util.SimpleTimeZone[id=Europe/Vienna,offset=3600000,dstSavings=3600000,useDaylight=true,startYear=0,startMode=2,startMonth=2,startDay=-1,startDayOfWeek=1,startTime=3600000,startTimeMode=2,endMode=2,endMonth=9,endDay=-1,endDayOfWeek=1,endTime=3600000,endTimeMode=2]],firstDayOfWeek=1,minimalDaysInFirstWeek=1,ERA=1,YEAR=2015,MONTH=4,WEEK_OF_YEAR=19,WEEK_OF_MONTH=2,DAY_OF_MONTH=9,DAY_OF_YEAR=129,DAY_OF_WEEK=7,DAY_OF_WEEK_IN_MONTH=2,AM_PM=1,HOUR=10,HOUR_OF_DAY=22,MINUTE=20,SECOND=28,MILLISECOND=803,ZONE_OFFSET=3600000,DST_OFFSET=3600000]]
+5145 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([city3_3_] : [VARCHAR]) - [some_city]
+5145 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([country4_3_] : [VARCHAR]) - [Some Country]
+5145 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([houseNum5_3_] : [VARCHAR]) - [54]
+5145 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([postCode6_3_] : [VARCHAR]) - [434545]
+5145 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([state7_3_] : [VARCHAR]) - [some state]
+5145 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([street8_3_] : [VARCHAR]) - [null]
+5145 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([descript9_3_] : [VARCHAR]) - [default]
+5145 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([latitud10_3_] : [DOUBLE]) - [100.0]
+5145 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([longitu11_3_] : [DOUBLE]) - [123.4]
+5148 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([startup12_3_] : [TIMESTAMP]) - [java.util.GregorianCalendar[time=1431202826795,areFieldsSet=true,areAllFieldsSet=true,lenient=true,zone=sun.util.calendar.ZoneInfo[id="Europe/Vienna",offset=3600000,dstSavings=3600000,useDaylight=true,transitions=139,lastRule=java.util.SimpleTimeZone[id=Europe/Vienna,offset=3600000,dstSavings=3600000,useDaylight=true,startYear=0,startMode=2,startMonth=2,startDay=-1,startDayOfWeek=1,startTime=3600000,startTimeMode=2,endMode=2,endMonth=9,endDay=-1,endDayOfWeek=1,endTime=3600000,endTimeMode=2]],firstDayOfWeek=1,minimalDaysInFirstWeek=1,ERA=1,YEAR=2015,MONTH=4,WEEK_OF_YEAR=19,WEEK_OF_MONTH=2,DAY_OF_MONTH=9,DAY_OF_YEAR=129,DAY_OF_WEEK=7,DAY_OF_WEEK_IN_MONTH=2,AM_PM=1,HOUR=10,HOUR_OF_DAY=22,MINUTE=20,SECOND=26,MILLISECOND=795,ZONE_OFFSET=3600000,DST_OFFSET=3600000]]
+5148 [main] DEBUG org.hibernate.engine.internal.TwoPhaseLoad  - Resolving associations for [org.thingsplode.core.entities.Device#1]
+5148 [main] TRACE org.hibernate.type.CollectionType  - Created collection wrapper: [org.thingsplode.core.entities.Component.capabilities#1]
+5148 [main] TRACE org.hibernate.type.CollectionType  - Created collection wrapper: [org.thingsplode.core.entities.Component.components#1]
+5148 [main] TRACE org.hibernate.type.CollectionType  - Created collection wrapper: [org.thingsplode.core.entities.Component.configuration#1]
+5148 [main] DEBUG org.hibernate.SQL  - 
+    select
+        model0_.id as id1_6_0_,
+        model0_.manufacturer as manufact2_6_0_,
+        model0_.type as type3_6_0_,
+        model0_.version as version4_6_0_ 
+    from
+        MODELS model0_ 
+    where
+        model0_.id=?
+Hibernate: 
+    select
+        model0_.id as id1_6_0_,
+        model0_.manufacturer as manufact2_6_0_,
+        model0_.type as type3_6_0_,
+        model0_.version as version4_6_0_ 
+    from
+        MODELS model0_ 
+    where
+        model0_.id=?
+5148 [main] TRACE org.hibernate.type.descriptor.sql.BasicBinder  - binding parameter [1] as [BIGINT] - [1]
+5148 [main] DEBUG org.hibernate.loader.plan.exec.process.internal.ResultSetProcessorImpl  - Starting ResultSet row #0
+5148 [main] DEBUG org.hibernate.loader.plan.exec.process.internal.EntityReferenceInitializerImpl  - On call to EntityIdentifierReaderImpl#resolve, EntityKey was already known; should only happen on root returns with an optional identifier specified
+5148 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([manufact2_6_0_] : [VARCHAR]) - [some_manufacturer]
+5148 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([type3_6_0_] : [VARCHAR]) - [some_type]
+5148 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([version4_6_0_] : [VARCHAR]) - [1]
+5148 [main] DEBUG org.hibernate.engine.internal.TwoPhaseLoad  - Resolving associations for [org.thingsplode.core.entities.Model#1]
+5148 [main] DEBUG org.hibernate.engine.internal.TwoPhaseLoad  - Done materializing entity [org.thingsplode.core.entities.Model#1]
+5149 [main] DEBUG org.hibernate.loader.entity.plan.AbstractLoadPlanBasedEntityLoader  - Done entity load : org.thingsplode.core.entities.Model#1
+5149 [main] TRACE org.hibernate.type.CollectionType  - Created collection wrapper: [org.thingsplode.core.entities.Component.tresholds#1]
+5149 [main] DEBUG org.hibernate.loader.collection.plan.AbstractLoadPlanBasedCollectionInitializer  - Loading collection: [org.thingsplode.core.entities.Component.tresholds#1]
+5149 [main] DEBUG org.hibernate.SQL  - 
+    select
+        tresholds0_.COMP_ID as COMP_ID7_1_0_,
+        tresholds0_.id as id1_8_0_,
+        tresholds0_.id as id1_8_1_,
+        tresholds0_.name as name2_8_1_,
+        tresholds0_.scope as scope3_8_1_,
+        tresholds0_.content as content4_8_1_,
+        tresholds0_.VALUE_TYPE as VALUE_TY5_8_1_,
+        tresholds0_.type as type6_8_1_ 
+    from
+        TRESHOLDS tresholds0_ 
+    where
+        tresholds0_.COMP_ID=?
+Hibernate: 
+    select
+        tresholds0_.COMP_ID as COMP_ID7_1_0_,
+        tresholds0_.id as id1_8_0_,
+        tresholds0_.id as id1_8_1_,
+        tresholds0_.name as name2_8_1_,
+        tresholds0_.scope as scope3_8_1_,
+        tresholds0_.content as content4_8_1_,
+        tresholds0_.VALUE_TYPE as VALUE_TY5_8_1_,
+        tresholds0_.type as type6_8_1_ 
+    from
+        TRESHOLDS tresholds0_ 
+    where
+        tresholds0_.COMP_ID=?
+5149 [main] TRACE org.hibernate.type.descriptor.sql.BasicBinder  - binding parameter [1] as [BIGINT] - [1]
+5149 [main] DEBUG org.hibernate.loader.plan.exec.process.internal.ResultSetProcessorImpl  - Preparing collection intializer : [org.thingsplode.core.entities.Component.tresholds#1]
+5149 [main] DEBUG org.hibernate.loader.plan.exec.process.internal.ResultSetProcessorImpl  - Starting ResultSet row #0
+5149 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([id1_8_1_] : [BIGINT]) - [2]
+5149 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([name2_8_1_] : [VARCHAR]) - [alarm_high]
+5149 [main] TRACE org.hibernate.type.EnumType  - Returning [DEVICE] as column [scope3_8_1_]
+5149 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([content4_8_1_] : [VARCHAR]) - [10000]
+5149 [main] TRACE org.hibernate.type.EnumType  - Returning [NUMBER] as column [VALUE_TY5_8_1_]
+5149 [main] TRACE org.hibernate.type.EnumType  - Returning [HIGH] as column [type6_8_1_]
+5149 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([COMP_ID7_1_0_] : [BIGINT]) - [1]
+5149 [main] DEBUG org.hibernate.loader.plan.exec.process.internal.CollectionReferenceInitializerImpl  - Found row of collection: [org.thingsplode.core.entities.Component.tresholds#1]
+5149 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([id1_8_0_] : [BIGINT]) - [2]
+5149 [main] DEBUG org.hibernate.loader.plan.exec.process.internal.ResultSetProcessorImpl  - Starting ResultSet row #1
+5149 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([id1_8_1_] : [BIGINT]) - [3]
+5149 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([name2_8_1_] : [VARCHAR]) - [alarm_low]
+5150 [main] TRACE org.hibernate.type.EnumType  - Returning [DEVICE] as column [scope3_8_1_]
+5150 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([content4_8_1_] : [VARCHAR]) - [100]
+5150 [main] TRACE org.hibernate.type.EnumType  - Returning [NUMBER] as column [VALUE_TY5_8_1_]
+5150 [main] TRACE org.hibernate.type.EnumType  - Returning [LOW] as column [type6_8_1_]
+5150 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([COMP_ID7_1_0_] : [BIGINT]) - [1]
+5150 [main] DEBUG org.hibernate.loader.plan.exec.process.internal.CollectionReferenceInitializerImpl  - Found row of collection: [org.thingsplode.core.entities.Component.tresholds#1]
+5150 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([id1_8_0_] : [BIGINT]) - [3]
+5150 [main] DEBUG org.hibernate.loader.plan.exec.process.internal.ResultSetProcessorImpl  - Starting ResultSet row #2
+5150 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([id1_8_1_] : [BIGINT]) - [7]
+5150 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([name2_8_1_] : [VARCHAR]) - [auxiliary_alarm]
+5150 [main] TRACE org.hibernate.type.EnumType  - Returning [DEVICE] as column [scope3_8_1_]
+5150 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([content4_8_1_] : [VARCHAR]) - [2000]
+5150 [main] TRACE org.hibernate.type.EnumType  - Returning [NUMBER] as column [VALUE_TY5_8_1_]
+5150 [main] TRACE org.hibernate.type.EnumType  - Returning [HIGH] as column [type6_8_1_]
+5150 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([COMP_ID7_1_0_] : [BIGINT]) - [1]
+5150 [main] DEBUG org.hibernate.loader.plan.exec.process.internal.CollectionReferenceInitializerImpl  - Found row of collection: [org.thingsplode.core.entities.Component.tresholds#1]
+5150 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([id1_8_0_] : [BIGINT]) - [7]
+5150 [main] DEBUG org.hibernate.loader.plan.exec.process.internal.ResultSetProcessorImpl  - Starting ResultSet row #3
+5150 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([id1_8_1_] : [BIGINT]) - [8]
+5150 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([name2_8_1_] : [VARCHAR]) - [temperature_activity]
+5150 [main] TRACE org.hibernate.type.EnumType  - Returning [DEVICE] as column [scope3_8_1_]
+5150 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([content4_8_1_] : [VARCHAR]) - [true]
+5150 [main] TRACE org.hibernate.type.EnumType  - Returning [BOOLEAN] as column [VALUE_TY5_8_1_]
+5150 [main] TRACE org.hibernate.type.EnumType  - Returning [HIGH] as column [type6_8_1_]
+5150 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([COMP_ID7_1_0_] : [BIGINT]) - [1]
+5150 [main] DEBUG org.hibernate.loader.plan.exec.process.internal.CollectionReferenceInitializerImpl  - Found row of collection: [org.thingsplode.core.entities.Component.tresholds#1]
+5150 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([id1_8_0_] : [BIGINT]) - [8]
+5150 [main] DEBUG org.hibernate.engine.internal.TwoPhaseLoad  - Resolving associations for [org.thingsplode.core.entities.Treshold#2]
+5150 [main] DEBUG org.hibernate.engine.internal.TwoPhaseLoad  - Done materializing entity [org.thingsplode.core.entities.Treshold#2]
+5150 [main] DEBUG org.hibernate.engine.internal.TwoPhaseLoad  - Resolving associations for [org.thingsplode.core.entities.Treshold#3]
+5150 [main] DEBUG org.hibernate.engine.internal.TwoPhaseLoad  - Done materializing entity [org.thingsplode.core.entities.Treshold#3]
+5150 [main] DEBUG org.hibernate.engine.internal.TwoPhaseLoad  - Resolving associations for [org.thingsplode.core.entities.Treshold#7]
+5150 [main] DEBUG org.hibernate.engine.internal.TwoPhaseLoad  - Done materializing entity [org.thingsplode.core.entities.Treshold#7]
+5150 [main] DEBUG org.hibernate.engine.internal.TwoPhaseLoad  - Resolving associations for [org.thingsplode.core.entities.Treshold#8]
+5150 [main] DEBUG org.hibernate.engine.internal.TwoPhaseLoad  - Done materializing entity [org.thingsplode.core.entities.Treshold#8]
+5150 [main] DEBUG org.hibernate.engine.loading.internal.CollectionLoadContext  - 1 collections were found in result set for role: org.thingsplode.core.entities.Component.tresholds
+5150 [main] DEBUG org.hibernate.engine.loading.internal.CollectionLoadContext  - Collection fully initialized: [org.thingsplode.core.entities.Component.tresholds#1]
+5150 [main] DEBUG org.hibernate.engine.loading.internal.CollectionLoadContext  - 1 collections initialized for role: org.thingsplode.core.entities.Component.tresholds
+5150 [main] DEBUG org.hibernate.loader.collection.plan.AbstractLoadPlanBasedCollectionInitializer  - Done loading collection
+5151 [main] DEBUG org.hibernate.engine.internal.TwoPhaseLoad  - Done materializing entity [org.thingsplode.core.entities.Device#1]
+5151 [main] DEBUG org.hibernate.engine.jdbc.internal.LogicalConnectionImpl  - Releasing JDBC connection
+5151 [main] DEBUG org.hibernate.engine.jdbc.internal.LogicalConnectionImpl  - Released JDBC connection
+5153 [main] DEBUG org.thingsplode.server.bus.interceptors.LoggingInterceptor  - On channel: syncChannel -> Message: GenericMessage [payload=EventSync{ AbstractRequest{ AbstractMessage{ Expectable{} messageId=null, protocolVersion=0} deviceId=test_device_1, messageTimestamp=1431202829062, serviceProviderName=null} componentName=test_device_1, event=[Event{ Persistable{id=null} component=null, eventId=some_event_id, eventClass=some_class, severity=DEBUG, eventDate=null, receiveDate=null, indications=[Persistable{id=null}, Persistable{id=null}]}]}, headers={id=d7e4400b-ef83-48ec-8836-7377442e94bc, timestamp=1431202829064}]
+5153 [main] DEBUG org.hibernate.jpa.criteria.CriteriaQueryImpl  - Rendered criteria query -> select generatedAlias0 from Device as generatedAlias0 where generatedAlias0.identification=:param0
+5153 [main] DEBUG org.hibernate.SQL  - 
+    select
+        device0_.id as id2_1_,
+        device0_1_.deviceClass as deviceCl3_1_,
+        device0_1_.enabledState as enabledS4_1_,
+        device0_1_.identification as identifi5_1_,
+        device0_1_.model_id as model_i10_1_,
+        device0_1_.partNumber as partNumb6_1_,
+        device0_1_.serialNumber as serialNu7_1_,
+        device0_1_.status as status8_1_,
+        device0_1_.type as type9_1_,
+        device0_.hostAddress as hostAddr1_3_,
+        device0_.lastHeartBeat as lastHear2_3_,
+        device0_.city as city3_3_,
+        device0_.country as country4_3_,
+        device0_.houseNumber as houseNum5_3_,
+        device0_.postCode as postCode6_3_,
+        device0_.state as state7_3_,
+        device0_.street as street8_3_,
+        device0_.description as descript9_3_,
+        device0_.latitude as latitud10_3_,
+        device0_.longitude as longitu11_3_,
+        device0_.startupDate as startup12_3_ 
+    from
+        DEVICES device0_ 
+    inner join
+        COMPONENT device0_1_ 
+            on device0_.id=device0_1_.id 
+    where
+        device0_1_.identification=?
+Hibernate: 
+    select
+        device0_.id as id2_1_,
+        device0_1_.deviceClass as deviceCl3_1_,
+        device0_1_.enabledState as enabledS4_1_,
+        device0_1_.identification as identifi5_1_,
+        device0_1_.model_id as model_i10_1_,
+        device0_1_.partNumber as partNumb6_1_,
+        device0_1_.serialNumber as serialNu7_1_,
+        device0_1_.status as status8_1_,
+        device0_1_.type as type9_1_,
+        device0_.hostAddress as hostAddr1_3_,
+        device0_.lastHeartBeat as lastHear2_3_,
+        device0_.city as city3_3_,
+        device0_.country as country4_3_,
+        device0_.houseNumber as houseNum5_3_,
+        device0_.postCode as postCode6_3_,
+        device0_.state as state7_3_,
+        device0_.street as street8_3_,
+        device0_.description as descript9_3_,
+        device0_.latitude as latitud10_3_,
+        device0_.longitude as longitu11_3_,
+        device0_.startupDate as startup12_3_ 
+    from
+        DEVICES device0_ 
+    inner join
+        COMPONENT device0_1_ 
+            on device0_.id=device0_1_.id 
+    where
+        device0_1_.identification=?
+5153 [main] DEBUG org.hibernate.engine.jdbc.internal.LogicalConnectionImpl  - Obtaining JDBC connection
+5153 [main] DEBUG org.hibernate.engine.jdbc.internal.LogicalConnectionImpl  - Obtained JDBC connection
+5154 [main] TRACE org.hibernate.type.descriptor.sql.BasicBinder  - binding parameter [1] as [VARCHAR] - [test_device_1]
+5154 [main] DEBUG org.hibernate.loader.Loader  - Result set row: 0
+5154 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([id2_1_] : [BIGINT]) - [1]
+5154 [main] DEBUG org.hibernate.loader.Loader  - Result row: EntityKey[org.thingsplode.core.entities.Device#1]
+5154 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([deviceCl3_1_] : [VARCHAR]) - [null]
+5154 [main] TRACE org.hibernate.type.EnumType  - Returning [ENABLED] as column [enabledS4_1_]
+5154 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([identifi5_1_] : [VARCHAR]) - [test_device_1]
+5154 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([model_i10_1_] : [BIGINT]) - [1]
+5154 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([partNumb6_1_] : [VARCHAR]) - [123]
+5154 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([serialNu7_1_] : [VARCHAR]) - [1231234235]
+5154 [main] TRACE org.hibernate.type.EnumType  - Returning [ONLINE] as column [status8_1_]
+5154 [main] TRACE org.hibernate.type.EnumType  - Returning [HARDWARE] as column [type9_1_]
+5154 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([hostAddr1_3_] : [VARCHAR]) - [111.111.111.111]
+5154 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([lastHear2_3_] : [TIMESTAMP]) - [java.util.GregorianCalendar[time=1431202828803,areFieldsSet=true,areAllFieldsSet=true,lenient=true,zone=sun.util.calendar.ZoneInfo[id="Europe/Vienna",offset=3600000,dstSavings=3600000,useDaylight=true,transitions=139,lastRule=java.util.SimpleTimeZone[id=Europe/Vienna,offset=3600000,dstSavings=3600000,useDaylight=true,startYear=0,startMode=2,startMonth=2,startDay=-1,startDayOfWeek=1,startTime=3600000,startTimeMode=2,endMode=2,endMonth=9,endDay=-1,endDayOfWeek=1,endTime=3600000,endTimeMode=2]],firstDayOfWeek=1,minimalDaysInFirstWeek=1,ERA=1,YEAR=2015,MONTH=4,WEEK_OF_YEAR=19,WEEK_OF_MONTH=2,DAY_OF_MONTH=9,DAY_OF_YEAR=129,DAY_OF_WEEK=7,DAY_OF_WEEK_IN_MONTH=2,AM_PM=1,HOUR=10,HOUR_OF_DAY=22,MINUTE=20,SECOND=28,MILLISECOND=803,ZONE_OFFSET=3600000,DST_OFFSET=3600000]]
+5154 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([city3_3_] : [VARCHAR]) - [some_city]
+5154 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([country4_3_] : [VARCHAR]) - [Some Country]
+5154 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([houseNum5_3_] : [VARCHAR]) - [54]
+5154 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([postCode6_3_] : [VARCHAR]) - [434545]
+5154 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([state7_3_] : [VARCHAR]) - [some state]
+5154 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([street8_3_] : [VARCHAR]) - [null]
+5154 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([descript9_3_] : [VARCHAR]) - [default]
+5154 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([latitud10_3_] : [DOUBLE]) - [100.0]
+5154 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([longitu11_3_] : [DOUBLE]) - [123.4]
+5154 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([startup12_3_] : [TIMESTAMP]) - [java.util.GregorianCalendar[time=1431202826795,areFieldsSet=true,areAllFieldsSet=true,lenient=true,zone=sun.util.calendar.ZoneInfo[id="Europe/Vienna",offset=3600000,dstSavings=3600000,useDaylight=true,transitions=139,lastRule=java.util.SimpleTimeZone[id=Europe/Vienna,offset=3600000,dstSavings=3600000,useDaylight=true,startYear=0,startMode=2,startMonth=2,startDay=-1,startDayOfWeek=1,startTime=3600000,startTimeMode=2,endMode=2,endMonth=9,endDay=-1,endDayOfWeek=1,endTime=3600000,endTimeMode=2]],firstDayOfWeek=1,minimalDaysInFirstWeek=1,ERA=1,YEAR=2015,MONTH=4,WEEK_OF_YEAR=19,WEEK_OF_MONTH=2,DAY_OF_MONTH=9,DAY_OF_YEAR=129,DAY_OF_WEEK=7,DAY_OF_WEEK_IN_MONTH=2,AM_PM=1,HOUR=10,HOUR_OF_DAY=22,MINUTE=20,SECOND=26,MILLISECOND=795,ZONE_OFFSET=3600000,DST_OFFSET=3600000]]
+5154 [main] DEBUG org.hibernate.engine.internal.TwoPhaseLoad  - Resolving associations for [org.thingsplode.core.entities.Device#1]
+5154 [main] TRACE org.hibernate.type.CollectionType  - Created collection wrapper: [org.thingsplode.core.entities.Component.capabilities#1]
+5154 [main] TRACE org.hibernate.type.CollectionType  - Created collection wrapper: [org.thingsplode.core.entities.Component.components#1]
+5154 [main] TRACE org.hibernate.type.CollectionType  - Created collection wrapper: [org.thingsplode.core.entities.Component.configuration#1]
+5154 [main] DEBUG org.hibernate.SQL  - 
+    select
+        model0_.id as id1_6_0_,
+        model0_.manufacturer as manufact2_6_0_,
+        model0_.type as type3_6_0_,
+        model0_.version as version4_6_0_ 
+    from
+        MODELS model0_ 
+    where
+        model0_.id=?
+Hibernate: 
+    select
+        model0_.id as id1_6_0_,
+        model0_.manufacturer as manufact2_6_0_,
+        model0_.type as type3_6_0_,
+        model0_.version as version4_6_0_ 
+    from
+        MODELS model0_ 
+    where
+        model0_.id=?
+5155 [main] TRACE org.hibernate.type.descriptor.sql.BasicBinder  - binding parameter [1] as [BIGINT] - [1]
+5155 [main] DEBUG org.hibernate.loader.plan.exec.process.internal.ResultSetProcessorImpl  - Starting ResultSet row #0
+5155 [main] DEBUG org.hibernate.loader.plan.exec.process.internal.EntityReferenceInitializerImpl  - On call to EntityIdentifierReaderImpl#resolve, EntityKey was already known; should only happen on root returns with an optional identifier specified
+5155 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([manufact2_6_0_] : [VARCHAR]) - [some_manufacturer]
+5155 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([type3_6_0_] : [VARCHAR]) - [some_type]
+5155 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([version4_6_0_] : [VARCHAR]) - [1]
+5155 [main] DEBUG org.hibernate.engine.internal.TwoPhaseLoad  - Resolving associations for [org.thingsplode.core.entities.Model#1]
+5155 [main] DEBUG org.hibernate.engine.internal.TwoPhaseLoad  - Done materializing entity [org.thingsplode.core.entities.Model#1]
+5155 [main] DEBUG org.hibernate.loader.entity.plan.AbstractLoadPlanBasedEntityLoader  - Done entity load : org.thingsplode.core.entities.Model#1
+5155 [main] TRACE org.hibernate.type.CollectionType  - Created collection wrapper: [org.thingsplode.core.entities.Component.tresholds#1]
+5155 [main] DEBUG org.hibernate.loader.collection.plan.AbstractLoadPlanBasedCollectionInitializer  - Loading collection: [org.thingsplode.core.entities.Component.tresholds#1]
+5155 [main] DEBUG org.hibernate.SQL  - 
+    select
+        tresholds0_.COMP_ID as COMP_ID7_1_0_,
+        tresholds0_.id as id1_8_0_,
+        tresholds0_.id as id1_8_1_,
+        tresholds0_.name as name2_8_1_,
+        tresholds0_.scope as scope3_8_1_,
+        tresholds0_.content as content4_8_1_,
+        tresholds0_.VALUE_TYPE as VALUE_TY5_8_1_,
+        tresholds0_.type as type6_8_1_ 
+    from
+        TRESHOLDS tresholds0_ 
+    where
+        tresholds0_.COMP_ID=?
+Hibernate: 
+    select
+        tresholds0_.COMP_ID as COMP_ID7_1_0_,
+        tresholds0_.id as id1_8_0_,
+        tresholds0_.id as id1_8_1_,
+        tresholds0_.name as name2_8_1_,
+        tresholds0_.scope as scope3_8_1_,
+        tresholds0_.content as content4_8_1_,
+        tresholds0_.VALUE_TYPE as VALUE_TY5_8_1_,
+        tresholds0_.type as type6_8_1_ 
+    from
+        TRESHOLDS tresholds0_ 
+    where
+        tresholds0_.COMP_ID=?
+5155 [main] TRACE org.hibernate.type.descriptor.sql.BasicBinder  - binding parameter [1] as [BIGINT] - [1]
+5155 [main] DEBUG org.hibernate.loader.plan.exec.process.internal.ResultSetProcessorImpl  - Preparing collection intializer : [org.thingsplode.core.entities.Component.tresholds#1]
+5155 [main] DEBUG org.hibernate.loader.plan.exec.process.internal.ResultSetProcessorImpl  - Starting ResultSet row #0
+5155 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([id1_8_1_] : [BIGINT]) - [2]
+5155 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([name2_8_1_] : [VARCHAR]) - [alarm_high]
+5155 [main] TRACE org.hibernate.type.EnumType  - Returning [DEVICE] as column [scope3_8_1_]
+5155 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([content4_8_1_] : [VARCHAR]) - [10000]
+5155 [main] TRACE org.hibernate.type.EnumType  - Returning [NUMBER] as column [VALUE_TY5_8_1_]
+5155 [main] TRACE org.hibernate.type.EnumType  - Returning [HIGH] as column [type6_8_1_]
+5155 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([COMP_ID7_1_0_] : [BIGINT]) - [1]
+5155 [main] DEBUG org.hibernate.loader.plan.exec.process.internal.CollectionReferenceInitializerImpl  - Found row of collection: [org.thingsplode.core.entities.Component.tresholds#1]
+5156 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([id1_8_0_] : [BIGINT]) - [2]
+5156 [main] DEBUG org.hibernate.loader.plan.exec.process.internal.ResultSetProcessorImpl  - Starting ResultSet row #1
+5156 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([id1_8_1_] : [BIGINT]) - [3]
+5156 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([name2_8_1_] : [VARCHAR]) - [alarm_low]
+5156 [main] TRACE org.hibernate.type.EnumType  - Returning [DEVICE] as column [scope3_8_1_]
+5156 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([content4_8_1_] : [VARCHAR]) - [100]
+5156 [main] TRACE org.hibernate.type.EnumType  - Returning [NUMBER] as column [VALUE_TY5_8_1_]
+5156 [main] TRACE org.hibernate.type.EnumType  - Returning [LOW] as column [type6_8_1_]
+5156 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([COMP_ID7_1_0_] : [BIGINT]) - [1]
+5156 [main] DEBUG org.hibernate.loader.plan.exec.process.internal.CollectionReferenceInitializerImpl  - Found row of collection: [org.thingsplode.core.entities.Component.tresholds#1]
+5156 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([id1_8_0_] : [BIGINT]) - [3]
+5156 [main] DEBUG org.hibernate.loader.plan.exec.process.internal.ResultSetProcessorImpl  - Starting ResultSet row #2
+5156 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([id1_8_1_] : [BIGINT]) - [7]
+5156 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([name2_8_1_] : [VARCHAR]) - [auxiliary_alarm]
+5156 [main] TRACE org.hibernate.type.EnumType  - Returning [DEVICE] as column [scope3_8_1_]
+5156 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([content4_8_1_] : [VARCHAR]) - [2000]
+5156 [main] TRACE org.hibernate.type.EnumType  - Returning [NUMBER] as column [VALUE_TY5_8_1_]
+5156 [main] TRACE org.hibernate.type.EnumType  - Returning [HIGH] as column [type6_8_1_]
+5156 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([COMP_ID7_1_0_] : [BIGINT]) - [1]
+5156 [main] DEBUG org.hibernate.loader.plan.exec.process.internal.CollectionReferenceInitializerImpl  - Found row of collection: [org.thingsplode.core.entities.Component.tresholds#1]
+5156 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([id1_8_0_] : [BIGINT]) - [7]
+5156 [main] DEBUG org.hibernate.loader.plan.exec.process.internal.ResultSetProcessorImpl  - Starting ResultSet row #3
+5156 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([id1_8_1_] : [BIGINT]) - [8]
+5157 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([name2_8_1_] : [VARCHAR]) - [temperature_activity]
+5157 [main] TRACE org.hibernate.type.EnumType  - Returning [DEVICE] as column [scope3_8_1_]
+5157 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([content4_8_1_] : [VARCHAR]) - [true]
+5157 [main] TRACE org.hibernate.type.EnumType  - Returning [BOOLEAN] as column [VALUE_TY5_8_1_]
+5157 [main] TRACE org.hibernate.type.EnumType  - Returning [HIGH] as column [type6_8_1_]
+5157 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([COMP_ID7_1_0_] : [BIGINT]) - [1]
+5157 [main] DEBUG org.hibernate.loader.plan.exec.process.internal.CollectionReferenceInitializerImpl  - Found row of collection: [org.thingsplode.core.entities.Component.tresholds#1]
+5157 [main] TRACE org.hibernate.type.descriptor.sql.BasicExtractor  - extracted value ([id1_8_0_] : [BIGINT]) - [8]
+5157 [main] DEBUG org.hibernate.engine.internal.TwoPhaseLoad  - Resolving associations for [org.thingsplode.core.entities.Treshold#2]
+5157 [main] DEBUG org.hibernate.engine.internal.TwoPhaseLoad  - Done materializing entity [org.thingsplode.core.entities.Treshold#2]
+5157 [main] DEBUG org.hibernate.engine.internal.TwoPhaseLoad  - Resolving associations for [org.thingsplode.core.entities.Treshold#3]
+5157 [main] DEBUG org.hibernate.engine.internal.TwoPhaseLoad  - Done materializing entity [org.thingsplode.core.entities.Treshold#3]
+5157 [main] DEBUG org.hibernate.engine.internal.TwoPhaseLoad  - Resolving associations for [org.thingsplode.core.entities.Treshold#7]
+5157 [main] DEBUG org.hibernate.engine.internal.TwoPhaseLoad  - Done materializing entity [org.thingsplode.core.entities.Treshold#7]
+5157 [main] DEBUG org.hibernate.engine.internal.TwoPhaseLoad  - Resolving associations for [org.thingsplode.core.entities.Treshold#8]
+5157 [main] DEBUG org.hibernate.engine.internal.TwoPhaseLoad  - Done materializing entity [org.thingsplode.core.entities.Treshold#8]
+5157 [main] DEBUG org.hibernate.engine.loading.internal.CollectionLoadContext  - 1 collections were found in result set for role: org.thingsplode.core.entities.Component.tresholds
+5157 [main] DEBUG org.hibernate.engine.loading.internal.CollectionLoadContext  - Collection fully initialized: [org.thingsplode.core.entities.Component.tresholds#1]
+5157 [main] DEBUG org.hibernate.engine.loading.internal.CollectionLoadContext  - 1 collections initialized for role: org.thingsplode.core.entities.Component.tresholds
+5157 [main] DEBUG org.hibernate.loader.collection.plan.AbstractLoadPlanBasedCollectionInitializer  - Done loading collection
+5157 [main] DEBUG org.hibernate.engine.internal.TwoPhaseLoad  - Done materializing entity [org.thingsplode.core.entities.Device#1]
+5158 [main] DEBUG org.hibernate.engine.jdbc.internal.LogicalConnectionImpl  - Releasing JDBC connection
+5158 [main] DEBUG org.hibernate.engine.jdbc.internal.LogicalConnectionImpl  - Released JDBC connection
+5161 [main] DEBUG org.hibernate.engine.transaction.spi.AbstractTransactionImpl  - begin
+5162 [main] DEBUG org.hibernate.engine.jdbc.internal.LogicalConnectionImpl  - Obtaining JDBC connection
+5162 [main] DEBUG org.hibernate.engine.jdbc.internal.LogicalConnectionImpl  - Obtained JDBC connection
+5162 [main] DEBUG org.hibernate.engine.transaction.internal.jdbc.JdbcTransaction  - initial autocommit status: true
+5162 [main] DEBUG org.hibernate.engine.transaction.internal.jdbc.JdbcTransaction  - disabling autocommit
+5163 [main] DEBUG org.hibernate.engine.spi.ActionQueue  - Executing identity-insert immediately
+5165 [main] DEBUG org.hibernate.SQL  - 
+    insert 
+    into
+        EVENTS
+        (id, COMPONENT_ID, eventClass, eventDate, eventId, receiveDate, severity, type) 
+    values
+        (null, ?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        EVENTS
+        (id, COMPONENT_ID, eventClass, eventDate, eventId, receiveDate, severity, type) 
+    values
+        (null, ?, ?, ?, ?, ?, ?, ?)
+5167 [main] TRACE org.hibernate.type.descriptor.sql.BasicBinder  - binding parameter [1] as [BIGINT] - [1]
+5167 [main] TRACE org.hibernate.type.descriptor.sql.BasicBinder  - binding parameter [2] as [VARCHAR] - [some_class]
+5167 [main] TRACE org.hibernate.type.descriptor.sql.BasicBinder  - binding parameter [3] as [TIMESTAMP] - [java.util.GregorianCalendar[time=1431202829069,areFieldsSet=true,areAllFieldsSet=true,lenient=true,zone=sun.util.calendar.ZoneInfo[id="Europe/Vienna",offset=3600000,dstSavings=3600000,useDaylight=true,transitions=139,lastRule=java.util.SimpleTimeZone[id=Europe/Vienna,offset=3600000,dstSavings=3600000,useDaylight=true,startYear=0,startMode=2,startMonth=2,startDay=-1,startDayOfWeek=1,startTime=3600000,startTimeMode=2,endMode=2,endMonth=9,endDay=-1,endDayOfWeek=1,endTime=3600000,endTimeMode=2]],firstDayOfWeek=1,minimalDaysInFirstWeek=1,ERA=1,YEAR=2015,MONTH=4,WEEK_OF_YEAR=19,WEEK_OF_MONTH=2,DAY_OF_MONTH=9,DAY_OF_YEAR=129,DAY_OF_WEEK=7,DAY_OF_WEEK_IN_MONTH=2,AM_PM=1,HOUR=10,HOUR_OF_DAY=22,MINUTE=20,SECOND=29,MILLISECOND=69,ZONE_OFFSET=3600000,DST_OFFSET=3600000]]
+5167 [main] TRACE org.hibernate.type.descriptor.sql.BasicBinder  - binding parameter [4] as [VARCHAR] - [some_event_id]
+5167 [main] TRACE org.hibernate.type.descriptor.sql.BasicBinder  - binding parameter [5] as [TIMESTAMP] - [java.util.GregorianCalendar[time=1431202829069,areFieldsSet=true,areAllFieldsSet=true,lenient=true,zone=sun.util.calendar.ZoneInfo[id="Europe/Vienna",offset=3600000,dstSavings=3600000,useDaylight=true,transitions=139,lastRule=java.util.SimpleTimeZone[id=Europe/Vienna,offset=3600000,dstSavings=3600000,useDaylight=true,startYear=0,startMode=2,startMonth=2,startDay=-1,startDayOfWeek=1,startTime=3600000,startTimeMode=2,endMode=2,endMonth=9,endDay=-1,endDayOfWeek=1,endTime=3600000,endTimeMode=2]],firstDayOfWeek=1,minimalDaysInFirstWeek=1,ERA=1,YEAR=2015,MONTH=4,WEEK_OF_YEAR=19,WEEK_OF_MONTH=2,DAY_OF_MONTH=9,DAY_OF_YEAR=129,DAY_OF_WEEK=7,DAY_OF_WEEK_IN_MONTH=2,AM_PM=1,HOUR=10,HOUR_OF_DAY=22,MINUTE=20,SECOND=29,MILLISECOND=69,ZONE_OFFSET=3600000,DST_OFFSET=3600000]]
+5167 [main] TRACE org.hibernate.type.EnumType  - Binding [DEBUG] to parameter: [6]
+5167 [main] TRACE org.hibernate.type.EnumType  - Binding null to parameter: [7]
+5168 [main] DEBUG com.mchange.v2.sql.SqlUtils  - Attempted to convert SQLException to SQLException. Leaving it alone. [SQLState: 23502; errorCode: 23502]
+org.h2.jdbc.JdbcSQLException: NULL not allowed for column "TYPE"; SQL statement:
+insert into EVENTS (id, COMPONENT_ID, eventClass, eventDate, eventId, receiveDate, severity, type) values (null, ?, ?, ?, ?, ?, ?, ?) [23502-172]
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:329)
+	at org.h2.message.DbException.get(DbException.java:169)
+	at org.h2.message.DbException.get(DbException.java:146)
+	at org.h2.table.Column.validateConvertUpdateSequence(Column.java:295)
+	at org.h2.table.Table.validateConvertUpdateSequence(Table.java:699)
+	at org.h2.command.dml.Insert.insertRows(Insert.java:122)
+	at org.h2.command.dml.Insert.update(Insert.java:86)
+	at org.h2.command.CommandContainer.update(CommandContainer.java:79)
+	at org.h2.command.Command.executeUpdate(Command.java:235)
+	at org.h2.jdbc.JdbcPreparedStatement.executeUpdateInternal(JdbcPreparedStatement.java:154)
+	at org.h2.jdbc.JdbcPreparedStatement.executeUpdate(JdbcPreparedStatement.java:140)
+	at com.mchange.v2.c3p0.impl.NewProxyPreparedStatement.executeUpdate(NewProxyPreparedStatement.java:105)
+	at org.hibernate.engine.jdbc.internal.ResultSetReturnImpl.executeUpdate(ResultSetReturnImpl.java:208)
+	at org.hibernate.id.IdentityGenerator$GetGeneratedKeysDelegate.executeAndExtract(IdentityGenerator.java:96)
+	at org.hibernate.id.insert.AbstractReturningDelegate.performInsert(AbstractReturningDelegate.java:58)
+	at org.hibernate.persister.entity.AbstractEntityPersister.insert(AbstractEntityPersister.java:3032)
+	at org.hibernate.persister.entity.AbstractEntityPersister.insert(AbstractEntityPersister.java:3558)
+	at org.hibernate.action.internal.EntityIdentityInsertAction.execute(EntityIdentityInsertAction.java:98)
+	at org.hibernate.engine.spi.ActionQueue.execute(ActionQueue.java:492)
+	at org.hibernate.engine.spi.ActionQueue.addResolvedEntityInsertAction(ActionQueue.java:197)
+	at org.hibernate.engine.spi.ActionQueue.addInsertAction(ActionQueue.java:181)
+	at org.hibernate.engine.spi.ActionQueue.addAction(ActionQueue.java:216)
+	at org.hibernate.event.internal.AbstractSaveEventListener.addInsertAction(AbstractSaveEventListener.java:324)
+	at org.hibernate.event.internal.AbstractSaveEventListener.performSaveOrReplicate(AbstractSaveEventListener.java:288)
+	at org.hibernate.event.internal.AbstractSaveEventListener.performSave(AbstractSaveEventListener.java:194)
+	at org.hibernate.event.internal.AbstractSaveEventListener.saveWithGeneratedId(AbstractSaveEventListener.java:125)
+	at org.hibernate.jpa.event.internal.core.JpaPersistEventListener.saveWithGeneratedId(JpaPersistEventListener.java:84)
+	at org.hibernate.event.internal.DefaultPersistEventListener.entityIsTransient(DefaultPersistEventListener.java:206)
+	at org.hibernate.event.internal.DefaultPersistEventListener.onPersist(DefaultPersistEventListener.java:149)
+	at org.hibernate.event.internal.DefaultPersistEventListener.onPersist(DefaultPersistEventListener.java:75)
+	at org.hibernate.internal.SessionImpl.firePersist(SessionImpl.java:811)
+	at org.hibernate.internal.SessionImpl.persist(SessionImpl.java:784)
+	at org.hibernate.internal.SessionImpl.persist(SessionImpl.java:789)
+	at org.hibernate.jpa.spi.AbstractEntityManagerImpl.persist(AbstractEntityManagerImpl.java:1181)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:497)
+	at org.springframework.orm.jpa.SharedEntityManagerCreator$SharedEntityManagerInvocationHandler.invoke(SharedEntityManagerCreator.java:291)
+	at com.sun.proxy.$Proxy72.persist(Unknown Source)
+	at org.springframework.data.jpa.repository.support.SimpleJpaRepository.save(SimpleJpaRepository.java:407)
+	at org.springframework.data.jpa.repository.support.SimpleJpaRepository.save(SimpleJpaRepository.java:441)
+	at org.springframework.data.jpa.repository.support.SimpleJpaRepository.save(SimpleJpaRepository.java:63)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:497)
+	at org.springframework.data.repository.core.support.RepositoryFactorySupport$QueryExecutorMethodInterceptor.executeMethodOn(RepositoryFactorySupport.java:416)
+	at org.springframework.data.repository.core.support.RepositoryFactorySupport$QueryExecutorMethodInterceptor.doInvoke(RepositoryFactorySupport.java:401)
+	at org.springframework.data.repository.core.support.RepositoryFactorySupport$QueryExecutorMethodInterceptor.invoke(RepositoryFactorySupport.java:373)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179)
+	at org.springframework.data.repository.core.support.RepositoryFactorySupport$DefaultMethodInvokingMethodInterceptor.invoke(RepositoryFactorySupport.java:486)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179)
+	at org.springframework.transaction.interceptor.TransactionInterceptor$1.proceedWithInvocation(TransactionInterceptor.java:99)
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:281)
+	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:96)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179)
+	at org.springframework.dao.support.PersistenceExceptionTranslationInterceptor.invoke(PersistenceExceptionTranslationInterceptor.java:136)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179)
+	at org.springframework.data.jpa.repository.support.CrudMethodMetadataPostProcessor$CrudMethodMetadataPopulatingMethodIntercceptor.invoke(CrudMethodMetadataPostProcessor.java:122)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179)
+	at org.springframework.aop.interceptor.ExposeInvocationInterceptor.invoke(ExposeInvocationInterceptor.java:92)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179)
+	at org.springframework.aop.framework.JdkDynamicAopProxy.invoke(JdkDynamicAopProxy.java:207)
+	at com.sun.proxy.$Proxy80.save(Unknown Source)
+	at org.thingsplode.server.bus.executors.EventSyncExecutor.executeImpl(EventSyncExecutor.java:48)
+	at org.thingsplode.server.bus.executors.EventSyncExecutor.executeImpl(EventSyncExecutor.java:23)
+	at org.thingsplode.server.bus.executors.AbstractSyncExecutor.process(AbstractSyncExecutor.java:34)
+	at org.thingsplode.server.BusConfig$1.handleMessageInternal(BusConfig.java:90)
+	at org.springframework.integration.handler.AbstractMessageHandler.handleMessage(AbstractMessageHandler.java:78)
+	at org.springframework.integration.config.annotation.ServiceActivatorAnnotationPostProcessor$ReplyProducingMessageHandlerWrapper.handleRequestMessage(ServiceActivatorAnnotationPostProcessor.java:96)
+	at org.springframework.integration.handler.AbstractReplyProducingMessageHandler.handleMessageInternal(AbstractReplyProducingMessageHandler.java:99)
+	at org.springframework.integration.handler.AbstractMessageHandler.handleMessage(AbstractMessageHandler.java:78)
+	at org.springframework.integration.dispatcher.AbstractDispatcher.tryOptimizedDispatch(AbstractDispatcher.java:116)
+	at org.springframework.integration.dispatcher.UnicastingDispatcher.doDispatch(UnicastingDispatcher.java:101)
+	at org.springframework.integration.dispatcher.UnicastingDispatcher.dispatch(UnicastingDispatcher.java:97)
+	at org.springframework.integration.channel.AbstractSubscribableChannel.doSend(AbstractSubscribableChannel.java:77)
+	at org.springframework.integration.channel.AbstractMessageChannel.send(AbstractMessageChannel.java:277)
+	at org.springframework.integration.channel.AbstractMessageChannel.send(AbstractMessageChannel.java:239)
+	at org.springframework.messaging.core.GenericMessagingTemplate.doSend(GenericMessagingTemplate.java:115)
+	at org.springframework.messaging.core.GenericMessagingTemplate.doSend(GenericMessagingTemplate.java:45)
+	at org.springframework.messaging.core.AbstractMessageSendingTemplate.send(AbstractMessageSendingTemplate.java:95)
+	at org.springframework.messaging.core.AbstractMessageSendingTemplate.convertAndSend(AbstractMessageSendingTemplate.java:133)
+	at org.springframework.messaging.core.AbstractMessageSendingTemplate.convertAndSend(AbstractMessageSendingTemplate.java:125)
+	at org.springframework.integration.gateway.MessagingGatewaySupport.send(MessagingGatewaySupport.java:302)
+	at org.springframework.integration.gateway.GatewayProxyFactoryBean.invokeGatewayMethod(GatewayProxyFactoryBean.java:417)
+	at org.springframework.integration.gateway.GatewayProxyFactoryBean.doInvoke(GatewayProxyFactoryBean.java:374)
+	at org.springframework.integration.gateway.GatewayProxyFactoryBean.invoke(GatewayProxyFactoryBean.java:365)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179)
+	at org.springframework.aop.framework.JdkDynamicAopProxy.invoke(JdkDynamicAopProxy.java:207)
+	at com.sun.proxy.$Proxy89.process(Unknown Source)
+	at org.thingsplode.server.executors.ExecutorTest.testEventSync(ExecutorTest.java:214)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:497)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:50)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:47)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+	at org.junit.internal.runners.statements.RunBefores.evaluate(RunBefores.java:26)
+	at org.springframework.test.context.junit4.statements.RunBeforeTestMethodCallbacks.evaluate(RunBeforeTestMethodCallbacks.java:73)
+	at org.springframework.test.context.junit4.statements.RunAfterTestMethodCallbacks.evaluate(RunAfterTestMethodCallbacks.java:82)
+	at org.springframework.test.context.junit4.statements.SpringRepeat.evaluate(SpringRepeat.java:73)
+	at org.junit.runners.ParentRunner.runLeaf(ParentRunner.java:325)
+	at org.springframework.test.context.junit4.SpringJUnit4ClassRunner.runChild(SpringJUnit4ClassRunner.java:217)
+	at org.springframework.test.context.junit4.SpringJUnit4ClassRunner.runChild(SpringJUnit4ClassRunner.java:83)
+	at org.junit.runners.ParentRunner$3.run(ParentRunner.java:290)
+	at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:71)
+	at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:288)
+	at org.junit.runners.ParentRunner.access$000(ParentRunner.java:58)
+	at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:268)
+	at org.springframework.test.context.junit4.statements.RunBeforeTestClassCallbacks.evaluate(RunBeforeTestClassCallbacks.java:61)
+	at org.springframework.test.context.junit4.statements.RunAfterTestClassCallbacks.evaluate(RunAfterTestClassCallbacks.java:68)
+	at org.junit.runners.ParentRunner.run(ParentRunner.java:363)
+	at org.springframework.test.context.junit4.SpringJUnit4ClassRunner.run(SpringJUnit4ClassRunner.java:163)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.execute(JUnit4Provider.java:283)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.executeWithRerun(JUnit4Provider.java:173)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.executeTestSet(JUnit4Provider.java:153)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.invoke(JUnit4Provider.java:128)
+	at org.apache.maven.surefire.booter.ForkedBooter.invokeProviderInSameClassLoader(ForkedBooter.java:203)
+	at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:155)
+	at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:103)
+5172 [main] DEBUG org.hibernate.engine.jdbc.spi.SqlExceptionHelper  - could not execute statement [n/a]
+org.h2.jdbc.JdbcSQLException: NULL not allowed for column "TYPE"; SQL statement:
+insert into EVENTS (id, COMPONENT_ID, eventClass, eventDate, eventId, receiveDate, severity, type) values (null, ?, ?, ?, ?, ?, ?, ?) [23502-172]
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:329)
+	at org.h2.message.DbException.get(DbException.java:169)
+	at org.h2.message.DbException.get(DbException.java:146)
+	at org.h2.table.Column.validateConvertUpdateSequence(Column.java:295)
+	at org.h2.table.Table.validateConvertUpdateSequence(Table.java:699)
+	at org.h2.command.dml.Insert.insertRows(Insert.java:122)
+	at org.h2.command.dml.Insert.update(Insert.java:86)
+	at org.h2.command.CommandContainer.update(CommandContainer.java:79)
+	at org.h2.command.Command.executeUpdate(Command.java:235)
+	at org.h2.jdbc.JdbcPreparedStatement.executeUpdateInternal(JdbcPreparedStatement.java:154)
+	at org.h2.jdbc.JdbcPreparedStatement.executeUpdate(JdbcPreparedStatement.java:140)
+	at com.mchange.v2.c3p0.impl.NewProxyPreparedStatement.executeUpdate(NewProxyPreparedStatement.java:105)
+	at org.hibernate.engine.jdbc.internal.ResultSetReturnImpl.executeUpdate(ResultSetReturnImpl.java:208)
+	at org.hibernate.id.IdentityGenerator$GetGeneratedKeysDelegate.executeAndExtract(IdentityGenerator.java:96)
+	at org.hibernate.id.insert.AbstractReturningDelegate.performInsert(AbstractReturningDelegate.java:58)
+	at org.hibernate.persister.entity.AbstractEntityPersister.insert(AbstractEntityPersister.java:3032)
+	at org.hibernate.persister.entity.AbstractEntityPersister.insert(AbstractEntityPersister.java:3558)
+	at org.hibernate.action.internal.EntityIdentityInsertAction.execute(EntityIdentityInsertAction.java:98)
+	at org.hibernate.engine.spi.ActionQueue.execute(ActionQueue.java:492)
+	at org.hibernate.engine.spi.ActionQueue.addResolvedEntityInsertAction(ActionQueue.java:197)
+	at org.hibernate.engine.spi.ActionQueue.addInsertAction(ActionQueue.java:181)
+	at org.hibernate.engine.spi.ActionQueue.addAction(ActionQueue.java:216)
+	at org.hibernate.event.internal.AbstractSaveEventListener.addInsertAction(AbstractSaveEventListener.java:324)
+	at org.hibernate.event.internal.AbstractSaveEventListener.performSaveOrReplicate(AbstractSaveEventListener.java:288)
+	at org.hibernate.event.internal.AbstractSaveEventListener.performSave(AbstractSaveEventListener.java:194)
+	at org.hibernate.event.internal.AbstractSaveEventListener.saveWithGeneratedId(AbstractSaveEventListener.java:125)
+	at org.hibernate.jpa.event.internal.core.JpaPersistEventListener.saveWithGeneratedId(JpaPersistEventListener.java:84)
+	at org.hibernate.event.internal.DefaultPersistEventListener.entityIsTransient(DefaultPersistEventListener.java:206)
+	at org.hibernate.event.internal.DefaultPersistEventListener.onPersist(DefaultPersistEventListener.java:149)
+	at org.hibernate.event.internal.DefaultPersistEventListener.onPersist(DefaultPersistEventListener.java:75)
+	at org.hibernate.internal.SessionImpl.firePersist(SessionImpl.java:811)
+	at org.hibernate.internal.SessionImpl.persist(SessionImpl.java:784)
+	at org.hibernate.internal.SessionImpl.persist(SessionImpl.java:789)
+	at org.hibernate.jpa.spi.AbstractEntityManagerImpl.persist(AbstractEntityManagerImpl.java:1181)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:497)
+	at org.springframework.orm.jpa.SharedEntityManagerCreator$SharedEntityManagerInvocationHandler.invoke(SharedEntityManagerCreator.java:291)
+	at com.sun.proxy.$Proxy72.persist(Unknown Source)
+	at org.springframework.data.jpa.repository.support.SimpleJpaRepository.save(SimpleJpaRepository.java:407)
+	at org.springframework.data.jpa.repository.support.SimpleJpaRepository.save(SimpleJpaRepository.java:441)
+	at org.springframework.data.jpa.repository.support.SimpleJpaRepository.save(SimpleJpaRepository.java:63)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:497)
+	at org.springframework.data.repository.core.support.RepositoryFactorySupport$QueryExecutorMethodInterceptor.executeMethodOn(RepositoryFactorySupport.java:416)
+	at org.springframework.data.repository.core.support.RepositoryFactorySupport$QueryExecutorMethodInterceptor.doInvoke(RepositoryFactorySupport.java:401)
+	at org.springframework.data.repository.core.support.RepositoryFactorySupport$QueryExecutorMethodInterceptor.invoke(RepositoryFactorySupport.java:373)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179)
+	at org.springframework.data.repository.core.support.RepositoryFactorySupport$DefaultMethodInvokingMethodInterceptor.invoke(RepositoryFactorySupport.java:486)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179)
+	at org.springframework.transaction.interceptor.TransactionInterceptor$1.proceedWithInvocation(TransactionInterceptor.java:99)
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:281)
+	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:96)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179)
+	at org.springframework.dao.support.PersistenceExceptionTranslationInterceptor.invoke(PersistenceExceptionTranslationInterceptor.java:136)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179)
+	at org.springframework.data.jpa.repository.support.CrudMethodMetadataPostProcessor$CrudMethodMetadataPopulatingMethodIntercceptor.invoke(CrudMethodMetadataPostProcessor.java:122)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179)
+	at org.springframework.aop.interceptor.ExposeInvocationInterceptor.invoke(ExposeInvocationInterceptor.java:92)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179)
+	at org.springframework.aop.framework.JdkDynamicAopProxy.invoke(JdkDynamicAopProxy.java:207)
+	at com.sun.proxy.$Proxy80.save(Unknown Source)
+	at org.thingsplode.server.bus.executors.EventSyncExecutor.executeImpl(EventSyncExecutor.java:48)
+	at org.thingsplode.server.bus.executors.EventSyncExecutor.executeImpl(EventSyncExecutor.java:23)
+	at org.thingsplode.server.bus.executors.AbstractSyncExecutor.process(AbstractSyncExecutor.java:34)
+	at org.thingsplode.server.BusConfig$1.handleMessageInternal(BusConfig.java:90)
+	at org.springframework.integration.handler.AbstractMessageHandler.handleMessage(AbstractMessageHandler.java:78)
+	at org.springframework.integration.config.annotation.ServiceActivatorAnnotationPostProcessor$ReplyProducingMessageHandlerWrapper.handleRequestMessage(ServiceActivatorAnnotationPostProcessor.java:96)
+	at org.springframework.integration.handler.AbstractReplyProducingMessageHandler.handleMessageInternal(AbstractReplyProducingMessageHandler.java:99)
+	at org.springframework.integration.handler.AbstractMessageHandler.handleMessage(AbstractMessageHandler.java:78)
+	at org.springframework.integration.dispatcher.AbstractDispatcher.tryOptimizedDispatch(AbstractDispatcher.java:116)
+	at org.springframework.integration.dispatcher.UnicastingDispatcher.doDispatch(UnicastingDispatcher.java:101)
+	at org.springframework.integration.dispatcher.UnicastingDispatcher.dispatch(UnicastingDispatcher.java:97)
+	at org.springframework.integration.channel.AbstractSubscribableChannel.doSend(AbstractSubscribableChannel.java:77)
+	at org.springframework.integration.channel.AbstractMessageChannel.send(AbstractMessageChannel.java:277)
+	at org.springframework.integration.channel.AbstractMessageChannel.send(AbstractMessageChannel.java:239)
+	at org.springframework.messaging.core.GenericMessagingTemplate.doSend(GenericMessagingTemplate.java:115)
+	at org.springframework.messaging.core.GenericMessagingTemplate.doSend(GenericMessagingTemplate.java:45)
+	at org.springframework.messaging.core.AbstractMessageSendingTemplate.send(AbstractMessageSendingTemplate.java:95)
+	at org.springframework.messaging.core.AbstractMessageSendingTemplate.convertAndSend(AbstractMessageSendingTemplate.java:133)
+	at org.springframework.messaging.core.AbstractMessageSendingTemplate.convertAndSend(AbstractMessageSendingTemplate.java:125)
+	at org.springframework.integration.gateway.MessagingGatewaySupport.send(MessagingGatewaySupport.java:302)
+	at org.springframework.integration.gateway.GatewayProxyFactoryBean.invokeGatewayMethod(GatewayProxyFactoryBean.java:417)
+	at org.springframework.integration.gateway.GatewayProxyFactoryBean.doInvoke(GatewayProxyFactoryBean.java:374)
+	at org.springframework.integration.gateway.GatewayProxyFactoryBean.invoke(GatewayProxyFactoryBean.java:365)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179)
+	at org.springframework.aop.framework.JdkDynamicAopProxy.invoke(JdkDynamicAopProxy.java:207)
+	at com.sun.proxy.$Proxy89.process(Unknown Source)
+	at org.thingsplode.server.executors.ExecutorTest.testEventSync(ExecutorTest.java:214)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:497)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:50)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:47)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+	at org.junit.internal.runners.statements.RunBefores.evaluate(RunBefores.java:26)
+	at org.springframework.test.context.junit4.statements.RunBeforeTestMethodCallbacks.evaluate(RunBeforeTestMethodCallbacks.java:73)
+	at org.springframework.test.context.junit4.statements.RunAfterTestMethodCallbacks.evaluate(RunAfterTestMethodCallbacks.java:82)
+	at org.springframework.test.context.junit4.statements.SpringRepeat.evaluate(SpringRepeat.java:73)
+	at org.junit.runners.ParentRunner.runLeaf(ParentRunner.java:325)
+	at org.springframework.test.context.junit4.SpringJUnit4ClassRunner.runChild(SpringJUnit4ClassRunner.java:217)
+	at org.springframework.test.context.junit4.SpringJUnit4ClassRunner.runChild(SpringJUnit4ClassRunner.java:83)
+	at org.junit.runners.ParentRunner$3.run(ParentRunner.java:290)
+	at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:71)
+	at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:288)
+	at org.junit.runners.ParentRunner.access$000(ParentRunner.java:58)
+	at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:268)
+	at org.springframework.test.context.junit4.statements.RunBeforeTestClassCallbacks.evaluate(RunBeforeTestClassCallbacks.java:61)
+	at org.springframework.test.context.junit4.statements.RunAfterTestClassCallbacks.evaluate(RunAfterTestClassCallbacks.java:68)
+	at org.junit.runners.ParentRunner.run(ParentRunner.java:363)
+	at org.springframework.test.context.junit4.SpringJUnit4ClassRunner.run(SpringJUnit4ClassRunner.java:163)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.execute(JUnit4Provider.java:283)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.executeWithRerun(JUnit4Provider.java:173)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.executeTestSet(JUnit4Provider.java:153)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.invoke(JUnit4Provider.java:128)
+	at org.apache.maven.surefire.booter.ForkedBooter.invokeProviderInSameClassLoader(ForkedBooter.java:203)
+	at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:155)
+	at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:103)
+5173 [main] WARN org.hibernate.engine.jdbc.spi.SqlExceptionHelper  - SQL Error: 23502, SQLState: 23502
+5173 [main] ERROR org.hibernate.engine.jdbc.spi.SqlExceptionHelper  - NULL not allowed for column "TYPE"; SQL statement:
+insert into EVENTS (id, COMPONENT_ID, eventClass, eventDate, eventId, receiveDate, severity, type) values (null, ?, ?, ?, ?, ?, ?, ?) [23502-172]
+5173 [main] DEBUG org.hibernate.jpa.spi.AbstractEntityManagerImpl  - Mark transaction for rollback
+5173 [main] DEBUG org.hibernate.engine.transaction.spi.AbstractTransactionImpl  - rolling back
+5173 [main] DEBUG org.hibernate.engine.transaction.internal.jdbc.JdbcTransaction  - rolled JDBC Connection
+5173 [main] DEBUG org.hibernate.engine.transaction.internal.jdbc.JdbcTransaction  - re-enabling autocommit
+5173 [main] DEBUG org.hibernate.engine.jdbc.internal.LogicalConnectionImpl  - Releasing JDBC connection
+5174 [main] DEBUG org.hibernate.engine.jdbc.internal.LogicalConnectionImpl  - Released JDBC connection
+5174 [main] ERROR org.thingsplode.server.bus.executors.AbstractSyncExecutor  - org.hibernate.exception.ConstraintViolationException: could not execute statement
+javax.persistence.PersistenceException: org.hibernate.exception.ConstraintViolationException: could not execute statement
+	at org.hibernate.jpa.spi.AbstractEntityManagerImpl.convert(AbstractEntityManagerImpl.java:1763)
+	at org.hibernate.jpa.spi.AbstractEntityManagerImpl.convert(AbstractEntityManagerImpl.java:1677)
+	at org.hibernate.jpa.spi.AbstractEntityManagerImpl.convert(AbstractEntityManagerImpl.java:1683)
+	at org.hibernate.jpa.spi.AbstractEntityManagerImpl.persist(AbstractEntityManagerImpl.java:1187)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:497)
+	at org.springframework.orm.jpa.SharedEntityManagerCreator$SharedEntityManagerInvocationHandler.invoke(SharedEntityManagerCreator.java:291)
+	at com.sun.proxy.$Proxy72.persist(Unknown Source)
+	at org.springframework.data.jpa.repository.support.SimpleJpaRepository.save(SimpleJpaRepository.java:407)
+	at org.springframework.data.jpa.repository.support.SimpleJpaRepository.save(SimpleJpaRepository.java:441)
+	at org.springframework.data.jpa.repository.support.SimpleJpaRepository.save(SimpleJpaRepository.java:63)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:497)
+	at org.springframework.data.repository.core.support.RepositoryFactorySupport$QueryExecutorMethodInterceptor.executeMethodOn(RepositoryFactorySupport.java:416)
+	at org.springframework.data.repository.core.support.RepositoryFactorySupport$QueryExecutorMethodInterceptor.doInvoke(RepositoryFactorySupport.java:401)
+	at org.springframework.data.repository.core.support.RepositoryFactorySupport$QueryExecutorMethodInterceptor.invoke(RepositoryFactorySupport.java:373)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179)
+	at org.springframework.data.repository.core.support.RepositoryFactorySupport$DefaultMethodInvokingMethodInterceptor.invoke(RepositoryFactorySupport.java:486)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179)
+	at org.springframework.transaction.interceptor.TransactionInterceptor$1.proceedWithInvocation(TransactionInterceptor.java:99)
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:281)
+	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:96)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179)
+	at org.springframework.dao.support.PersistenceExceptionTranslationInterceptor.invoke(PersistenceExceptionTranslationInterceptor.java:136)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179)
+	at org.springframework.data.jpa.repository.support.CrudMethodMetadataPostProcessor$CrudMethodMetadataPopulatingMethodIntercceptor.invoke(CrudMethodMetadataPostProcessor.java:122)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179)
+	at org.springframework.aop.interceptor.ExposeInvocationInterceptor.invoke(ExposeInvocationInterceptor.java:92)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179)
+	at org.springframework.aop.framework.JdkDynamicAopProxy.invoke(JdkDynamicAopProxy.java:207)
+	at com.sun.proxy.$Proxy80.save(Unknown Source)
+	at org.thingsplode.server.bus.executors.EventSyncExecutor.executeImpl(EventSyncExecutor.java:48)
+	at org.thingsplode.server.bus.executors.EventSyncExecutor.executeImpl(EventSyncExecutor.java:23)
+	at org.thingsplode.server.bus.executors.AbstractSyncExecutor.process(AbstractSyncExecutor.java:34)
+	at org.thingsplode.server.BusConfig$1.handleMessageInternal(BusConfig.java:90)
+	at org.springframework.integration.handler.AbstractMessageHandler.handleMessage(AbstractMessageHandler.java:78)
+	at org.springframework.integration.config.annotation.ServiceActivatorAnnotationPostProcessor$ReplyProducingMessageHandlerWrapper.handleRequestMessage(ServiceActivatorAnnotationPostProcessor.java:96)
+	at org.springframework.integration.handler.AbstractReplyProducingMessageHandler.handleMessageInternal(AbstractReplyProducingMessageHandler.java:99)
+	at org.springframework.integration.handler.AbstractMessageHandler.handleMessage(AbstractMessageHandler.java:78)
+	at org.springframework.integration.dispatcher.AbstractDispatcher.tryOptimizedDispatch(AbstractDispatcher.java:116)
+	at org.springframework.integration.dispatcher.UnicastingDispatcher.doDispatch(UnicastingDispatcher.java:101)
+	at org.springframework.integration.dispatcher.UnicastingDispatcher.dispatch(UnicastingDispatcher.java:97)
+	at org.springframework.integration.channel.AbstractSubscribableChannel.doSend(AbstractSubscribableChannel.java:77)
+	at org.springframework.integration.channel.AbstractMessageChannel.send(AbstractMessageChannel.java:277)
+	at org.springframework.integration.channel.AbstractMessageChannel.send(AbstractMessageChannel.java:239)
+	at org.springframework.messaging.core.GenericMessagingTemplate.doSend(GenericMessagingTemplate.java:115)
+	at org.springframework.messaging.core.GenericMessagingTemplate.doSend(GenericMessagingTemplate.java:45)
+	at org.springframework.messaging.core.AbstractMessageSendingTemplate.send(AbstractMessageSendingTemplate.java:95)
+	at org.springframework.messaging.core.AbstractMessageSendingTemplate.convertAndSend(AbstractMessageSendingTemplate.java:133)
+	at org.springframework.messaging.core.AbstractMessageSendingTemplate.convertAndSend(AbstractMessageSendingTemplate.java:125)
+	at org.springframework.integration.gateway.MessagingGatewaySupport.send(MessagingGatewaySupport.java:302)
+	at org.springframework.integration.gateway.GatewayProxyFactoryBean.invokeGatewayMethod(GatewayProxyFactoryBean.java:417)
+	at org.springframework.integration.gateway.GatewayProxyFactoryBean.doInvoke(GatewayProxyFactoryBean.java:374)
+	at org.springframework.integration.gateway.GatewayProxyFactoryBean.invoke(GatewayProxyFactoryBean.java:365)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179)
+	at org.springframework.aop.framework.JdkDynamicAopProxy.invoke(JdkDynamicAopProxy.java:207)
+	at com.sun.proxy.$Proxy89.process(Unknown Source)
+	at org.thingsplode.server.executors.ExecutorTest.testEventSync(ExecutorTest.java:214)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:497)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:50)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:47)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+	at org.junit.internal.runners.statements.RunBefores.evaluate(RunBefores.java:26)
+	at org.springframework.test.context.junit4.statements.RunBeforeTestMethodCallbacks.evaluate(RunBeforeTestMethodCallbacks.java:73)
+	at org.springframework.test.context.junit4.statements.RunAfterTestMethodCallbacks.evaluate(RunAfterTestMethodCallbacks.java:82)
+	at org.springframework.test.context.junit4.statements.SpringRepeat.evaluate(SpringRepeat.java:73)
+	at org.junit.runners.ParentRunner.runLeaf(ParentRunner.java:325)
+	at org.springframework.test.context.junit4.SpringJUnit4ClassRunner.runChild(SpringJUnit4ClassRunner.java:217)
+	at org.springframework.test.context.junit4.SpringJUnit4ClassRunner.runChild(SpringJUnit4ClassRunner.java:83)
+	at org.junit.runners.ParentRunner$3.run(ParentRunner.java:290)
+	at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:71)
+	at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:288)
+	at org.junit.runners.ParentRunner.access$000(ParentRunner.java:58)
+	at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:268)
+	at org.springframework.test.context.junit4.statements.RunBeforeTestClassCallbacks.evaluate(RunBeforeTestClassCallbacks.java:61)
+	at org.springframework.test.context.junit4.statements.RunAfterTestClassCallbacks.evaluate(RunAfterTestClassCallbacks.java:68)
+	at org.junit.runners.ParentRunner.run(ParentRunner.java:363)
+	at org.springframework.test.context.junit4.SpringJUnit4ClassRunner.run(SpringJUnit4ClassRunner.java:163)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.execute(JUnit4Provider.java:283)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.executeWithRerun(JUnit4Provider.java:173)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.executeTestSet(JUnit4Provider.java:153)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.invoke(JUnit4Provider.java:128)
+	at org.apache.maven.surefire.booter.ForkedBooter.invokeProviderInSameClassLoader(ForkedBooter.java:203)
+	at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:155)
+	at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:103)
+Caused by: org.hibernate.exception.ConstraintViolationException: could not execute statement
+	at org.hibernate.exception.internal.SQLStateConversionDelegate.convert(SQLStateConversionDelegate.java:129)
+	at org.hibernate.exception.internal.StandardSQLExceptionConverter.convert(StandardSQLExceptionConverter.java:49)
+	at org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:126)
+	at org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:112)
+	at org.hibernate.engine.jdbc.internal.ResultSetReturnImpl.executeUpdate(ResultSetReturnImpl.java:211)
+	at org.hibernate.id.IdentityGenerator$GetGeneratedKeysDelegate.executeAndExtract(IdentityGenerator.java:96)
+	at org.hibernate.id.insert.AbstractReturningDelegate.performInsert(AbstractReturningDelegate.java:58)
+	at org.hibernate.persister.entity.AbstractEntityPersister.insert(AbstractEntityPersister.java:3032)
+	at org.hibernate.persister.entity.AbstractEntityPersister.insert(AbstractEntityPersister.java:3558)
+	at org.hibernate.action.internal.EntityIdentityInsertAction.execute(EntityIdentityInsertAction.java:98)
+	at org.hibernate.engine.spi.ActionQueue.execute(ActionQueue.java:492)
+	at org.hibernate.engine.spi.ActionQueue.addResolvedEntityInsertAction(ActionQueue.java:197)
+	at org.hibernate.engine.spi.ActionQueue.addInsertAction(ActionQueue.java:181)
+	at org.hibernate.engine.spi.ActionQueue.addAction(ActionQueue.java:216)
+	at org.hibernate.event.internal.AbstractSaveEventListener.addInsertAction(AbstractSaveEventListener.java:324)
+	at org.hibernate.event.internal.AbstractSaveEventListener.performSaveOrReplicate(AbstractSaveEventListener.java:288)
+	at org.hibernate.event.internal.AbstractSaveEventListener.performSave(AbstractSaveEventListener.java:194)
+	at org.hibernate.event.internal.AbstractSaveEventListener.saveWithGeneratedId(AbstractSaveEventListener.java:125)
+	at org.hibernate.jpa.event.internal.core.JpaPersistEventListener.saveWithGeneratedId(JpaPersistEventListener.java:84)
+	at org.hibernate.event.internal.DefaultPersistEventListener.entityIsTransient(DefaultPersistEventListener.java:206)
+	at org.hibernate.event.internal.DefaultPersistEventListener.onPersist(DefaultPersistEventListener.java:149)
+	at org.hibernate.event.internal.DefaultPersistEventListener.onPersist(DefaultPersistEventListener.java:75)
+	at org.hibernate.internal.SessionImpl.firePersist(SessionImpl.java:811)
+	at org.hibernate.internal.SessionImpl.persist(SessionImpl.java:784)
+	at org.hibernate.internal.SessionImpl.persist(SessionImpl.java:789)
+	at org.hibernate.jpa.spi.AbstractEntityManagerImpl.persist(AbstractEntityManagerImpl.java:1181)
+	... 89 more
+Caused by: org.h2.jdbc.JdbcSQLException: NULL not allowed for column "TYPE"; SQL statement:
+insert into EVENTS (id, COMPONENT_ID, eventClass, eventDate, eventId, receiveDate, severity, type) values (null, ?, ?, ?, ?, ?, ?, ?) [23502-172]
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:329)
+	at org.h2.message.DbException.get(DbException.java:169)
+	at org.h2.message.DbException.get(DbException.java:146)
+	at org.h2.table.Column.validateConvertUpdateSequence(Column.java:295)
+	at org.h2.table.Table.validateConvertUpdateSequence(Table.java:699)
+	at org.h2.command.dml.Insert.insertRows(Insert.java:122)
+	at org.h2.command.dml.Insert.update(Insert.java:86)
+	at org.h2.command.CommandContainer.update(CommandContainer.java:79)
+	at org.h2.command.Command.executeUpdate(Command.java:235)
+	at org.h2.jdbc.JdbcPreparedStatement.executeUpdateInternal(JdbcPreparedStatement.java:154)
+	at org.h2.jdbc.JdbcPreparedStatement.executeUpdate(JdbcPreparedStatement.java:140)
+	at com.mchange.v2.c3p0.impl.NewProxyPreparedStatement.executeUpdate(NewProxyPreparedStatement.java:105)
+	at org.hibernate.engine.jdbc.internal.ResultSetReturnImpl.executeUpdate(ResultSetReturnImpl.java:208)
+	... 110 more
+]]></system-out>
+  </testcase>
+</testsuite>
