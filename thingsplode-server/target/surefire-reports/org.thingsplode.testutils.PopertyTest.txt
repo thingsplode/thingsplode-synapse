@@ -1,0 +1,9 @@
+-------------------------------------------------------------------------------
+Test set: org.thingsplode.testutils.PopertyTest
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 0.428 sec <<< FAILURE! - in org.thingsplode.testutils.PopertyTest
+testProps(org.thingsplode.testutils.PopertyTest)  Time elapsed: 0.001 sec  <<< FAILURE!
+junit.framework.ComparisonFailure: It should be a expected:<[a]> but was:<[default]>
+	at junit.framework.Assert.assertEquals(Assert.java:100)
+	at org.thingsplode.testutils.PopertyTest.testProps(PopertyTest.java:39)
+
