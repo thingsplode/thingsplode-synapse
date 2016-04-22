@@ -24,6 +24,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import com.acme.synapse.testdata.services.RpcEndpointImpl;
 import com.acme.synapse.testdata.services.EndpointTesterService;
+import com.acme.synapse.testdata.services.TrickyService;
 import com.acme.synapse.testdata.services.core.Address;
 import com.acme.synapse.testdata.services.core.Device;
 import com.acme.synapse.testdata.services.core.Filter;
@@ -69,6 +70,7 @@ public class ServiceRegistryTest {
     @Before
     public void setUp() {
         if (!inited) {
+            registry.register(null, new TrickyService());
             registry.register(null, new RpcEndpointImpl());
             registry.register(null, new DummyMarkedEndpoint());
             registry.register(null, new EndpointTesterService());

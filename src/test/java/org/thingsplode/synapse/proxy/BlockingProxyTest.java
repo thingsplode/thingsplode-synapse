@@ -29,6 +29,7 @@ import org.junit.Test;
 import org.thingsplode.synapse.AbstractTest;
 import org.thingsplode.synapse.core.domain.Request;
 import org.thingsplode.synapse.core.domain.Response;
+import org.thingsplode.synapse.core.exceptions.RequestTimeoutException;
 
 /**
  *
@@ -44,7 +45,6 @@ public class BlockingProxyTest extends AbstractTest {
 
     @BeforeClass
     public static void setUpClass() throws SSLException, InterruptedException, URISyntaxException {
-        
 
     }
 
@@ -71,6 +71,8 @@ public class BlockingProxyTest extends AbstractTest {
         System.out.println("->" + r);
     }
 
+    //todo: timing out non-existent method
+    
     @Test
     public void baseBlockingRequestTimeoutTest() throws InterruptedException, UnsupportedEncodingException, ExecutionException {
         Assert.assertNotNull("the dispacther must not be null", defaultDispatcher);
@@ -80,19 +82,16 @@ public class BlockingProxyTest extends AbstractTest {
                 System.out.println("RESPONSE RECEIVED@Test Case => " + (rsp.getHeader() != null ? rsp.getHeader().getResponseCode() : "NULL RSP CODE") + " //Body: " + rsp.getBody());
                 return 1;
             } else {
-                System.out.println("\n\nERROR -> " + ex.getMessage() + "\n\n");
-                Assert.assertTrue("Execution should time out", ex != null);
-                ex.printStackTrace();
+                Assert.assertTrue("Execution should time out", ex instanceof RequestTimeoutException);
                 return -1;
             }
         }).get();
-        Assert.assertTrue("The return code must be -1 because the message must have timed our", code == -1);
+        Assert.assertTrue("The return code must be -1 because the message must have timed out", code == -1);
     }
 
     @Test()
     public void baseBlockingRequestTest() throws InterruptedException, URISyntaxException, SSLException, UnsupportedEncodingException, ExecutionException {
         Assert.assertNotNull("the dispacther must not be null", defaultDispatcher);
-        //Thread.sleep(2000);
         DispatcherFuture<Request, Response> f = defaultDispatcher.dispatch(Request.create("/com/acme/synapse/testdata/services/RpcEndpointImpl/ping", Request.RequestHeader.RequestMethod.GET), 6000);
         int code = f.handle((rsp, ex) -> {
             if (rsp != null) {
@@ -105,20 +104,6 @@ public class BlockingProxyTest extends AbstractTest {
             }
         }).get();
         Assert.assertTrue("The return code must be 1 so no error is returned", code == 1);
-
-        //response introspector line 50
-        //server-timeout handlers on the client
-//        while (true) {
-//            Thread.sleep(50000L);
-//        }
-//        EndpointProxy proxy = EndpointProxy.init().endpoints().defaultPolicy().start();
-//        TestEndpoint testEp = proxy.createStub("test_service", TestEndpoint.class);
-//        testEp.ping();
-//        String msg = "hello world!";
-//        Assert.assertEquals(String.format("Expected message: %s", msg), msg, testEp.echo(msg));
-//        Filter f = new Filter("select * from something", 1, 100);
-//        Assert.assertTrue("The result should be a filter class", testEp.filter(f) instanceof Filter);
-//        Assert.assertEquals("The page size should be 200", new Integer(200), ((Filter) testEp.filter(f)).getPageSize());
     }
 
     //todo: broadcast test: //defaultDispatcher.broadcast(Request.create("/com/acme/synapse/testdata/services/RpcEndpointImpl/ping", Request.RequestHeader.RequestMethod.GET));

@@ -40,6 +40,7 @@ public class BlockingRspCorrelator extends DispatcherFutureHandler {
     @Override
     public void register(DispatcherFuture<Request, Response> df) throws InterruptedException {
         //todo: prepare for message timeout and close connection upon timeout
+        df.setRequestFiredTime(System.currentTimeMillis());
         requestQueue.put(df);
     }
 
@@ -57,22 +58,40 @@ public class BlockingRspCorrelator extends DispatcherFutureHandler {
 
         @Override
         public void run() {
-            Long now = System.currentTimeMillis();
-            DispatcherFuture df = requestQueue.peek();
-            if (df == null) {
-                return;
-            }
-            long msgTimeout = df.getTimeout() != -1 ? df.getTimeout() : defaultTimeout;
-            long diffInSec = now - df.getRequestFiredTime();
-            if (df.getTimeout() != 0 // 0 means that the timeout is ignored (infinite timeout)
-                    && diffInSec > msgTimeout) {
-                if (logger.isTraceEnabled()) {
-                    logger.trace(String.format("Generating timeout for a %s because [now - fires = %s > %s]", MSG_ENTRY_NAME, diffInSec, msgTimeout));
+            try {
+                if (logger != null && logger.isTraceEnabled()) {
+                    logger.trace("evaluating message timeout...");
                 }
-                DispatcherFuture msgWrapper = removeEntry(null);
-                msgWrapper.completeExceptionally(new RequestTimeoutException("Waiting for message has timed out [" + msgTimeout + "]ms in " + this.getClass().getSimpleName()));
+                Long now = System.currentTimeMillis();
+
+                if (requestQueue == null) {
+                    //the extending class is not yet initialized
+                    return;
+                }
+
+                DispatcherFuture df = requestQueue.peek();
+                if (df == null) {
+                    if (logger.isTraceEnabled()) {
+                        logger.warn("There's no request in the queue... timeout evaluation will stop here.");
+                    }
+                    return;
+                }
+                long msgTimeout = df.getTimeout() != -1 ? df.getTimeout() : defaultTimeout;
+                long diffInSec = now - df.getRequestFiredTime();
+                if (logger != null && logger.isTraceEnabled()) {
+                    logger.trace("Evaluating message timeout -> timeout msec[" + df.getTimeout() + "] diffInMsec [" + diffInSec + "]");
+                }
+                if (df.getTimeout() != 0 // 0 means that the timeout is ignored (infinite timeout)
+                        && diffInSec > msgTimeout) {
+                    if (logger != null && logger.isTraceEnabled()) {
+                        logger.trace(String.format("Generating timeout for a %s because [now - fires = %s > %s]", MSG_ENTRY_NAME, diffInSec, msgTimeout));
+                    }
+                    DispatcherFuture msgWrapper = removeEntry(null);
+                    msgWrapper.completeExceptionally(new RequestTimeoutException("Waiting for message has timed out [" + msgTimeout + "]ms in " + this.getClass().getSimpleName()));
+                }
+            } catch (Exception ex) {
+                logger.error("Exception caught in timer -> " + ex.getMessage(), ex);
             }
         }
     }
-
 }

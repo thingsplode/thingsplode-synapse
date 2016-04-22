@@ -29,15 +29,15 @@ import org.thingsplode.synapse.util.Util;
  * @author Csaba Tamas
  */
 public class MsgIdRspCorrelator extends DispatcherFutureHandler {
-    
+
     private final Logger logger = LoggerFactory.getLogger(MsgIdRspCorrelator.class);
-    
-    private ConcurrentHashMap<String, DispatcherFuture<Request, Response>> requestMsgRegistry;//msg id/msg correlation entry map
-    
+
+    private final ConcurrentHashMap<String, DispatcherFuture<Request, Response>> requestMsgRegistry;//msg id/msg correlation entry map
+
     public MsgIdRspCorrelator() {
         super();
         this.requestMsgRegistry = new ConcurrentHashMap<>();
-        
+
     }
 
     /**
@@ -54,15 +54,15 @@ public class MsgIdRspCorrelator extends DispatcherFutureHandler {
             logger.warn(String.format("Did not registered Message Entry because is NULL"));
             return;
         }
-        
+
         if (msgEntry.getRequest() == null || msgEntry.getRequest().getHeader() == null) {
             throw new IllegalArgumentException("At this stage the " + Request.class.getSimpleName() + " and its header should have been already set.");
         } else if (Util.isEmpty(msgEntry.getRequest().getHeader().getMsgId())) {
             throw new IllegalArgumentException("The " + MsgIdRspCorrelator.class.getSimpleName() + "requires a unique message id");
         }
-        
+
         String msgId = msgEntry.getRequest().getHeader().getMsgId();
-        
+
         if (msgId != null) {
             msgEntry.setRequestFiredTime(System.currentTimeMillis());
             DispatcherFuture oldMsgEntry = requestMsgRegistry.put(msgId, msgEntry);
@@ -72,7 +72,7 @@ public class MsgIdRspCorrelator extends DispatcherFutureHandler {
         } else {
             logger.warn(String.format("Skipping the registration of a %s because the Message ID [%s]", MSG_ENTRY_NAME, msgId));
         }
-        
+
         if (logger.isDebugEnabled()) {
             logger.debug(debugStatuses());
         }
@@ -117,19 +117,22 @@ public class MsgIdRspCorrelator extends DispatcherFutureHandler {
         });
         requestMapBuilder.append("**** END OF SESSION REGISTRY ****");
         return requestMapBuilder.toString();
-        
+
     }
 
     @Override
     TimerTask getTimerTask() {
         return new SessionTimerTask();
     }
-    
+
     class SessionTimerTask extends TimerTask {
-        
+
         @Override
         public void run() {
             try {
+                if (requestMsgRegistry == null) {
+                    return;
+                }
                 Long now = System.currentTimeMillis();
                 requestMsgRegistry.keySet().stream().forEach((msgID) -> {
                     DispatcherFuture msgEntry = requestMsgRegistry.get(msgID);
@@ -147,8 +150,8 @@ public class MsgIdRspCorrelator extends DispatcherFutureHandler {
             } catch (Throwable th) {
                 logger.warn("There was an error in the correlation timer task execution: " + th.getMessage(), th);
             }
-            
+
         }
     }
-    
+
 }

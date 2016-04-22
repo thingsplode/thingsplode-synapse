@@ -106,6 +106,11 @@ public class Request<T extends Serializable> extends AbstractMessage<T> {
             return method;
         }
 
+        @Override
+        public String toString() {
+            return "RequestHeader{" + "uri=" + uri + ", method=" + method + '}';
+        }
+        
         public enum RequestMethod {
 
             /**

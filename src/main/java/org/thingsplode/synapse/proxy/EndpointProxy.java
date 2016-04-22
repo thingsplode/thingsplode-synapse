@@ -57,7 +57,7 @@ import org.thingsplode.synapse.proxy.handlers.ResponseHandler;
 //todo: port already binded
 public class EndpointProxy {
 
-    private Logger logger = LoggerFactory.getLogger(EndpointProxy.class);
+    private final Logger logger = LoggerFactory.getLogger(EndpointProxy.class);
     private final URI connectionUri;
     private final EventLoopGroup group = new NioEventLoopGroup();
     private SslContext sslContext = null;
@@ -69,7 +69,7 @@ public class EndpointProxy {
     private final Dispatcher.DispatcherPattern dispatchPattern;
     private MsgIdRspCorrelator correlatorService;
     private boolean retryConnection = false;
-    private AtomicInteger reconnectCounter = new AtomicInteger(0);
+    private final AtomicInteger reconnectCounter = new AtomicInteger(0);
 
     //todo: place connection uri to the aqcuire dispatcher, so one client instance can work with many servers
     private EndpointProxy(String baseUrl, Dispatcher.DispatcherPattern dispatchPattern) throws URISyntaxException {
@@ -111,7 +111,7 @@ public class EndpointProxy {
             b.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connectTimeout);
         } finally {
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                this.logger.info("Stopping client...");
+                this.logger.info("Activating endpoint proxy (client) shutdown hook...");
                 this.stop();
                 ForkJoinPool.commonPool().awaitQuiescence(5, TimeUnit.SECONDS);
             }));
@@ -158,7 +158,7 @@ public class EndpointProxy {
 
     public void stop() {
         if (this.lifecycle == ComponentLifecycle.UNITIALIZED) {
-            throw new IllegalStateException("Please use this method afer starting the " + EndpointProxy.class.getSimpleName());
+            throw new IllegalStateException("Please use this method after starting the " + EndpointProxy.class.getSimpleName());
         }
         dispatchers.forEach(d -> {
             try {

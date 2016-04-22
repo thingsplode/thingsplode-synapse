@@ -109,4 +109,9 @@ public class Uri {
         return queryParameters;
     }
 
+    @Override
+    public String toString() {
+        return "Uri{" + "path=" + path + ", query=" + query + ", queryParameters=" + queryParameters + '}';
+    }
+
 }

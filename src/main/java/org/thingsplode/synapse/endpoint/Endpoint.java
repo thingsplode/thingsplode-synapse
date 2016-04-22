@@ -66,7 +66,7 @@ import org.thingsplode.synapse.util.NetworkUtil;
  * @author Csaba Tamas //todo: add basic authorization
  */
 public class Endpoint {
-    
+
     private Logger logger = LoggerFactory.getLogger(Endpoint.class);
     public static final String ENDPOINT_URL_PATERN = "/services|/services/";
     public static final String HTTP_ENCODER = "http_encoder";
@@ -91,10 +91,10 @@ public class Endpoint {
     private ServiceRegistry serviceRegistry = new ServiceRegistry();
     private EndpointApiGenerator apiGenerator = null;
     private boolean introspection = false;
-        
+
     private Endpoint() {
     }
-    
+
     private Endpoint(String id, ConnectionProvider connections) {
         this.endpointId = id;
         this.connections = connections;
@@ -111,7 +111,7 @@ public class Endpoint {
         Endpoint ep = new Endpoint(endpointId, connections);
         return ep;
     }
-    
+
     public void start() throws InterruptedException {
         try {
             logger.debug("Starting endpoint [" + endpointId + "].");
@@ -154,7 +154,7 @@ public class Endpoint {
         } finally {
             this.logger.debug("Adding shutdown hook for the endpoint.");
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                this.logger.info("Stopping endpoint [{}].", endpointId);
+                this.logger.info("Endpoint shutdown hook activated [{}].", endpointId);
                 this.stop();
                 ForkJoinPool.commonPool().awaitQuiescence(5, TimeUnit.SECONDS);
             }));
@@ -176,8 +176,12 @@ public class Endpoint {
         lifecycle = ComponentLifecycle.STARTED;
         logger.info("Endpoint [" + endpointId + "] started.");
     }
-    
+
     public void stop() {
+        if (lifecycle == ComponentLifecycle.UNITIALIZED) {
+            logger.warn("Endpoint is still/already uninitialized. Exiting stop method...");
+            return;
+        }
         logger.debug("Stopping endpoint [" + endpointId + "].");
         lifecycle = ComponentLifecycle.UNITIALIZED;
         channelRegistry.close().awaitUninterruptibly();
@@ -191,24 +195,24 @@ public class Endpoint {
         }
         logger.info("Endpoint [" + endpointId + "] stopped.");
     }
-    
+
     private void initGroups() throws InterruptedException {
         if (masterGroup == null && workerGroup == null) {
             masterGroup = new NioEventLoopGroup();
             workerGroup = new NioEventLoopGroup();
             return;
         }
-        
+
         if (workerGroup.isShuttingDown()) {
             logger.debug("Worker Event Loop Group is awaiting termination.");
             workerGroup.awaitTermination(TERMINATION_TIMEOUT, TimeUnit.SECONDS);
         }
-        
+
         if (masterGroup.isShuttingDown()) {
             logger.debug("Master Event Loop Group is awaiting termination.");
             masterGroup.awaitTermination(TERMINATION_TIMEOUT, TimeUnit.SECONDS);
         }
-        
+
         if (masterGroup.isShutdown()) {
             logger.debug("Creating new Master Event Loop Group.");
             masterGroup = new NioEventLoopGroup();
@@ -222,7 +226,7 @@ public class Endpoint {
             logger.debug("Worker Event Loop Group will not be reinitialized because it is not yet shut down.");
         }
     }
-    
+
     public Endpoint publish(String path, Object serviceInstance) {
         //        if (lifecycle == Lifecycle.UNITIALIZED){
         //            throw new IllegalStateException();
@@ -230,7 +234,7 @@ public class Endpoint {
         serviceRegistry.register(path, serviceInstance);
         return this;
     }
-    
+
     public Endpoint publish(Object serviceInstance) {
         if (apiGenerator != null && !(serviceInstance instanceof EndpointApiGenerator)) {
             apiGenerator.addPackageToBeScanned(serviceInstance.getClass().getPackage().getName());
@@ -238,11 +242,11 @@ public class Endpoint {
         this.publish(null, serviceInstance);
         return this;
     }
-    
+
     public enum Protocol {
         JSON
     }
-    
+
     public enum TransportType {
 
         /**
@@ -262,11 +266,11 @@ public class Endpoint {
          */
         DOMAIN_SOCKET;
     }
-    
+
     public static class ConnectionProvider {
-        
+
         private final Set<SocketAddress> socketAddresses;
-        
+
         public ConnectionProvider(int port, String... interfaceNames) {
             this.socketAddresses = new HashSet<>();
             for (String iface : interfaceNames) {
@@ -281,22 +285,22 @@ public class Endpoint {
                 } else {
                     socketAddresses.add(new InetSocketAddress(inetAddress, port));
                 }
-                
+
             }
         }
-        
+
         public ConnectionProvider(SocketAddress... addresses) {
             if (addresses == null) {
                 throw new RuntimeException("Please specify some socket addresses.");
             }
             this.socketAddresses = new HashSet<>(Arrays.asList(addresses));
         }
-        
+
         public Set<SocketAddress> getSocketAddresses() {
             return socketAddresses;
         }
     }
-    
+
     public Endpoint enableIntrospection() {
         this.introspection = true;
         return this;
@@ -312,7 +316,7 @@ public class Endpoint {
      * @throws FileNotFoundException
      */
     public Endpoint enableSwagger(String version, String hostname) throws FileNotFoundException {
-        
+
         if (fileHandler == null) {
             fileHandler = new HttpFileHandler();
         }
@@ -332,7 +336,7 @@ public class Endpoint {
         this.publish(apiGenerator);
         return this;
     }
-    
+
     public Endpoint enableFileHandler(String webroot) throws FileNotFoundException {
         if (fileHandler == null) {
             fileHandler = new HttpFileHandler(webroot);
@@ -341,26 +345,26 @@ public class Endpoint {
         }
         return this;
     }
-    
+
     public Endpoint logLevel(LogLevel logLevel) {
         this.logLevel = logLevel;
         return this;
     }
-    
+
     public Endpoint transportType(TransportType transportType) {
         this.transportType = transportType;
         return this;
     }
-    
+
     public Endpoint protocol(Protocol protocol) {
         this.protocol = protocol;
         return this;
     }
-    
+
     public Protocol getProtocol() {
         return protocol;
     }
-    
+
     public TransportType getTransportType() {
         return transportType;
     }

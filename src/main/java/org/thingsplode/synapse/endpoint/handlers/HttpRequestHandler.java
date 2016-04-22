@@ -59,6 +59,7 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest httpRequest) throws Exception {
+        //todo: support for API keys
         ///endpoints/json?api_key=565656
         try {
             // Handle a bad request.

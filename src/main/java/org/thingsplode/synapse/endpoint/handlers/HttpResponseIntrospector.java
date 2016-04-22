@@ -33,12 +33,14 @@ import org.thingsplode.synapse.util.Util;
  */
 @ChannelHandler.Sharable
 public class HttpResponseIntrospector extends ChannelOutboundHandlerAdapter {
-    
+
     private Logger logger = LoggerFactory.getLogger(HttpRequestIntrospector.class);
-    
+
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
-        if (msg != null && msg instanceof HttpResponse && logger.isDebugEnabled()) {
+        if (msg == null || !(msg instanceof HttpResponse)) {
+            logger.warn("Message@Endpoint <to be sent>: not an instance of HTTPResponse or NULL.");
+        } else if (logger.isDebugEnabled()) {
             final StringBuilder hb = new StringBuilder();
             ((HttpResponse) msg).headers().entries().forEach(e -> {
                 hb.append(e.getKey()).append(" : ").append(e.getValue()).append("\n");
@@ -54,10 +56,7 @@ public class HttpResponseIntrospector extends ChannelOutboundHandlerAdapter {
             logger.debug("Message@Endpoint to be sent: \n\n"
                     + "Status: " + ((HttpResponse) msg).status() + "\n"
                     + hb.toString() + "\n" + "Payload: " + (!Util.isEmpty(payloadAsSring) ? payloadAsSring + "\n" : "EMPTY\n"));
-        } else {
-            logger.warn("Message@Endpoint to be sent: not instance of HTTPResponse or NULL.");
         }
-        
         ctx.write(msg, promise);
     }
 }

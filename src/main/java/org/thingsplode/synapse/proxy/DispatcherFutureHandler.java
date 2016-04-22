@@ -18,7 +18,10 @@ package org.thingsplode.synapse.proxy;
 import java.util.TimerTask;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.thingsplode.synapse.core.domain.Request;
 import org.thingsplode.synapse.core.domain.Response;
 
@@ -27,7 +30,7 @@ import org.thingsplode.synapse.core.domain.Response;
  * @author Csaba Tamas
  */
 public abstract class DispatcherFutureHandler {
-
+    private final Logger logger = LoggerFactory.getLogger(DispatcherFutureHandler.class);
     protected final static String MSG_ENTRY_NAME = DispatcherFuture.class.getSimpleName();
     protected final static long SECOND = 1000L;
     protected final static long MINUTE = 60 * SECOND;
@@ -35,7 +38,14 @@ public abstract class DispatcherFutureHandler {
     private final ScheduledExecutorService executor;
 
     public DispatcherFutureHandler() {
-        executor = Executors.newSingleThreadScheduledExecutor();
+        executor = Executors.newSingleThreadScheduledExecutor((Runnable r) -> {
+            Thread t = new Thread(r, "timer-thread");
+            t.setDaemon(true);
+            t.setUncaughtExceptionHandler((Thread t1, Throwable e) -> {
+                logger.error("Ucaught exception while executing timer-task:" + e.getMessage(), e);
+            });
+            return t;
+        });
         executor.scheduleAtFixedRate(getTimerTask(), 0, SECOND, TimeUnit.MILLISECONDS);
     }
 
