@@ -29,8 +29,8 @@ import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.util.CharsetUtil;
-import io.netty.util.internal.logging.InternalLogger;
-import io.netty.util.internal.logging.InternalLoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.thingsplode.synapse.core.domain.AbstractMessage;
 import org.thingsplode.synapse.core.domain.MediaType;
 import org.thingsplode.synapse.core.domain.Response;
@@ -44,16 +44,16 @@ import org.thingsplode.synapse.serializers.SynapseSerializer;
 @ChannelHandler.Sharable
 public class HttpResponseHandler extends SimpleChannelInboundHandler<Response> {
 
-    private static final InternalLogger logger = InternalLoggerFactory.getInstance(HttpResponseHandler.class);
+    private static final Logger logger = LoggerFactory.getLogger(HttpResponseHandler.class);
     private final SerializationService serializationService = new SerializationService();
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Response rsp) throws Exception {
         MediaType mt = rsp.getHeader().getContentType();
         SynapseSerializer<String> serializer = serializationService.getSerializer(mt);
-        ByteBuf rspBuf = Unpooled.copiedBuffer(serializer.marshallToWireformat(rsp.getBody()), CharsetUtil.UTF_8);
+        byte[] payload = serializer.marshall(rsp.getBody());
         FullHttpResponse response = new DefaultFullHttpResponse(
-                HttpVersion.HTTP_1_1, rsp.getHeader().getResponseCode(), rspBuf);
+                HttpVersion.HTTP_1_1, rsp.getHeader().getResponseCode(), Unpooled.wrappedBuffer(payload));
         response.headers().set(HttpHeaderNames.CONTENT_TYPE, mt != null ? mt.getName() : "application/json; charset=UTF-8");
         decorate(rsp, response);
         //response.headers().set(HttpHeaderNames.CONTENT_LENGTH, rspBuf.array().length);

@@ -23,16 +23,17 @@ import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshaker;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory;
-import io.netty.util.internal.logging.InternalLogger;
-import io.netty.util.internal.logging.InternalLoggerFactory;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.util.Map.Entry;
 import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.thingsplode.synapse.core.domain.AbstractMessage;
 import org.thingsplode.synapse.core.domain.FileRequest;
 import org.thingsplode.synapse.core.domain.MediaType;
 import org.thingsplode.synapse.core.domain.Request;
+import org.thingsplode.synapse.core.domain.RequestMethod;
 import org.thingsplode.synapse.core.domain.Response;
 import org.thingsplode.synapse.core.domain.Uri;
 import org.thingsplode.synapse.core.exceptions.SynapseException;
@@ -50,7 +51,7 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
     private final String endpointId;
     private WebSocketServerHandshaker handshaker;
     private final ServiceRegistry registry;
-    private static final InternalLogger logger = InternalLoggerFactory.getInstance(HttpRequestHandler.class);
+    private static final Logger logger = LoggerFactory.getLogger(HttpRequestHandler.class);
 
     public HttpRequestHandler(String endpointId, ServiceRegistry registry) {
         this.registry = registry;
@@ -94,7 +95,7 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
                 Optional<Entry<String, String>> msgIdOpt = httpRequest.headers().entries().stream().filter(e -> e.getKey().equalsIgnoreCase(AbstractMessage.PROP_MESSAGE_ID)).findFirst();
                 String msgId = msgIdOpt.isPresent() ? msgIdOpt.get().getValue() : null;
                 try {
-                    header = new Request.RequestHeader(msgId, new Uri(httpRequest.uri()), Request.RequestHeader.RequestMethod.fromHttpMethod(httpRequest.method()));
+                    header = new Request.RequestHeader(msgId, new Uri(httpRequest.uri()), RequestMethod.fromHttpMethod(httpRequest.method()));
                     header.addAllMessageProperties(httpRequest.headers());
                 } catch (UnsupportedEncodingException ex) {
                     logger.error(ex.getMessage(), ex);

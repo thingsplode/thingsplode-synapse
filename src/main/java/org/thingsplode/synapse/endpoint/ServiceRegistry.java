@@ -16,8 +16,6 @@
 package org.thingsplode.synapse.endpoint;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
-import io.netty.util.internal.logging.InternalLogger;
-import io.netty.util.internal.logging.InternalLoggerFactory;
 import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -42,6 +40,8 @@ import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.thingsplode.synapse.core.SynapseEndpointServiceMarker;
 import org.thingsplode.synapse.core.domain.Uri;
 import org.thingsplode.synapse.core.annotations.PathVariable;
@@ -54,7 +54,7 @@ import org.thingsplode.synapse.core.domain.Event;
 import org.thingsplode.synapse.core.domain.MediaType;
 import org.thingsplode.synapse.core.domain.ParameterWrapper;
 import org.thingsplode.synapse.core.domain.Request;
-import org.thingsplode.synapse.core.domain.Request.RequestHeader.RequestMethod;
+import org.thingsplode.synapse.core.domain.RequestMethod;
 import org.thingsplode.synapse.core.domain.Response;
 import org.thingsplode.synapse.core.exceptions.ExecutionException;
 import org.thingsplode.synapse.core.exceptions.MethodNotFoundException;
@@ -77,7 +77,7 @@ public class ServiceRegistry {
     private Routes routes;
     private Pattern urlParamPattern = Pattern.compile("\\{(.*?)\\}", Pattern.CASE_INSENSITIVE);
     private SerializationService serializationService = new SerializationService();
-    private static final InternalLogger logger = InternalLoggerFactory.getInstance(ServiceRegistry.class);
+    private static final Logger logger = LoggerFactory.getLogger(ServiceRegistry.class);
 
     public ServiceRegistry() {
         routes = new Routes();
@@ -404,6 +404,7 @@ public class ServiceRegistry {
 
         private Object[] extractInvocationArguments(Request.RequestHeader header, Object messageBody) throws MissingParameterException {
             final List<Object> methodParams = new ArrayList<>();
+
             for (MethodParam p : parameters) {
                 switch (p.source) {
                     case BODY: {
@@ -422,9 +423,10 @@ public class ServiceRegistry {
                         if (messageBody == null || !(messageBody instanceof ParameterWrapper)) {
                             throw new MissingParameterException(header.getUri().getPath(), p.paramId);
                         }
-                        ((ParameterWrapper) messageBody).getParams().forEach(wp -> {
-                            methodParams.add(wp.getValue());
-                        });
+                        Optional<org.thingsplode.synapse.core.domain.ParameterWrapper.Parameter> pOpt = ((ParameterWrapper) messageBody).getParameterByName(p.paramId);
+                        if (pOpt.isPresent()) {
+                            methodParams.add(pOpt.get().getValue());
+                        }
                         break;
                     }
                     case QUERY_PARAM: {

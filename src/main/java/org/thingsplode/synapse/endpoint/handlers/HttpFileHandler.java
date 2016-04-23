@@ -34,8 +34,6 @@ import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.stream.ChunkedFile;
-import io.netty.util.internal.logging.InternalLogger;
-import io.netty.util.internal.logging.InternalLoggerFactory;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
@@ -54,6 +52,8 @@ import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.activation.MimetypesFileTypeMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.thingsplode.synapse.endpoint.swagger.Loader;
 import org.thingsplode.synapse.core.domain.FileRequest;
 import org.thingsplode.synapse.core.domain.Request;
@@ -75,7 +75,7 @@ public final class HttpFileHandler extends SimpleChannelInboundHandler<FileReque
     private static final Pattern INSECURE_URI_PATTERN = Pattern.compile(".*[<>&\"].*");
     private static final String MIME_TYPES_FILE = "/META-INF/server.mime.types";
     private static MimetypesFileTypeMap MIME_TYPES_MAP;
-    private static final InternalLogger logger = InternalLoggerFactory.getInstance(HttpFileHandler.class);
+    private static final Logger logger = LoggerFactory.getLogger(HttpFileHandler.class);
     private File webroot = null;
     private final HashMap<Pattern,String> redirects = new HashMap<>();
 

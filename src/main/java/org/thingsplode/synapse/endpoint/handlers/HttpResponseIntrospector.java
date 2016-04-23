@@ -49,13 +49,13 @@ public class HttpResponseIntrospector extends ChannelOutboundHandlerAdapter {
             if (msg instanceof FullHttpResponse) {
                 ByteBuf content = ((FullHttpResponse) msg).content();
                 byte[] dst = new byte[content.capacity()];
-                //content.copy().getBytes(0, dst);
+                content.copy().getBytes(0, dst);
                 content.retain();
                 payloadAsSring = new String(dst, Charset.forName("UTF-8"));
             }
             logger.debug("Message@Endpoint to be sent: \n\n"
                     + "Status: " + ((HttpResponse) msg).status() + "\n"
-                    + hb.toString() + "\n" + "Payload: " + (!Util.isEmpty(payloadAsSring) ? payloadAsSring + "\n" : "EMPTY\n"));
+                    + hb.toString() + "\n" + "Payload: [" + (!Util.isEmpty(payloadAsSring) ? payloadAsSring + "]\n" : "EMPTY\n"));
         }
         ctx.write(msg, promise);
     }
