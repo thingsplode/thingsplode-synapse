@@ -17,11 +17,11 @@ package org.thingsplode.synapse.proxy.handlers;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.util.internal.logging.InternalLogger;
-import io.netty.util.internal.logging.InternalLoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.thingsplode.synapse.core.domain.Response;
-import org.thingsplode.synapse.proxy.DispatcherFuture;
-import org.thingsplode.synapse.proxy.DispatcherFutureHandler;
+import org.thingsplode.synapse.proxy.DispatchedFuture;
+import org.thingsplode.synapse.proxy.DispatchedFutureHandler;
 
 /**
  *
@@ -29,16 +29,16 @@ import org.thingsplode.synapse.proxy.DispatcherFutureHandler;
  */
 public class ResponseHandler extends SimpleChannelInboundHandler<Response> {
     
-    private final DispatcherFutureHandler dfh;
-    private static final InternalLogger logger = InternalLoggerFactory.getInstance(ResponseHandler.class);
+    private final DispatchedFutureHandler dfh;
+    private static final Logger logger = LoggerFactory.getLogger(ResponseHandler.class);
 
-    public ResponseHandler(DispatcherFutureHandler dfh) {
+    public ResponseHandler(DispatchedFutureHandler dfh) {
         this.dfh = dfh;
     }
     
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Response msg) throws Exception {
-        DispatcherFuture df =dfh.removeEntry(null);
+        DispatchedFuture df =dfh.responseReceived(null);
         if (df == null) {
             logger.error("Response received but no request token was available. Discarding message.");
         } else {
@@ -51,7 +51,7 @@ public class ResponseHandler extends SimpleChannelInboundHandler<Response> {
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         logger.error("Excaption caught while expecting response: " + cause.getMessage());
-        dfh.removeEntry(null).completeExceptionally(cause);
+        dfh.responseReceived(null).completeExceptionally(cause);
     }
     
 }

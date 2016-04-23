@@ -15,79 +15,74 @@
  */
 package org.thingsplode.synapse.proxy;
 
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
 import java.util.TimerTask;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.thingsplode.synapse.core.domain.Request;
 import org.thingsplode.synapse.core.domain.Response;
 import org.thingsplode.synapse.core.exceptions.RequestTimeoutException;
-import static org.thingsplode.synapse.proxy.DispatcherFutureHandler.MSG_ENTRY_NAME;
 
 /**
  *
  * @author Csaba Tamas
  */
-public class BlockingRspCorrelator extends DispatcherFutureHandler {
+public class BlockingRspCorrelator implements DispatchedFutureHandler {
 
     private final Logger logger = LoggerFactory.getLogger(BlockingRspCorrelator.class);
-    private final ArrayBlockingQueue<DispatcherFuture> requestQueue = new ArrayBlockingQueue(1);
-
-    public BlockingRspCorrelator() {
-        super();
-    }
+    private final ArrayBlockingQueue<DispatchedFuture> requestQueue = new ArrayBlockingQueue(1);
+    private TimerTask timerTask;
+    private long defaultResponseTimeout = finalDefaultTimeout;
 
     @Override
-    public void register(DispatcherFuture<Request, Response> df) throws InterruptedException {
+    public void beforeDispatch(DispatchedFuture<Request, Response> df) throws InterruptedException {
         //todo: prepare for message timeout and close connection upon timeout
         df.setRequestFiredTime(System.currentTimeMillis());
+        long timeout = df.getTimeout() != -1 ? df.getTimeout() : defaultResponseTimeout;
+        if (timeout > 0) {
+            df.getChannel().eventLoop().schedule(getTimerTask(), timeout, TimeUnit.MILLISECONDS);
+        }
         requestQueue.put(df);
     }
 
     @Override
-    public DispatcherFuture<Request, Response> removeEntry(String msgId) {
+    public DispatchedFuture<Request, Response> responseReceived(String msgId) {
+        if (timerTask != null) {
+            timerTask.cancel();
+        }
         return requestQueue.poll();
     }
 
     @Override
-    TimerTask getTimerTask() {
-        return new RequestTimeoutTimerTask();
+    public TimerTask getTimerTask() {
+        if (timerTask == null) {
+            timerTask = new TimeoutTriggeringTimerTask();
+        }
+        return timerTask;
     }
 
-    public class RequestTimeoutTimerTask extends TimerTask {
+    @Override
+    public void setDefaultTimeout(Long responseTimeout) {
+        this.defaultResponseTimeout = responseTimeout;
+    }
+
+    public class TimeoutTriggeringTimerTask extends TimerTask {
 
         @Override
         public void run() {
             try {
-                if (logger != null && logger.isTraceEnabled()) {
-                    logger.trace("evaluating message timeout...");
-                }
-                Long now = System.currentTimeMillis();
-
-                if (requestQueue == null) {
-                    //the extending class is not yet initialized
-                    return;
-                }
-
-                DispatcherFuture df = requestQueue.peek();
-                if (df == null) {
-                    if (logger.isTraceEnabled()) {
-                        logger.warn("There's no request in the queue... timeout evaluation will stop here.");
-                    }
-                    return;
-                }
-                long msgTimeout = df.getTimeout() != -1 ? df.getTimeout() : defaultTimeout;
-                long diffInSec = now - df.getRequestFiredTime();
-                if (logger != null && logger.isTraceEnabled()) {
-                    logger.trace("Evaluating message timeout -> timeout msec[" + df.getTimeout() + "] diffInMsec [" + diffInSec + "]");
-                }
-                if (df.getTimeout() != 0 // 0 means that the timeout is ignored (infinite timeout)
-                        && diffInSec > msgTimeout) {
-                    if (logger != null && logger.isTraceEnabled()) {
-                        logger.trace(String.format("Generating timeout for a %s because [now - fires = %s > %s]", MSG_ENTRY_NAME, diffInSec, msgTimeout));
-                    }
-                    DispatcherFuture msgWrapper = removeEntry(null);
-                    msgWrapper.completeExceptionally(new RequestTimeoutException("Waiting for message has timed out [" + msgTimeout + "]ms in " + this.getClass().getSimpleName()));
+                DispatchedFuture dispatchedMessage = requestQueue.poll();
+                if (dispatchedMessage != null) {
+                    dispatchedMessage.getChannel().disconnect().addListener((ChannelFutureListener) (ChannelFuture future) -> {
+                        if (future.isSuccess()) {
+                            logger.warn("Channel is closed as a consequence of a message timeout.");
+                        }
+                    }).await();
+                    logger.trace("Generating Timeout Exception for a request message.");
+                    dispatchedMessage.completeExceptionally(new RequestTimeoutException("Response for request message has timed out [" + dispatchedMessage.getTimeout() + "]ms in " + this.getClass().getSimpleName()));
                 }
             } catch (Exception ex) {
                 logger.error("Exception caught in timer -> " + ex.getMessage(), ex);

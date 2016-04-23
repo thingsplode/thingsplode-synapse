@@ -15,22 +15,30 @@
  */
 package org.thingsplode.synapse.proxy;
 
-import static org.thingsplode.synapse.proxy.BlockingProxyTest.defaultDispatcher;
+import java.net.URISyntaxException;
+import javax.net.ssl.SSLException;
+import org.thingsplode.synapse.AbstractTest;
+
 
 /**
  *
  * @author Csaba Tamas
  */
-public class ConnectingProxyTests {
+public class ConnectingProxyTests extends AbstractTest{
 
     public void testConnectionRetry() {
         try {
             EndpointProxy epx = EndpointProxy.create("http://localhost:8080/", Dispatcher.DispatcherPattern.BLOCKING_REQUEST).setRetryConnection(true).start();
-            defaultDispatcher = epx.acquireDispatcher();
-        } catch (Throwable th) {
+            dispatcher = epx.acquireDispatcher();
+        } catch (URISyntaxException | SSLException | InterruptedException th) {
             System.out.println("\n\n\nERROR while setting up: " + BlockingProxyTest.class.getSimpleName() + ". Dumping stack trace: ");
             th.printStackTrace();
         }
     }
+    
+    //todo: connecting disconnecting with idle
+    //todo: reconnect while connecting for the first time
+    //todo: reconnect when unilaterally disconnected
+    
 
 }

@@ -20,7 +20,6 @@ import com.acme.synapse.testdata.services.DummyMarkedEndpoint;
 import com.acme.synapse.testdata.services.EndpointTesterService;
 import io.netty.handler.logging.LogLevel;
 import java.net.InetSocketAddress;
-import org.apache.log4j.BasicConfigurator;
 import org.junit.Rule;
 import org.junit.rules.ExternalResource;
 import org.thingsplode.synapse.endpoint.Endpoint;
@@ -28,13 +27,14 @@ import org.thingsplode.synapse.endpoint.Endpoint.ConnectionProvider;
 import com.acme.synapse.testdata.services.RpcEndpointImpl;
 import com.acme.synapse.testdata.services.core.Address;
 import java.io.FileNotFoundException;
-import org.apache.log4j.Level;
+import java.net.URISyntaxException;
+import javax.net.ssl.SSLException;
+import org.junit.ClassRule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.thingsplode.synapse.core.domain.Event;
 import org.thingsplode.synapse.endpoint.AbstractEventSink;
 import org.thingsplode.synapse.proxy.BlockingProxyTest;
-import static org.thingsplode.synapse.proxy.BlockingProxyTest.defaultDispatcher;
 import org.thingsplode.synapse.proxy.Dispatcher;
 import org.thingsplode.synapse.proxy.EndpointProxy;
 
@@ -44,69 +44,87 @@ import org.thingsplode.synapse.proxy.EndpointProxy;
  */
 public abstract class AbstractTest {
 
-    private Logger logger = LoggerFactory.getLogger(this.getClass());
-    private Endpoint ep;
+    private static Logger logger = LoggerFactory.getLogger(AbstractTest.class);
+    protected static Dispatcher dispatcher;
+    @ClassRule
+    public static ExternalResource synapticEndpoint = new ExternalResource() {
+        private Endpoint ep;
 
-    @Rule
-    public ExternalResource resource;
+        @Override
+        protected void before() throws InterruptedException, FileNotFoundException {
+            System.out.println("\n\n BEFORE METHOD CALLED\n\n");
 
-    public AbstractTest() {
-        this.resource = new ExternalResource() {
-
-            private Endpoint ep;
-
-            @Override
-            protected void before() throws InterruptedException, FileNotFoundException {
-                System.out.println("\n\n BEFORE METHOD CALLED\n\n");
-
-                Thread t = new Thread(() -> {
-                    try {
-                        ep = Endpoint.create("test", new ConnectionProvider(new InetSocketAddress("0.0.0.0", 8080)))
-                                .logLevel(LogLevel.TRACE)
-                                .protocol(Endpoint.Protocol.JSON)
-                                .transportType(Endpoint.TransportType.HTTP_REST)
-                                .enableFileHandler(System.getProperty("java.io.tmpdir"))
-                                .enableSwagger("1.0", null)
-                                .enableIntrospection()
-                                .publish(new RpcEndpointImpl())
-                                .publish(new EndpointTesterService())
-                                .publish(new CrudTestEndpointService())
-                                .publish(new DummyMarkedEndpoint())
-                                .publish("/default/", new AbstractEventSink<Address>(Address.class) {
-                                    @Override
-                                    protected void eventReceived(Event<Address> event) {
-                                        System.out.println("Event Received: " + event.getBody());
-                                    }
-                                });
-                        ep.start();
-                    } catch (InterruptedException | FileNotFoundException ex) {
-                        logger.error("Error while initializing test: " + ex.getMessage(), ex);
-                    }
-                });
-                t.start();
-                Thread.sleep(4000);
+            Thread t = new Thread(() -> {
                 try {
-                    EndpointProxy epx = EndpointProxy.create("http://localhost:8080/", Dispatcher.DispatcherPattern.BLOCKING_REQUEST).setRetryConnection(true).start();
-                    defaultDispatcher = epx.acquireDispatcher();
-                    Thread.sleep(4000);
-                } catch (Throwable th) {
-                    System.out.println("\n\n\nERROR while setting up: " + BlockingProxyTest.class.getSimpleName() + ". Dumping stack trace: ");
-                    th.printStackTrace();
+                    ep = Endpoint.create("test", new ConnectionProvider(new InetSocketAddress("0.0.0.0", 8080)))
+                            .logLevel(LogLevel.TRACE)
+                            .protocol(Endpoint.Protocol.JSON)
+                            .transportType(Endpoint.TransportType.HTTP_REST)
+                            .enableFileHandler(System.getProperty("java.io.tmpdir"))
+                            .enableSwagger("1.0", null)
+                            .enableIntrospection()
+                            .publish(new RpcEndpointImpl())
+                            .publish(new EndpointTesterService())
+                            .publish(new CrudTestEndpointService())
+                            .publish(new DummyMarkedEndpoint())
+                            .publish("/default/", new AbstractEventSink<Address>(Address.class) {
+                                @Override
+                                protected void eventReceived(Event<Address> event) {
+                                    System.out.println("Event Received: " + event.getBody());
+                                }
+                            });
+                    ep.start();
+                } catch (InterruptedException | FileNotFoundException ex) {
+                    logger.error("Error while initializing test: " + ex.getMessage(), ex);
                 }
-            }
+            });
+            t.start();
+            Thread.sleep(4000);
+        }
 
-            @Override
-            protected void after() {
-                if (ep != null) {
-                    ep.stop();
-                }
+        @Override
+        protected void after() {
+            if (ep != null) {
+                ep.stop();
             }
-        };
-    }
+        }
 
-    public Endpoint getEndpoint() {
-        return ep;
-    }
+        public Endpoint getEp() {
+            return ep;
+        }
+    };
+
+    @ClassRule
+    public static ExternalResource clientProxy = new ExternalResource() {
+        
+        private EndpointProxy epx;
+
+        @Override
+        protected void before() {
+            try {
+                epx = EndpointProxy.create("http://localhost:8080/", Dispatcher.DispatcherPattern.BLOCKING_REQUEST).setRetryConnection(true).start();
+                dispatcher = epx.acquireDispatcher();
+                Thread.sleep(4000);
+            } catch (URISyntaxException | SSLException | InterruptedException th) {
+                System.out.println("\n\n\nERROR while setting up: " + BlockingProxyTest.class.getSimpleName() + ". Dumping stack trace: ");
+                th.printStackTrace();
+            }
+        }
+
+        @Override
+        protected void after() {
+            epx.stop();
+        }
+
+        public Dispatcher getDispatcher() {
+            return dispatcher;
+        }
+
+        public EndpointProxy getEpx() {
+            return epx;
+        }
+    };
+
 }
 
 //Todo: remove the content from bellow

@@ -30,7 +30,7 @@ import java.util.Optional;
 import org.thingsplode.synapse.core.domain.MediaType;
 import org.thingsplode.synapse.core.domain.Request;
 import org.thingsplode.synapse.core.exceptions.SerializationException;
-import org.thingsplode.synapse.serializers.SerializationService;
+import org.thingsplode.synapse.proxy.EndpointProxy;
 import org.thingsplode.synapse.util.Util;
 
 /**
@@ -38,8 +38,6 @@ import org.thingsplode.synapse.util.Util;
  * @author Csaba Tamas
  */
 public class RequestToHttpRequestEncoder extends MessageToMessageEncoder<Request> {
-
-    private final SerializationService serializationService = new SerializationService();
 
     @Override
     protected void encode(ChannelHandlerContext ctx, Request in, List<Object> out) throws Exception {
@@ -65,7 +63,7 @@ public class RequestToHttpRequestEncoder extends MessageToMessageEncoder<Request
         if (in.getBody() != null) {
             Optional<String> contentTypeOpt = in.getRequestHeaderProperty(HttpHeaderNames.ACCEPT.toString());
             MediaType mt = contentTypeOpt.isPresent() ? new MediaType(contentTypeOpt.get()) : new MediaType(MediaType.APPLICATION_JSON);
-            byte[] payload = serializationService.getSerializer(mt).marshall(in.getBody());
+            byte[] payload = EndpointProxy.SERIALIZATION_SERVICE.getSerializer(mt).marshall(in.getBody());
             out = new DefaultFullHttpRequest(HttpVersion.HTTP_1_0, m, in.getHeader().getUri().getPath(), Unpooled.wrappedBuffer(payload));
             out.headers().add(HttpHeaderNames.CONTENT_LENGTH, payload.length);
         } else {

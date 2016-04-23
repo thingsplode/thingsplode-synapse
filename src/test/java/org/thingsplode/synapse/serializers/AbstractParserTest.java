@@ -28,7 +28,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.thingsplode.synapse.core.domain.ParameterWrapper;
 import org.thingsplode.synapse.core.domain.Request;
-import org.thingsplode.synapse.core.domain.Request.RequestHeader.RequestMethod;
+import org.thingsplode.synapse.core.domain.RequestMethod;
+import org.thingsplode.synapse.core.domain.RequestMethod;
 import org.thingsplode.synapse.core.domain.Response;
 import org.thingsplode.synapse.core.domain.Uri;
 import org.thingsplode.synapse.core.exceptions.SerializationException;
@@ -102,12 +103,12 @@ public class AbstractParserTest {
     
     @Test
     public void testMarshallingRequestObject() throws UnsupportedEncodingException, SerializationException {
-        Request<Device> r = (Request<Device>) Request.create(UUID.randomUUID().toString(), new Uri("/1221221/devices/add"), Request.RequestHeader.RequestMethod.GET, Device.createTestDevice());
+        Request<Device> r = (Request<Device>) Request.create(UUID.randomUUID().toString(), new Uri("/1221221/devices/add"), RequestMethod.GET, Device.createTestDevice());
         String json = getSerializer().marshallToWireformat(r);
         System.out.println(json);
         Request ur = getSerializer().unMarshall(Request.class, json);
         Assert.assertNotNull(ur);
-        Assert.assertTrue(ur.getHeader().getMethod() == Request.RequestHeader.RequestMethod.GET);
+        Assert.assertTrue(ur.getHeader().getMethod() == RequestMethod.GET);
         Assert.assertTrue(ur.getHeader().getUri().getPath().equalsIgnoreCase("/1221221/devices/add"));
     }
     

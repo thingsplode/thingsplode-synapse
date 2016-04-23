@@ -17,9 +17,9 @@ package org.thingsplode.synapse.proxy.handlers;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.util.internal.logging.InternalLogger;
-import io.netty.util.internal.logging.InternalLoggerFactory;
-import org.thingsplode.synapse.proxy.DispatcherFutureHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.thingsplode.synapse.proxy.DispatchedFutureHandler;
 
 /**
  *
@@ -27,10 +27,10 @@ import org.thingsplode.synapse.proxy.DispatcherFutureHandler;
  */
 public class InboundExceptionHandler extends ChannelInboundHandlerAdapter { //extends ChannelDuplexHandler {
 
-    private final DispatcherFutureHandler dfh;
-    private static final InternalLogger logger = InternalLoggerFactory.getInstance(InboundExceptionHandler.class);
+    private final DispatchedFutureHandler dfh;
+    private static final Logger logger = LoggerFactory.getLogger(InboundExceptionHandler.class);
 
-    public InboundExceptionHandler(DispatcherFutureHandler dispatcherFutureHandler) {
+    public InboundExceptionHandler(DispatchedFutureHandler dispatcherFutureHandler) {
         this.dfh = dispatcherFutureHandler;
     }
 
@@ -38,7 +38,7 @@ public class InboundExceptionHandler extends ChannelInboundHandlerAdapter { //ex
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         // Uncaught exceptions from inbound handlers will propagate up to this handler 
         logger.error("Exception caught on inbound pipe: " + cause.getMessage(), cause);
-        dfh.removeEntry(null).completeExceptionally(cause);
+        dfh.responseReceived(null).completeExceptionally(cause);
     }
 
 //    @Override

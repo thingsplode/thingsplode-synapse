@@ -50,7 +50,7 @@ public class HttpResponseIntrospector extends SimpleChannelInboundHandler<HttpRe
             }
             logger.debug("Message received @Proxy [" + msg.getClass().getName() + "]: \n\n"
                     + "Status: " + msg.status() + "\n"
-                    + hb.toString() + "\n" + "Payload: " + (!Util.isEmpty(payloadAsSring) ? payloadAsSring + "\n" : "EMPTY\n"));
+                    + hb.toString() + "\n" + "Payload: [" + (!Util.isEmpty(payloadAsSring) ? payloadAsSring + "]\n" : "EMPTY\n"));
         }
         ctx.fireChannelRead(msg);
     }

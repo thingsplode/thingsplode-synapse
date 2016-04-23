@@ -25,7 +25,6 @@ import org.thingsplode.synapse.core.exceptions.MethodNotFoundException;
  *
  * @author Csaba Tamas
  */
-
 public class RpcEndpointImpl implements RpcEndpoint {
 
     @Override
@@ -38,9 +37,8 @@ public class RpcEndpointImpl implements RpcEndpoint {
         }
     }
 
-    
     @Override
-    public void pingWithTimeout(int timeout){
+    public void pingWithTimeout(int timeout) {
         try {
             Thread.sleep(timeout);
             System.out.println("ping executed");
@@ -48,14 +46,19 @@ public class RpcEndpointImpl implements RpcEndpoint {
             Logger.getLogger(RpcEndpointImpl.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+
     @Override
     public String echo(String message) {
         return message;
     }
-   
+
+    @Override
+    public String echoWithTimeout(long timeout, String id) throws InterruptedException {
+        Thread.sleep(timeout);
+        return id;
+    }
+
     //todo: make and test required false tests
-    
     @Override
     public Serializable getInfo() throws MethodNotFoundException {
         return new Filter("some query", 10, 100);

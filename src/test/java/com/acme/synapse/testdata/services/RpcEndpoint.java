@@ -27,11 +27,15 @@ import org.thingsplode.synapse.core.exceptions.MethodNotFoundException;
 public interface RpcEndpoint extends SynapseEndpointServiceMarker {
 
     public void ping();
+
     public void pingWithTimeout(int timeout);
-            
+
+    public String echoWithTimeout(long timeout, String id) throws InterruptedException;
+
     public String echo(String message);
 
     public Serializable getInfo() throws MethodNotFoundException;
+
     public Serializable filter(Filter filter);
 
 }

@@ -15,10 +15,12 @@
  */
 package org.thingsplode.synapse.proxy;
 
+import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.thingsplode.synapse.core.domain.AbstractMessage;
@@ -30,18 +32,25 @@ import org.thingsplode.synapse.core.domain.Response;
  * @author Csaba Tamas
  */
 public class Dispatcher {
-
+    
     private final Logger logger = LoggerFactory.getLogger(Dispatcher.class);
-    private final Channel ch;
-    private final DispatcherFutureHandler dispatcherFutureHandler;
+    private Channel channel;
+    private final DispatchedFutureHandler dispatchedFutureHandler;
     private final DispatcherPattern pattern;
-
-    public Dispatcher(Channel ch, DispatcherFutureHandler dispatcherFutureHandler) {
-        this.ch = ch;
-        this.dispatcherFutureHandler = dispatcherFutureHandler;
+    private boolean retryConnection = false;
+    private final AtomicInteger reconnectCounter = new AtomicInteger(0);
+    private boolean destroying = false;
+    
+    public Dispatcher(boolean retryConnection, DispatchedFutureHandler dispatchedFutureHandler) {
+        this(dispatchedFutureHandler);
+        this.retryConnection = retryConnection;
+    }
+    
+    public Dispatcher(DispatchedFutureHandler dispatchedFutureHandler) {
+        this.dispatchedFutureHandler = dispatchedFutureHandler;
         this.pattern = DispatcherPattern.CORRELATED_ASYNC;
     }
-
+    
     public enum DispatcherPattern {
 
         /**
@@ -82,40 +91,114 @@ public class Dispatcher {
      * @return
      */
     public ChannelFuture broadcast(Request event) {
-        return ch.writeAndFlush(event);
+        return channel.writeAndFlush(event);
     }
-
-    public DispatcherFuture<Request, Response> dispatch(Request request, long requestTimeout) throws InterruptedException {
-        request.getHeader().setMsgId(UUID.randomUUID().toString());
-        DispatcherFuture<Request, Response> dispatcherFuture = new DispatcherFuture<>(request, requestTimeout);
-        if (pattern != null && (pattern == DispatcherPattern.CORRELATED_ASYNC || pattern == DispatcherPattern.BLOCKING_REQUEST)) {
-            dispatcherFutureHandler.register(dispatcherFuture);
+    
+    public DispatchedFuture<Request, Response> dispatch(Request request, long requestTimeout) throws InterruptedException {
+        if (!channel.isActive()) {
+            throw new IllegalStateException("The channel is not open, please make sure that is activated before trying to send messages.");
         }
-
-        ChannelFuture cf = ch.writeAndFlush(request);
+        request.getHeader().setMsgId(UUID.randomUUID().toString());
+        DispatchedFuture<Request, Response> dispatcherFuture = new DispatchedFuture<>(request, channel, requestTimeout);
+        if (pattern != null && (pattern == DispatcherPattern.CORRELATED_ASYNC || pattern == DispatcherPattern.BLOCKING_REQUEST)) {
+            dispatchedFutureHandler.beforeDispatch(dispatcherFuture);
+        }
+        
+        ChannelFuture cf = channel.writeAndFlush(request);
         cf.addListener((ChannelFutureListener) new ChannelFutureListener() {
             @Override
             public void operationComplete(ChannelFuture future) throws Exception {
                 if (!future.isSuccess()) {
                     //the message could not be sent
                     //todo: build a retry mechanism?
-                    dispatcherFutureHandler.removeEntry((String) request.getRequestHeaderProperty(AbstractMessage.PROP_MESSAGE_ID).get());
+
+                    dispatchedFutureHandler.responseReceived((String) (request.getRequestHeaderProperty(AbstractMessage.PROP_MESSAGE_ID).orElse(null)));
                     dispatcherFuture.completeExceptionally(future.cause());
                     future.channel().close();
                 } else if (logger.isDebugEnabled()) {
-                    logger.debug("Request message is succsfully dispatched: " + request.getHeader().getMsgId());
+                    logger.debug("Request message is succesfully dispatched: " + request.getHeader().getMsgId());
                 }
             }
         });
         return dispatcherFuture;
     }
-
+    
     public <T> T createStub(String servicePath, Class<T> aClass) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
-
+    
     void destroy() throws InterruptedException {
         // Wait for the server to close the connection.
-        ch.closeFuture().sync();
+        logger.debug("Destroying " + Dispatcher.class.getSimpleName());
+        this.setDestroying(true);
+        channel.close().sync();
+    }
+    
+    public Channel getChannel() {
+        return channel;
+    }
+    
+    public boolean isDestroying() {
+        return destroying;
+    }
+    
+    public void setDestroying(boolean destroying) {
+        this.destroying = destroying;
+    }
+    
+    protected void connect(Bootstrap b, String host, int port) throws InterruptedException {
+        try {
+            ChannelFuture cf = b.connect(host, port).addListener((ChannelFutureListener) (ChannelFuture future) -> {
+                if (!future.isSuccess()) {
+                    logger.warn("Connecting to the channel was not successfull.");
+                } else {
+                    logger.debug("Channel connected @ EndpointProxy");
+                }
+            }).sync();
+            
+            while (!cf.isSuccess()) {
+                logger.warn("Connection attempt was not successfull / retrying...");
+                cf = handleReconnect(b, host, port);
+                if (cf == null) {
+                    break;
+                }
+            }
+            
+            this.channel = cf.channel();
+            if (channel == null) {
+                throw new InterruptedException("Cannot connect.");
+            }
+            channel.closeFuture().addListener((ChannelFutureListener) (ChannelFuture future) -> {
+                if (future.isSuccess()) {
+                    if (!this.destroying) {
+                        logger.info("Channel unexpectedly closed. Trying to reconnect the proxy...");
+                        Thread.dumpStack();
+                        this.connect(b, host, port);
+                    }
+                }
+            });
+        } catch (Exception ex) {
+            logger.warn("Could not connect: " + ex.getMessage(), ex);
+            ChannelFuture cf2 = handleReconnect(b, host, port);
+            if (cf2 != null) {
+                this.channel = cf2.channel();
+            } else {
+                throw ex;
+            }
+        }
+    }
+    
+    private ChannelFuture handleReconnect(Bootstrap b, String host, int port) throws InterruptedException {
+        if (retryConnection) {
+            int currentReconnectCounter = reconnectCounter.incrementAndGet();
+            if (currentReconnectCounter > 5) {
+                //increasing the break between reconnects up to 5 seconds. Afterwards retrying every 5 second;
+                currentReconnectCounter = 5;
+            }
+            Thread.sleep(currentReconnectCounter);
+            return b.connect(host, port).sync();
+        } else {
+            return null;
+        }
     }
 }

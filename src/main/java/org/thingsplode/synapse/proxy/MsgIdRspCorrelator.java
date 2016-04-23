@@ -28,11 +28,12 @@ import org.thingsplode.synapse.util.Util;
  *
  * @author Csaba Tamas
  */
-public class MsgIdRspCorrelator extends DispatcherFutureHandler {
+public class MsgIdRspCorrelator extends SchedulingDispatchedFutureHandler {
 
     private final Logger logger = LoggerFactory.getLogger(MsgIdRspCorrelator.class);
+    private long defaultResponseTimeout = finalDefaultTimeout;
 
-    private final ConcurrentHashMap<String, DispatcherFuture<Request, Response>> requestMsgRegistry;//msg id/msg correlation entry map
+    private final ConcurrentHashMap<String, DispatchedFuture<Request, Response>> requestMsgRegistry;//msg id/msg correlation entry map
 
     public MsgIdRspCorrelator() {
         super();
@@ -49,7 +50,7 @@ public class MsgIdRspCorrelator extends DispatcherFutureHandler {
      * @see DispatchListener
      */
     @Override
-    public void register(DispatcherFuture<Request, Response> msgEntry) {
+    public void beforeDispatch(DispatchedFuture<Request, Response> msgEntry) {
         if (msgEntry == null) {
             logger.warn(String.format("Did not registered Message Entry because is NULL"));
             return;
@@ -65,7 +66,7 @@ public class MsgIdRspCorrelator extends DispatcherFutureHandler {
 
         if (msgId != null) {
             msgEntry.setRequestFiredTime(System.currentTimeMillis());
-            DispatcherFuture oldMsgEntry = requestMsgRegistry.put(msgId, msgEntry);
+            DispatchedFuture oldMsgEntry = requestMsgRegistry.put(msgId, msgEntry);
             if (oldMsgEntry != null) {
                 logger.warn(String.format("Duplicated registration for the same message with Message ID [%s] .\r\nOldMessage: %s\r\nNewMessage: %s", msgId, oldMsgEntry.toString(), msgEntry.toString()));
             }
@@ -88,9 +89,9 @@ public class MsgIdRspCorrelator extends DispatcherFutureHandler {
      * @see ReceiverListener
      */
     @Override
-    public DispatcherFuture<Request, Response> removeEntry(String msgId) {
+    public DispatchedFuture<Request, Response> responseReceived(String msgId) {
         if (msgId != null) {
-            DispatcherFuture deleted = requestMsgRegistry.remove(msgId);
+            DispatchedFuture deleted = requestMsgRegistry.remove(msgId);
             if (deleted == null) {
                 logger.warn(String.format("Removal of %s with message ID [%s] failed, because it was not inlcuded in the reponse correlation registry anymore.", MSG_ENTRY_NAME, msgId));
             }
@@ -121,8 +122,14 @@ public class MsgIdRspCorrelator extends DispatcherFutureHandler {
     }
 
     @Override
-    TimerTask getTimerTask() {
+    public TimerTask getTimerTask() {
+
         return new SessionTimerTask();
+    }
+
+    @Override
+    public void setDefaultTimeout(Long responseTimeout) {
+        this.defaultResponseTimeout = responseTimeout;
     }
 
     class SessionTimerTask extends TimerTask {
@@ -135,15 +142,15 @@ public class MsgIdRspCorrelator extends DispatcherFutureHandler {
                 }
                 Long now = System.currentTimeMillis();
                 requestMsgRegistry.keySet().stream().forEach((msgID) -> {
-                    DispatcherFuture msgEntry = requestMsgRegistry.get(msgID);
-                    long msgTimeout = msgEntry.getTimeout() != -1 ? msgEntry.getTimeout() : defaultTimeout;
+                    DispatchedFuture msgEntry = requestMsgRegistry.get(msgID);
+                    long msgTimeout = msgEntry.getTimeout() != -1 ? msgEntry.getTimeout() : defaultResponseTimeout;
                     long diffInSec = now - msgEntry.getRequestFiredTime();
                     if (msgEntry.getTimeout() != 0 // 0 means that the timeout is ignored (infinite timeout)
                             && diffInSec > msgTimeout) {
                         if (logger.isTraceEnabled()) {
                             logger.trace(String.format("Generating timeout for a %s with message ID [%s] because [now - fires = %s > %s]", MSG_ENTRY_NAME, msgID, diffInSec, msgTimeout));
                         }
-                        DispatcherFuture msgWrapper = removeEntry(msgID);
+                        DispatchedFuture msgWrapper = responseReceived(msgID);
                         msgWrapper.completeExceptionally(new RequestTimeoutException("Waiting for message has timed out [" + msgTimeout + "]ms in " + MsgIdRspCorrelator.class.getSimpleName()));
                     }
                 });
