@@ -39,7 +39,7 @@ import org.junit.Assert;
 import org.thingsplode.synapse.core.domain.Uri;
 import org.thingsplode.synapse.core.domain.ParameterWrapper;
 import org.thingsplode.synapse.core.domain.Request;
-import org.thingsplode.synapse.core.domain.Request.RequestHeader.RequestMethod;
+import org.thingsplode.synapse.core.domain.RequestMethod;
 import org.thingsplode.synapse.core.domain.Response;
 import org.thingsplode.synapse.core.exceptions.ExecutionException;
 import org.thingsplode.synapse.core.exceptions.MarshallerException;
