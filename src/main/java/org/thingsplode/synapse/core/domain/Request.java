@@ -17,12 +17,10 @@ package org.thingsplode.synapse.core.domain;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.netty.handler.codec.http.HttpMethod;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.util.Optional;
 import org.thingsplode.synapse.core.domain.Request.RequestHeader;
-import org.thingsplode.synapse.core.domain.Request.RequestHeader.RequestMethod;
 
 /**
  *
@@ -60,6 +58,10 @@ public class Request<T extends Serializable> extends AbstractMessage<T> {
 
     public static Request<?> create(String uri, RequestMethod method) throws UnsupportedEncodingException {
         return new Request(new RequestHeader(new Uri(uri), method));
+    }
+
+    public static Request<?> create(String uri, RequestMethod method, Serializable body) throws UnsupportedEncodingException {
+        return new Request(new RequestHeader(new Uri(uri), method), body);
     }
 
     public RequestHeader getHeader() {
@@ -110,39 +112,5 @@ public class Request<T extends Serializable> extends AbstractMessage<T> {
         public String toString() {
             return "RequestHeader{" + "uri=" + uri + ", method=" + method + '}';
         }
-        
-        public enum RequestMethod {
-
-            /**
-             * The GET method means retrieve whatever information (in the form
-             * of an entity) is identified by the Request-URI. If the
-             * Request-URI refers to a data-producing process, it is the
-             * produced data which shall be returned as the entity in the
-             * response and not the source text of the process, unless that text
-             * happens to be the output of the process.
-             */
-            GET,
-            /**
-             * The POST method is used to request that the origin server accept
-             * the entity enclosed in the request as a new subordinate of the
-             * resource identified by the Request-URI in the Request-Line.
-             */
-            POST,
-            /**
-             * The PUT method requests that the enclosed entity be stored under
-             * the supplied Request-URI.
-             */
-            PUT,
-            /**
-             * The DELETE method requests that the origin server delete the
-             * resource identified by the Request-URI.
-             */
-            DELETE;
-
-            public static RequestMethod fromHttpMethod(HttpMethod httpMethod) {
-                return RequestMethod.valueOf(httpMethod.name());
-            }
-        }
-
     }
 }

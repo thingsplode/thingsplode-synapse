@@ -23,6 +23,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import org.thingsplode.synapse.serializers.jackson.adapters.ParameterWrapperDeserializer;
 
 /**
@@ -46,6 +47,10 @@ public class ParameterWrapper implements Serializable {
 
     public List<Parameter> getParams() {
         return Collections.synchronizedList(params);
+    }
+
+    public Optional<Parameter> getParameterByName(String name) {
+        return params.stream().filter((Parameter p) -> p.paramid.equalsIgnoreCase(name)).findFirst();
     }
 
     public static class Parameter {
