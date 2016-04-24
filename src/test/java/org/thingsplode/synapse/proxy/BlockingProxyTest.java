@@ -150,6 +150,7 @@ public class BlockingProxyTest extends AbstractTest {
         }
         System.out.println("-------- EOF SEQUENTIAL BLOCKING REQUEST EXECUTION TEST --------\n\n");
     }
+    
 
     //todo: testing already bound exception
     //todo: broadcast test: //defaultDispatcher.broadcast(Request.create("/com/acme/synapse/testdata/services/RpcEndpointImpl/ping", Request.RequestHeader.RequestMethod.GET));

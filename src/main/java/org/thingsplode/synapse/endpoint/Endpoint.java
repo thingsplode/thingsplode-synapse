@@ -52,7 +52,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.thingsplode.synapse.endpoint.handlers.HttpFileHandler;
+import org.thingsplode.synapse.endpoint.handlers.FileRequestHandler;
 import org.thingsplode.synapse.endpoint.handlers.HttpRequestIntrospector;
 import org.thingsplode.synapse.endpoint.handlers.HttpRequestHandler;
 import org.thingsplode.synapse.endpoint.handlers.HttpResponseHandler;
@@ -71,6 +71,8 @@ public class Endpoint {
     public static final String ENDPOINT_URL_PATERN = "/services|/services/";
     public static final String HTTP_ENCODER = "http_encoder";
     public static final String HTTP_DECODER = "http_decoder";
+    public static final String HTTP_AGGREGATOR = "http_aggregator";
+    public static final String HTTP_REQUEST_HANDLER = "http_request_handler";
     public static final String REQUEST_HANDLER = "request_handler";
     public static final String ALL_CHANNEL_GROUP_NAME = "all-open-channels";
     public static final String HTTP_FILE_HANDLER = "http_file_handler";
@@ -86,7 +88,7 @@ public class Endpoint {
     private TransportType transportType = TransportType.DOMAIN_SOCKET;
     private Protocol protocol = Protocol.JSON;
     private ComponentLifecycle lifecycle = ComponentLifecycle.UNITIALIZED;
-    private HttpFileHandler fileHandler = null;
+    private FileRequestHandler fileHandler = null;
     private EventExecutorGroup evtExecutorGroup = new DefaultEventExecutorGroup(10);
     private ServiceRegistry serviceRegistry = new ServiceRegistry();
     private EndpointApiGenerator apiGenerator = null;
@@ -127,17 +129,17 @@ public class Endpoint {
                                 ChannelPipeline p = ch.pipeline();
                                 p.addLast(HTTP_ENCODER, new HttpResponseEncoder());
                                 p.addLast(HTTP_DECODER, new HttpRequestDecoder());
-                                p.addLast("aggregator", new HttpObjectAggregator(1048576));
+                                p.addLast(HTTP_AGGREGATOR, new HttpObjectAggregator(1048576));
                                 if (introspection) {
                                     p.addLast(new HttpResponseIntrospector());
                                     p.addLast(new HttpRequestIntrospector());
                                 }
-                                p.addLast(evtExecutorGroup, "http_request_handler", new HttpRequestHandler(endpointId, serviceRegistry));
+                                p.addLast(HTTP_REQUEST_HANDLER, new HttpRequestHandler(endpointId));
+                                p.addLast(REQUEST_HANDLER, new RequestHandler(serviceRegistry));
                                 if (fileHandler != null) {
                                     p.addLast(evtExecutorGroup, HTTP_FILE_HANDLER, fileHandler);
                                 }
                                 p.addLast(HTTP_RESPONSE_HANDLER, new HttpResponseHandler());
-                                p.addLast(evtExecutorGroup, "handler", new RequestHandler());
                             }
                         });
             } else {
@@ -318,7 +320,7 @@ public class Endpoint {
     public Endpoint enableSwagger(String version, String hostname) throws FileNotFoundException {
 
         if (fileHandler == null) {
-            fileHandler = new HttpFileHandler();
+            fileHandler = new FileRequestHandler();
         }
         fileHandler.addRedirect(Pattern.compile(ENDPOINT_URL_PATERN), "/services/index.html?jurl=http://{Host}/services/json");
         if (hostname == null) {
@@ -339,7 +341,7 @@ public class Endpoint {
 
     public Endpoint enableFileHandler(String webroot) throws FileNotFoundException {
         if (fileHandler == null) {
-            fileHandler = new HttpFileHandler(webroot);
+            fileHandler = new FileRequestHandler(webroot);
         } else {
             fileHandler.setWebroot(webroot);
         }

@@ -67,7 +67,8 @@ import org.thingsplode.synapse.util.Util;
 //todo: concurrent large file support
 //todo: file upload
 @Sharable
-public final class HttpFileHandler extends SimpleChannelInboundHandler<FileRequest> {
+public final class FileRequestHandler extends SimpleChannelInboundHandler<FileRequest> {
+    private static final Logger logger = LoggerFactory.getLogger(FileRequestHandler.class);
     private final Pattern urlParamPattern = Pattern.compile("\\{(.*?)\\}", Pattern.CASE_INSENSITIVE);
     private static final String HTTP_DATE_FORMAT = "EEE, dd MMM yyyy HH:mm:ss zzz";
     private static final String HTTP_DATE_GMT_TIMEZONE = "GMT";
@@ -75,11 +76,10 @@ public final class HttpFileHandler extends SimpleChannelInboundHandler<FileReque
     private static final Pattern INSECURE_URI_PATTERN = Pattern.compile(".*[<>&\"].*");
     private static final String MIME_TYPES_FILE = "/META-INF/server.mime.types";
     private static MimetypesFileTypeMap MIME_TYPES_MAP;
-    private static final Logger logger = LoggerFactory.getLogger(HttpFileHandler.class);
     private File webroot = null;
     private final HashMap<Pattern,String> redirects = new HashMap<>();
 
-    public HttpFileHandler(String webroot) throws FileNotFoundException {
+    public FileRequestHandler(String webroot) throws FileNotFoundException {
         this();
         setWebroot(webroot);
     }
@@ -96,7 +96,7 @@ public final class HttpFileHandler extends SimpleChannelInboundHandler<FileReque
 
 
     
-    public HttpFileHandler() throws FileNotFoundException {
+    public FileRequestHandler() throws FileNotFoundException {
         synchronized (this) {
             if (MIME_TYPES_MAP == null) {
                 InputStream is = this.getClass().getResourceAsStream(MIME_TYPES_FILE);

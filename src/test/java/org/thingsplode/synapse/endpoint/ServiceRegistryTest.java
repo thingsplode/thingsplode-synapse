@@ -95,8 +95,8 @@ public class ServiceRegistryTest {
         Optional<ServiceRegistry.MethodContext> optM2 = registry.getMethodContext(new Request.RequestHeader(UUID.randomUUID().toString(), new Uri("/1221221/devices/add"), RequestMethod.PUT));
         Assert.assertTrue(optM2.isPresent());
         ///----------------------------
-        assertResponse(registry.invokeWithJavaObject(new Request.RequestHeader(null, new Uri("/1221221/devices/add"), RequestMethod.POST), null));
-        assertResponse(registry.invokeWithJavaObject(new Request.RequestHeader(null, new Uri("/1221221/devices/add"), RequestMethod.PUT), null));
+        assertResponse(registry.invokeWithObject(new Request.RequestHeader(null, new Uri("/1221221/devices/add"), RequestMethod.POST), null));
+        assertResponse(registry.invokeWithObject(new Request.RequestHeader(null, new Uri("/1221221/devices/add"), RequestMethod.PUT), null));
     }
     
     private void assertResponse(Response<Device> rsp) {
@@ -118,10 +118,10 @@ public class ServiceRegistryTest {
         Assert.assertTrue(opt1.isPresent());
         Assert.assertEquals("/test/{user}/messages", opt1.get().rootCtx);
         ///----------------------------
-        Response<Integer> rsp = registry.invokeWithJavaObject(new Request.RequestHeader(null, new Uri("/test/user.name/messages/calculate?a=2&b=3"), RequestMethod.GET), null);
+        Response<Integer> rsp = registry.invokeWithObject(new Request.RequestHeader(null, new Uri("/test/user.name/messages/calculate?a=2&b=3"), RequestMethod.GET), null);
         Assert.assertTrue(rsp.getBody() == 5);
 
-        Response<Integer> rsp2 = registry.invokeWithJavaObject(new Request.RequestHeader(null, new Uri("/test/user.name/messages/add?a=1231434&b=212112"), RequestMethod.GET), null);
+        Response<Integer> rsp2 = registry.invokeWithObject(new Request.RequestHeader(null, new Uri("/test/user.name/messages/add?a=1231434&b=212112"), RequestMethod.GET), null);
         Assert.assertTrue(rsp2.getBody() == 1443546);
     }
 
@@ -134,7 +134,7 @@ public class ServiceRegistryTest {
 
         final String country = "some country";
         final String street = "some street";
-        Response<Address> rsp1 = registry.invokeWithJavaObject(new Request.RequestHeader(null, new Uri("/test/user.name/messages/check_address"), RequestMethod.GET), new Address(street, country, 4040));
+        Response<Address> rsp1 = registry.invokeWithObject(new Request.RequestHeader(null, new Uri("/test/user.name/messages/check_address"), RequestMethod.GET), new Address(street, country, 4040));
         Assert.assertTrue(rsp1.getBody().getCountry().equalsIgnoreCase(country));
         Assert.assertTrue(rsp1.getBody().getStreet().equalsIgnoreCase(street));
         Assert.assertTrue(rsp1.getBody().getPostalCode() == 5050);
@@ -143,7 +143,7 @@ public class ServiceRegistryTest {
         Assert.assertTrue(opt2.isPresent());
         Assert.assertEquals("/{userid}/devices", opt2.get().rootCtx);
 
-        Response<Device> rsp2 = registry.invokeWithJavaObject(new Request.RequestHeader(null, new Uri("/user.name/devices/getById"), RequestMethod.GET), new Long(112));
+        Response<Device> rsp2 = registry.invokeWithObject(new Request.RequestHeader(null, new Uri("/user.name/devices/getById"), RequestMethod.GET), new Long(112));
         Assert.assertTrue(rsp2.getBody().getId() == 112);
 
     }
@@ -151,10 +151,10 @@ public class ServiceRegistryTest {
     //@Test()
     public void testMissingParams() throws MethodNotFoundException, ExecutionException, MissingParameterException, UnsupportedEncodingException, SerializationException {
         //todo: reenable this
-        Response<Integer> rsp1 = registry.invokeWithJavaObject(new Request.RequestHeader(null, new Uri("/test/user.name/messages/add"), RequestMethod.GET), null);
-        Response<Integer> rsp2 = registry.invokeWithJavaObject(new Request.RequestHeader(null, new Uri("/test/user.name/messages/add?a=1231434"), RequestMethod.GET), null);
-        Response<Integer> rsp3 = registry.invokeWithJavaObject(new Request.RequestHeader(null, new Uri("/test/user.name/messages/add?a=1231434&b="), RequestMethod.GET), null);
-        Response<Integer> rsp4 = registry.invokeWithJavaObject(new Request.RequestHeader(null, new Uri("/test/user.name/messages/add?a=1231434&b=null"), RequestMethod.GET), null);
+        Response<Integer> rsp1 = registry.invokeWithObject(new Request.RequestHeader(null, new Uri("/test/user.name/messages/add"), RequestMethod.GET), null);
+        Response<Integer> rsp2 = registry.invokeWithObject(new Request.RequestHeader(null, new Uri("/test/user.name/messages/add?a=1231434"), RequestMethod.GET), null);
+        Response<Integer> rsp3 = registry.invokeWithObject(new Request.RequestHeader(null, new Uri("/test/user.name/messages/add?a=1231434&b="), RequestMethod.GET), null);
+        Response<Integer> rsp4 = registry.invokeWithObject(new Request.RequestHeader(null, new Uri("/test/user.name/messages/add?a=1231434&b=null"), RequestMethod.GET), null);
         Assert.assertTrue(rsp1.getBody() == 1443546);
     }
 
@@ -167,7 +167,7 @@ public class ServiceRegistryTest {
 
         //(?!/test/)([.a-z0-9]+)(?=/messages/clear)
         //([A-Za-z0-9._@]+)$
-        Response<Integer> rsp = registry.invokeWithJavaObject(new Request.RequestHeader(null, new Uri("/test/user.name/messages/clear"), RequestMethod.GET), null);
+        Response<Integer> rsp = registry.invokeWithObject(new Request.RequestHeader(null, new Uri("/test/user.name/messages/clear"), RequestMethod.GET), null);
         Assert.assertTrue(rsp.getHeader().getResponseCode() == HttpResponseStatus.OK);
         Assert.assertTrue(rsp.getBody() == null);
     }
@@ -177,13 +177,13 @@ public class ServiceRegistryTest {
         Optional<ServiceRegistry.MethodContext> optGbdi = registry.getMethodContext(new Request.RequestHeader(null, new Uri("/1212212/devices/2323434"), RequestMethod.GET));
         Assert.assertTrue(optGbdi.isPresent());
         //(?!/)([.a-z0-9]+)(?=/devices/)
-        Response<Device> rsp = registry.invokeWithJavaObject(new Request.RequestHeader(null, new Uri("/1212212/devices/2323434"), RequestMethod.GET), null);
+        Response<Device> rsp = registry.invokeWithObject(new Request.RequestHeader(null, new Uri("/1212212/devices/2323434"), RequestMethod.GET), null);
         Assert.assertTrue(rsp.getHeader().getResponseCode() == HttpResponseStatus.OK);
         Assert.assertTrue(rsp.getBody().getId() == 2323434l);
 
         Optional<ServiceRegistry.MethodContext> optGbdi1 = registry.getMethodContext(new Request.RequestHeader(null, new Uri("/1212212/devices/switches/1998"), RequestMethod.GET));
         Assert.assertTrue(optGbdi1.isPresent());
-        Response<Device> rsp1 = registry.invokeWithJavaObject(new Request.RequestHeader(null, new Uri("/1212212/devices/switches/1998"), RequestMethod.GET), null);
+        Response<Device> rsp1 = registry.invokeWithObject(new Request.RequestHeader(null, new Uri("/1212212/devices/switches/1998"), RequestMethod.GET), null);
         Optional<ServiceRegistry.MethodContext> opt1 = registry.getMethodContext(new Request.RequestHeader(null, new Uri("/test/user.name/messages/add?a=1231434&b=212112"), RequestMethod.GET));
         Assert.assertTrue(rsp1.getHeader().getResponseCode() == HttpResponseStatus.OK);
         Assert.assertTrue(rsp1.getBody().getId() == 1998);
@@ -193,7 +193,7 @@ public class ServiceRegistryTest {
     public void testPathVariableResolution3() throws UnsupportedEncodingException, MethodNotFoundException, ExecutionException, MissingParameterException, SerializationException {
         Optional<ServiceRegistry.MethodContext> optGbdi2 = registry.getMethodContext(new Request.RequestHeader(null, new Uri("/1212212/devices/getById/1122321"), RequestMethod.GET));
         Assert.assertTrue(optGbdi2.isPresent());
-        Response<Device> rsp = registry.invokeWithJavaObject(new Request.RequestHeader(null, new Uri("/1212212/devices/getById/1122321"), RequestMethod.GET), null);
+        Response<Device> rsp = registry.invokeWithObject(new Request.RequestHeader(null, new Uri("/1212212/devices/getById/1122321"), RequestMethod.GET), null);
         Assert.assertTrue(rsp.getHeader().getResponseCode() == HttpResponseStatus.OK);
         Assert.assertTrue(rsp.getBody().getId() == 1122321l);
     }
@@ -204,7 +204,7 @@ public class ServiceRegistryTest {
         Optional<ServiceRegistry.MethodContext> opt3 = registry.getMethodContext(new Request.RequestHeader(null, new Uri("/test/user/name/messages/clear"), RequestMethod.GET));
         Assert.assertTrue(!opt3.isPresent());
 
-        Response rspX = registry.invokeWithJavaObject(new Request.RequestHeader(null, new Uri("/test/user/name/messages/clear"), RequestMethod.GET), null);
+        Response rspX = registry.invokeWithObject(new Request.RequestHeader(null, new Uri("/test/user/name/messages/clear"), RequestMethod.GET), null);
         Optional<ServiceRegistry.MethodContext> opt1 = registry.getMethodContext(new Request.RequestHeader(null, new Uri("/test/user.name/messages/add?a=1231434&b=212112"), RequestMethod.GET));
         Assert.assertTrue(rspX.getHeader().getResponseCode() == HttpResponseStatus.OK);
         Assert.assertTrue(rspX.getBody() == null);
@@ -216,14 +216,14 @@ public class ServiceRegistryTest {
         Optional<ServiceRegistry.MethodContext> elOpt1 = registry.getMethodContext(new Request.RequestHeader(null, new Uri("/222/devices/owner"), RequestMethod.GET));
         Assert.assertTrue(elOpt1.isPresent());
 
-        Response<Device> rsp1 = registry.invokeWithJavaObject(new Request.RequestHeader(null, new Uri("/222/devices/owner"), RequestMethod.GET), null);
+        Response<Device> rsp1 = registry.invokeWithObject(new Request.RequestHeader(null, new Uri("/222/devices/owner"), RequestMethod.GET), null);
         Assert.assertTrue(rsp1.getHeader().getResponseCode() == HttpResponseStatus.OK);
         Assert.assertTrue(rsp1.getBody().getLogicalName().equalsIgnoreCase("owner"));
 
         Optional<ServiceRegistry.MethodContext> elOpt2 = registry.getMethodContext(new Request.RequestHeader(null, new Uri("/222/devices/owner?arg0=222"), RequestMethod.POST));
         Assert.assertTrue("Method context should be found", elOpt2.isPresent());
 
-        Response<Device> rsp2 = registry.invokeWithJavaObject(new Request.RequestHeader(null, new Uri("/222/devices/owner?arg0=222"), RequestMethod.POST), null);
+        Response<Device> rsp2 = registry.invokeWithObject(new Request.RequestHeader(null, new Uri("/222/devices/owner?arg0=222"), RequestMethod.POST), null);
         Assert.assertTrue(rsp2.getHeader().getResponseCode() == HttpResponseStatus.OK);
         Assert.assertTrue(rsp2.getBody().getLogicalName().equalsIgnoreCase("some device"));
         Assert.assertTrue(rsp2.getBody().getId() == 222);
@@ -232,7 +232,7 @@ public class ServiceRegistryTest {
         Optional<ServiceRegistry.MethodContext> elOpt3 = registry.getMethodContext(new Request.RequestHeader(null, new Uri("/222/devices/owner?arg0=222&arg1=114"), RequestMethod.GET));
         Assert.assertTrue(elOpt3.isPresent());
 
-        Response<Device> rsp3 = registry.invokeWithJavaObject(new Request.RequestHeader(null, new Uri("/222/devices/owner?arg0=222&arg1=114"), RequestMethod.GET), null);
+        Response<Device> rsp3 = registry.invokeWithObject(new Request.RequestHeader(null, new Uri("/222/devices/owner?arg0=222&arg1=114"), RequestMethod.GET), null);
         Assert.assertTrue(rsp3.getHeader().getResponseCode() == HttpResponseStatus.OK);
         Assert.assertTrue(rsp3.getBody().getLogicalName().equalsIgnoreCase("some device"));
         Assert.assertTrue(rsp3.getBody().getId() == 222);
@@ -241,7 +241,7 @@ public class ServiceRegistryTest {
         Optional<ServiceRegistry.MethodContext> elOpt4 = registry.getMethodContext(new Request.RequestHeader(null, new Uri("/222/devices/owner/old"), RequestMethod.GET));
         Assert.assertTrue(elOpt4.isPresent());
 
-        Response<Device> rsp4 = registry.invokeWithJavaObject(new Request.RequestHeader(null, new Uri("/222/devices/owner/old"), RequestMethod.GET), null);
+        Response<Device> rsp4 = registry.invokeWithObject(new Request.RequestHeader(null, new Uri("/222/devices/owner/old"), RequestMethod.GET), null);
         Assert.assertTrue(rsp4.getHeader().getResponseCode() == HttpResponseStatus.OK);
         Assert.assertTrue(rsp4.getBody().getLogicalName().equalsIgnoreCase("some device"));
         ///----------------------------
@@ -255,12 +255,12 @@ public class ServiceRegistryTest {
         //(?!/test/)([.@a-z0-9]+)(?=/messages/sum)
         //(?!/test/)([A-Za-z0-9._@]+)(?=/messages/sum)
         Request<Tuple<Integer, Integer>> req = new Request<>(new Request.RequestHeader(null, new Uri("/test/user@name/messages/sum"), RequestMethod.fromHttpMethod(HttpMethod.GET)), new Tuple<>(10, 10));
-        Response<Integer> rsp1 = registry.invokeWithJavaObject(req.getHeader(), req);
+        Response<Integer> rsp1 = registry.invokeWithObject(req.getHeader(), req);
         Assert.assertTrue(rsp1.getHeader().getResponseCode() == HttpResponseStatus.OK);
         Assert.assertTrue(rsp1.getBody() == 20);
 
         Request<Tuple<Integer, Integer>> reqForMultiply = new Request<>(new Request.RequestHeader(null, new Uri("/test/user@name/messages/multiply"), RequestMethod.fromHttpMethod(HttpMethod.GET)), new Tuple<>(10, 10));
-        Response<Integer> multiplyRsp = registry.invokeWithJavaObject(reqForMultiply.getHeader(), reqForMultiply);
+        Response<Integer> multiplyRsp = registry.invokeWithObject(reqForMultiply.getHeader(), reqForMultiply);
         Assert.assertTrue(multiplyRsp.getHeader().getResponseCode() == HttpResponseStatus.OK);
         Assert.assertTrue(multiplyRsp.getBody() == 100);
 
@@ -268,7 +268,7 @@ public class ServiceRegistryTest {
         Optional<ServiceRegistry.MethodContext> opt9 = registry.getMethodContext(new Request.RequestHeader(null, new Uri("/some_user/devices/listAll"), RequestMethod.GET));
         Assert.assertTrue(opt9.isPresent());
 
-        Response<ArrayList<Device>> rsp2 = registry.invokeWithJavaObject(new Request.RequestHeader(null, new Uri("/some_user/devices/listAll"), RequestMethod.GET), null);
+        Response<ArrayList<Device>> rsp2 = registry.invokeWithObject(new Request.RequestHeader(null, new Uri("/some_user/devices/listAll"), RequestMethod.GET), null);
         Assert.assertTrue(rsp2.getHeader().getResponseCode() == HttpResponseStatus.OK);
         Assert.assertTrue(0 == rsp2.getBody().size());
     }
@@ -282,11 +282,11 @@ public class ServiceRegistryTest {
         Optional<ServiceRegistry.MethodContext> opt5 = registry.getMethodContext(new Request.RequestHeader(null, new Uri("/com/acme/synapse/testdata/services/DummyMarkedEndpoint/echo"), RequestMethod.GET));
         Assert.assertTrue(opt5.isPresent());
 
-        Response<String> rsp1 = registry.invokeWithJavaObject(new Request.RequestHeader(null, new Uri("/com/acme/synapse/testdata/services/DummyMarkedEndpoint/echo"), RequestMethod.GET), ParameterWrapper.create().add("arg0", String.class, "\"something in the rain\""));
+        Response<String> rsp1 = registry.invokeWithObject(new Request.RequestHeader(null, new Uri("/com/acme/synapse/testdata/services/DummyMarkedEndpoint/echo"), RequestMethod.GET), ParameterWrapper.create().add("arg0", String.class, "\"something in the rain\""));
         Assert.assertTrue(rsp1.getHeader().getResponseCode() == HttpResponseStatus.OK);
         Assert.assertTrue(rsp1.getBody().equalsIgnoreCase("Greetings earthlings: " + "\"something in the rain\""));
 
-        Response<String> rsp2 = registry.invokeWithJavaObject(new Request.RequestHeader(null, new Uri("/com/acme/synapse/testdata/services/DummyMarkedEndpoint/echo"), RequestMethod.GET), ParameterWrapper.create().add("arg0", String.class, "something in the rain"));
+        Response<String> rsp2 = registry.invokeWithObject(new Request.RequestHeader(null, new Uri("/com/acme/synapse/testdata/services/DummyMarkedEndpoint/echo"), RequestMethod.GET), ParameterWrapper.create().add("arg0", String.class, "something in the rain"));
         Assert.assertTrue(rsp2.getHeader().getResponseCode() == HttpResponseStatus.OK);
         Assert.assertTrue(rsp2.getBody().equalsIgnoreCase("Greetings earthlings: " + "something in the rain"));
         ///----------------------------
@@ -301,21 +301,21 @@ public class ServiceRegistryTest {
         Optional<ServiceRegistry.MethodContext> opt7 = registry.getMethodContext(new Request.RequestHeader(null, new Uri("/com/acme/synapse/testdata/services/RpcEndpointImpl/ping"), RequestMethod.GET));
         Assert.assertTrue(opt7.isPresent());
 
-        Response rsp = registry.invokeWithJavaObject(new Request.RequestHeader(null, new Uri("/com/acme/synapse/testdata/services/RpcEndpointImpl/ping"), RequestMethod.GET), null);
+        Response rsp = registry.invokeWithObject(new Request.RequestHeader(null, new Uri("/com/acme/synapse/testdata/services/RpcEndpointImpl/ping"), RequestMethod.GET), null);
         Assert.assertTrue(rsp.getHeader().getResponseCode() == HttpResponseStatus.OK);
         Assert.assertTrue(rsp.getBody() == null);
     }
 
     @Test
     public void testRpcServices2() throws UnsupportedEncodingException, MethodNotFoundException, ExecutionException, MissingParameterException, SerializationException {
-        Response<String> rsp1 = registry.invokeWithJavaObject(new Request.RequestHeader(null, new Uri("/com/acme/synapse/testdata/services/RpcEndpointImpl/echo"), RequestMethod.GET), ParameterWrapper.create().add("arg0", String.class, "Hello people"));
+        Response<String> rsp1 = registry.invokeWithObject(new Request.RequestHeader(null, new Uri("/com/acme/synapse/testdata/services/RpcEndpointImpl/echo"), RequestMethod.GET), ParameterWrapper.create().add("arg0", String.class, "Hello people"));
         Assert.assertTrue(rsp1.getHeader().getResponseCode() == HttpResponseStatus.OK);
         Assert.assertTrue(rsp1.getBody().equalsIgnoreCase("Hello people"));
     }
 
     @Test
     public void testRpcServices3() throws UnsupportedEncodingException, MethodNotFoundException, ExecutionException, MissingParameterException, SerializationException {
-        Response<Filter> rsp2 = registry.invokeWithJavaObject(new Request.RequestHeader(null, new Uri("/com/acme/synapse/testdata/services/RpcEndpointImpl/getInfo"), RequestMethod.GET), null);
+        Response<Filter> rsp2 = registry.invokeWithObject(new Request.RequestHeader(null, new Uri("/com/acme/synapse/testdata/services/RpcEndpointImpl/getInfo"), RequestMethod.GET), null);
         Assert.assertTrue(rsp2.getHeader().getResponseCode() == HttpResponseStatus.OK);
         Assert.assertTrue(rsp2.getBody().getQuery().equalsIgnoreCase("some query"));
         Assert.assertTrue(rsp2.getBody().getPage() == 10);
@@ -324,7 +324,7 @@ public class ServiceRegistryTest {
 
     @Test
     public void testRpcServices4() throws UnsupportedEncodingException, MethodNotFoundException, ExecutionException, MissingParameterException, SerializationException {
-        Response<Filter> rsp3 = registry.invokeWithJavaObject(new Request.RequestHeader(null, new Uri("/com/acme/synapse/testdata/services/RpcEndpointImpl/filter"), RequestMethod.GET), ParameterWrapper.create().add("arg0", Filter.class, new Filter("other query", Integer.MAX_VALUE, Integer.MAX_VALUE)));
+        Response<Filter> rsp3 = registry.invokeWithObject(new Request.RequestHeader(null, new Uri("/com/acme/synapse/testdata/services/RpcEndpointImpl/filter"), RequestMethod.GET), ParameterWrapper.create().add("arg0", Filter.class, new Filter("other query", Integer.MAX_VALUE, Integer.MAX_VALUE)));
         Assert.assertTrue(rsp3.getHeader().getResponseCode() == HttpResponseStatus.OK);
         Assert.assertTrue(rsp3.getBody().getPage() == 100);
         Assert.assertTrue(rsp3.getBody().getPageSize() == 200);
@@ -332,7 +332,7 @@ public class ServiceRegistryTest {
 
     @Test(expected = MethodNotFoundException.class)
     public void testNegative() throws MethodNotFoundException, ExecutionException, MissingParameterException, UnsupportedEncodingException, SerializationException {
-        Response<Filter> rsp1 = registry.invokeWithJavaObject(new Request.RequestHeader(null, new Uri("/com/acme/synapse/testdata/services/RpcEndpointImpl/getInfo?arg0=some param"), RequestMethod.GET), null);
+        Response<Filter> rsp1 = registry.invokeWithObject(new Request.RequestHeader(null, new Uri("/com/acme/synapse/testdata/services/RpcEndpointImpl/getInfo?arg0=some param"), RequestMethod.GET), null);
     }
 
 }

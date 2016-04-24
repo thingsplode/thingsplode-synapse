@@ -79,7 +79,7 @@ public abstract class AbstractTest {
                 }
             });
             t.start();
-            Thread.sleep(3000);
+            Thread.sleep(1000);
         }
 
         @Override

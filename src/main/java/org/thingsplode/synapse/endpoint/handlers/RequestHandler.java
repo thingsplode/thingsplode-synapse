@@ -15,9 +15,20 @@
  */
 package org.thingsplode.synapse.endpoint.handlers;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.handler.codec.http.HttpResponseStatus;
+import java.nio.charset.Charset;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.thingsplode.synapse.core.domain.FileRequest;
+import org.thingsplode.synapse.core.domain.HttpStatus;
+import org.thingsplode.synapse.core.domain.MediaType;
 import org.thingsplode.synapse.core.domain.Request;
+import org.thingsplode.synapse.core.domain.Response;
+import org.thingsplode.synapse.core.exceptions.SynapseException;
+import org.thingsplode.synapse.endpoint.ServiceRegistry;
 
 /**
  *
@@ -25,10 +36,37 @@ import org.thingsplode.synapse.core.domain.Request;
  */
 public class RequestHandler extends SimpleChannelInboundHandler<Request> {
 
-    @Override
-    protected void channelRead0(ChannelHandlerContext ctx, Request msg) throws Exception {
-        System.out.println("Message received" + msg.toString());
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    private final ServiceRegistry registry;
+    private static final Logger logger = LoggerFactory.getLogger(RequestHandler.class);
+
+    public RequestHandler(ServiceRegistry registry) {
+        this.registry = registry;
     }
-    
+
+    @Override
+    protected void channelRead0(ChannelHandlerContext ctx, Request request) throws Exception {
+        Response response;
+        try {
+            if (request.getBody() == null || request.getBody() instanceof ByteBuf) {
+                ByteBuf content = (ByteBuf) request.getBody();
+                byte[] dst = new byte[content.capacity()];
+                content.getBytes(0, dst);
+                String json = new String(dst, Charset.forName("UTF-8"));
+                response = registry.invokeWithParsable(request.getHeader(), json);
+            } else {
+                response = new Response(new Response.ResponseHeader(request.getHeader(), HttpResponseStatus.valueOf(HttpStatus.BAD_REQUEST.value()), new MediaType("text/plain; charset=UTF-8")), "Body type not supported.");
+            }
+        } catch (SynapseException ex) {
+            logger.error("Error processing REST request: " + ex.getMessage(), ex);
+            response = new Response(new Response.ResponseHeader(request.getHeader(), HttpResponseStatus.valueOf(ex.getResponseStatus().value()), new MediaType("text/plain; charset=UTF-8")), ex.getClass().getSimpleName() + ": " + ex.getMessage());
+        }
+
+        if (response.getHeader().getResponseCode() == HttpResponseStatus.NOT_FOUND) {
+            FileRequest fr = new FileRequest(request.getHeader());
+            ctx.fireChannelRead(fr);
+        } else {
+            ctx.fireChannelRead(response);
+        }
+    }
+
 }

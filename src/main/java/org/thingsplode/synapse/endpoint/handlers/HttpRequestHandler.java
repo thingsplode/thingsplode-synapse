@@ -15,7 +15,6 @@
  */
 package org.thingsplode.synapse.endpoint.handlers;
 
-import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.FullHttpRequest;
@@ -25,19 +24,14 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshaker;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory;
 import java.io.UnsupportedEncodingException;
-import java.nio.charset.Charset;
 import java.util.Map.Entry;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.thingsplode.synapse.core.domain.AbstractMessage;
-import org.thingsplode.synapse.core.domain.FileRequest;
-import org.thingsplode.synapse.core.domain.MediaType;
 import org.thingsplode.synapse.core.domain.Request;
 import org.thingsplode.synapse.core.domain.RequestMethod;
-import org.thingsplode.synapse.core.domain.Response;
 import org.thingsplode.synapse.core.domain.Uri;
-import org.thingsplode.synapse.core.exceptions.SynapseException;
 import org.thingsplode.synapse.endpoint.ServiceRegistry;
 import static org.thingsplode.synapse.endpoint.handlers.HttpResponseHandler.sendError;
 import org.thingsplode.synapse.util.Util;
@@ -46,19 +40,23 @@ import org.thingsplode.synapse.util.Util;
  *
  * @author Csaba Tamas
  */
+//todo: cleanup the content from below
+//https://github.com/RestExpress/RestExpress/blob/master/core/src/test/java/org/restexpress/contenttype/MediaTypeParserTest.java
+//https://github.com/jwboardman/khs-stockticker/blob/master/src/main/java/com/khs/stockticker/StockTickerServerHandler.java
+//https://keyholesoftware.com/2015/03/16/netty-a-different-kind-of-websocket-server/
+//http://microservices.io/patterns/microservices.html
+//http://netty.io/4.0/api/io/netty/channel/ChannelPipeline.html
 public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
-    
+
     private static final Logger logger = LoggerFactory.getLogger(HttpRequestHandler.class);
     private static final String HVALUE_UPGRADE = "Upgrade";
     private final String endpointId;
     private WebSocketServerHandshaker handshaker;
-    private final ServiceRegistry registry;
-    
-    public HttpRequestHandler(String endpointId, ServiceRegistry registry) {
-        this.registry = registry;
+
+    public HttpRequestHandler(String endpointId) {
         this.endpointId = endpointId;
     }
-    
+
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest httpRequest) throws Exception {
         //todo: support for API keys
@@ -69,7 +67,7 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
                 HttpResponseHandler.sendError(ctx, HttpResponseStatus.BAD_REQUEST, "Could not decode request.");
                 return;
             }
-            
+
             if (httpRequest.method() == HttpMethod.HEAD
                     || httpRequest.method() == HttpMethod.PATCH
                     || httpRequest.method() == HttpMethod.TRACE
@@ -78,7 +76,7 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
                 HttpResponseHandler.sendError(ctx, HttpResponseStatus.FORBIDDEN, "Method forbidden (The following are not supported: HEAD, PATCH, TRACE, CONNECT, OPTIONS).");
                 return;
             }
-            
+
             String upgradeHeader = httpRequest.headers().get(HVALUE_UPGRADE);
             if (!Util.isEmpty(upgradeHeader) && "websocket".equalsIgnoreCase(upgradeHeader)) {
                 // Handshake. Ideally you'd want to configure your websocket uri
@@ -92,6 +90,7 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
                     handshaker.handshake(ctx.channel(), httpRequest);
                 }
             } else {
+                //simple http request
                 Request.RequestHeader header = null;
                 Optional<Entry<String, String>> msgIdOpt = httpRequest.headers().entries().stream().filter(e -> e.getKey().equalsIgnoreCase(AbstractMessage.PROP_MESSAGE_ID)).findFirst();
                 String msgId = msgIdOpt.isPresent() ? msgIdOpt.get().getValue() : null;
@@ -107,41 +106,20 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
                     logger.error(ex.getMessage(), ex);
                     HttpResponseHandler.sendError(ctx, HttpResponseStatus.BAD_REQUEST, ex.getClass().getSimpleName() + ": " + ex.getMessage());
                 }
-                Response response = handleREST(ctx, header, httpRequest.content());
-                //todo: cleanup the content from below
-                //https://github.com/RestExpress/RestExpress/blob/master/core/src/test/java/org/restexpress/contenttype/MediaTypeParserTest.java
-                //https://github.com/jwboardman/khs-stockticker/blob/master/src/main/java/com/khs/stockticker/StockTickerServerHandler.java
-                //https://keyholesoftware.com/2015/03/16/netty-a-different-kind-of-websocket-server/
-                //http://microservices.io/patterns/microservices.html
-                if (response.getHeader().getResponseCode() == HttpResponseStatus.NOT_FOUND) {
-                    //http://netty.io/4.0/api/io/netty/channel/ChannelPipeline.html
-                    FileRequest fr = new FileRequest(header);
-                    ctx.fireChannelRead(fr);
-                } else {
-                    ctx.fireChannelRead(response);
-                }
+                Request request = new Request(header);
+                request.setBody(httpRequest.content());
+                ctx.fireChannelRead(request);
             }
         } catch (Exception ex) {
             logger.error("Channel read error: " + ex.getMessage(), ex);
             HttpResponseHandler.sendError(ctx, HttpResponseStatus.INTERNAL_SERVER_ERROR, ex.getClass().getSimpleName() + ": " + ex.getMessage());
         }
     }
-    
+
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         logger.error("Error while processing HTTP request: " + cause.getMessage(), cause);
         sendError(ctx, HttpResponseStatus.INTERNAL_SERVER_ERROR, cause.getClass().getSimpleName() + ": " + cause.getMessage());
     }
-    
-    private Response handleREST(ChannelHandlerContext ctx, Request.RequestHeader header, ByteBuf content) {
-        try {
-            byte[] dst = new byte[content.capacity()];
-            content.getBytes(0, dst);
-            String json = new String(dst, Charset.forName("UTF-8"));
-            return registry.invokeWithParseable(header, json);
-        } catch (SynapseException ex) {
-            logger.error("Error processing REST request: " + ex.getMessage(), ex);
-            return new Response(new Response.ResponseHeader(header, HttpResponseStatus.valueOf(ex.getResponseStatus().value()), new MediaType("text/plain; charset=UTF-8")), ex.getClass().getSimpleName() + ": " + ex.getMessage());
-        }
-    }
+
 }

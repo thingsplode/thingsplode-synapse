@@ -127,7 +127,7 @@ public class ServiceRegistry {
      * @throws org.thingsplode.synapse.core.exceptions.MissingParameterException
      * @throws org.thingsplode.synapse.core.exceptions.SerializationException
      */
-    public Response invokeWithParseable(Request.RequestHeader header, Object requestBody) throws ExecutionException, MissingParameterException, SerializationException {
+    public Response invokeWithParsable(Request.RequestHeader header, Object requestBody) throws ExecutionException, MissingParameterException, SerializationException {
 
         Optional<MethodContext> mcOpt = getMethodContext(header);
         if (!mcOpt.isPresent()) {
@@ -171,7 +171,7 @@ public class ServiceRegistry {
         return invoke(header, mcOpt.get(), requestBodyObject);
     }
 
-    Response invokeWithJavaObject(Request.RequestHeader header, Object requestBody) throws MethodNotFoundException, ExecutionException, MissingParameterException, SerializationException {
+    public Response invokeWithObject(Request.RequestHeader header, Object requestBody) throws MethodNotFoundException, ExecutionException, MissingParameterException, SerializationException {
         return invoke(header, getMethodContextOrThrowException(header), requestBody);
     }
 
