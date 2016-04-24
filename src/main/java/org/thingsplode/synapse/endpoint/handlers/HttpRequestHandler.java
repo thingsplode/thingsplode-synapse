@@ -19,6 +19,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.FullHttpRequest;
+import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshaker;
@@ -46,18 +47,18 @@ import org.thingsplode.synapse.util.Util;
  * @author Csaba Tamas
  */
 public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
-
+    
+    private static final Logger logger = LoggerFactory.getLogger(HttpRequestHandler.class);
     private static final String HVALUE_UPGRADE = "Upgrade";
     private final String endpointId;
     private WebSocketServerHandshaker handshaker;
     private final ServiceRegistry registry;
-    private static final Logger logger = LoggerFactory.getLogger(HttpRequestHandler.class);
-
+    
     public HttpRequestHandler(String endpointId, ServiceRegistry registry) {
         this.registry = registry;
         this.endpointId = endpointId;
     }
-
+    
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest httpRequest) throws Exception {
         //todo: support for API keys
@@ -68,7 +69,7 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
                 HttpResponseHandler.sendError(ctx, HttpResponseStatus.BAD_REQUEST, "Could not decode request.");
                 return;
             }
-
+            
             if (httpRequest.method() == HttpMethod.HEAD
                     || httpRequest.method() == HttpMethod.PATCH
                     || httpRequest.method() == HttpMethod.TRACE
@@ -77,7 +78,7 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
                 HttpResponseHandler.sendError(ctx, HttpResponseStatus.FORBIDDEN, "Method forbidden (The following are not supported: HEAD, PATCH, TRACE, CONNECT, OPTIONS).");
                 return;
             }
-
+            
             String upgradeHeader = httpRequest.headers().get(HVALUE_UPGRADE);
             if (!Util.isEmpty(upgradeHeader) && "websocket".equalsIgnoreCase(upgradeHeader)) {
                 // Handshake. Ideally you'd want to configure your websocket uri
@@ -97,6 +98,11 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
                 try {
                     header = new Request.RequestHeader(msgId, new Uri(httpRequest.uri()), RequestMethod.fromHttpMethod(httpRequest.method()));
                     header.addAllMessageProperties(httpRequest.headers());
+                    if (HttpHeaders.isKeepAlive(httpRequest)) {
+                        header.setKeepalive(true);
+                    } else {
+                        header.setKeepalive(false);
+                    }
                 } catch (UnsupportedEncodingException ex) {
                     logger.error(ex.getMessage(), ex);
                     HttpResponseHandler.sendError(ctx, HttpResponseStatus.BAD_REQUEST, ex.getClass().getSimpleName() + ": " + ex.getMessage());
@@ -120,13 +126,13 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
             HttpResponseHandler.sendError(ctx, HttpResponseStatus.INTERNAL_SERVER_ERROR, ex.getClass().getSimpleName() + ": " + ex.getMessage());
         }
     }
-
+    
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         logger.error("Error while processing HTTP request: " + cause.getMessage(), cause);
         sendError(ctx, HttpResponseStatus.INTERNAL_SERVER_ERROR, cause.getClass().getSimpleName() + ": " + cause.getMessage());
     }
-
+    
     private Response handleREST(ChannelHandlerContext ctx, Request.RequestHeader header, ByteBuf content) {
         try {
             byte[] dst = new byte[content.capacity()];

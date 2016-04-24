@@ -125,7 +125,6 @@ public class EndpointProxy {
                             }
                             p.addLast(requestToHttpRequestEncoder);
                             p.addLast(requestEncoder);
-                            //todo: chose one of the two and tune it
                             p.addLast(httResponseToResponseDecoder);
                             p.addLast(responseHandler);
                             p.addLast(inboundExceptionHandler);

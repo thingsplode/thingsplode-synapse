@@ -114,10 +114,6 @@ public class BlockingProxyTest extends AbstractTest {
         }).get();
         Assert.assertTrue("The return code must be 1 so no error is returned", code == 1);
         System.out.println("--------EOF BLOCKING REQUEST NORMAL EXECUTION TEST--------\n\n");
-
-        //todo: ParameterWrapperDeserializer -> add support for all primitive types
-        //todo: channel closing when and why / make it clean
-        //todo: create only one instance of the shareable handlers in the pipeline
     }
 
     @Test
@@ -125,14 +121,14 @@ public class BlockingProxyTest extends AbstractTest {
         System.out.println("\n\n*** SEQUENTIAL BLOCKING REQUEST EXECUTION TEST > Thread: " + Thread.currentThread().getName());
         Assert.assertNotNull("the dispacther must not be null", dispatcher);
         String serviceMethod = "/com/acme/synapse/testdata/services/RpcEndpointImpl/echoWithTimeout";
-        boolean shortValue = false;
+        boolean timeout = false;
         for (int i = 0; i < 10; i++) {
             System.out.println("\n\n============== MSG COUNTER [" + i + "] ==============");
             String uuid = UUID.randomUUID().toString();
             ParameterWrapper pw = new ParameterWrapper();
-            pw.add("arg0", Long.TYPE, 500);
+            pw.add("arg0", Long.TYPE, timeout ? 2000 : 500);
             pw.add("arg1", String.class, uuid);
-            DispatchedFuture<Request, Response> f = dispatcher.dispatch(Request.create(serviceMethod, RequestMethod.GET, pw), 2000);
+            DispatchedFuture<Request, Response> f = dispatcher.dispatch(Request.create(serviceMethod, RequestMethod.GET, pw), 1000);
             int code = f.handle((rsp, ex) -> {
                 if (rsp != null) {
                     System.out.println("RESPONSE RECEIVED@Test Case => " + (rsp.getHeader() != null ? rsp.getHeader().getResponseCode() : "NULL RSP CODE") + " //Body: " + rsp.getBody());
@@ -141,13 +137,16 @@ public class BlockingProxyTest extends AbstractTest {
                     Assert.assertTrue("the response uuid should match the request uuid", ((String) rsp.getBody()).equals(uuid));
                     return 1;
                 } else {
-                    System.out.println("\n\nTEST ERROR -> " + ex.getMessage() + "| returning -1\n\n");
+                    System.out.println("\n\nTEST Exception -> " + ex.getMessage() + "| returning -1\n\n");
                     return -1;
                 }
             }).get();
-            Assert.assertTrue("The return code must be 1 so no error is returned", code == 1);
-            System.out.println("---> TEST STEP: OK.");
-            shortValue = !shortValue;
+            if (!timeout) {
+                Assert.assertTrue("The return code must be 1 because error code should have not been returned.", code == 1);
+            } else {
+                Assert.assertTrue("The return code must be -1, because the message must have timed out.", code == -1);
+            }
+            timeout = !timeout;
         }
         System.out.println("-------- EOF SEQUENTIAL BLOCKING REQUEST EXECUTION TEST --------\n\n");
     }

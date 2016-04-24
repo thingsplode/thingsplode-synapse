@@ -77,9 +77,9 @@ public class Request<T extends Serializable> extends AbstractMessage<T> {
     }
 
     public static class RequestHeader extends AbstractMessage.MessageHeader {
-
         private Uri uri;
         private RequestMethod method;
+        private boolean keepalive = false;
 
         public RequestHeader(Uri uri, RequestMethod method) {
             this(null, uri, method);
@@ -106,6 +106,14 @@ public class Request<T extends Serializable> extends AbstractMessage<T> {
 
         public RequestMethod getMethod() {
             return method;
+        }
+
+        public boolean isKeepalive() {
+            return keepalive;
+        }
+
+        public void setKeepalive(boolean keepalive) {
+            this.keepalive = keepalive;
         }
 
         @Override

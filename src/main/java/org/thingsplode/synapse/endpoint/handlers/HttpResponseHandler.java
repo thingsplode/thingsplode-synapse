@@ -24,6 +24,7 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
@@ -56,10 +57,16 @@ public class HttpResponseHandler extends SimpleChannelInboundHandler<Response> {
                 HttpVersion.HTTP_1_1, rsp.getHeader().getResponseCode(), Unpooled.wrappedBuffer(payload));
         response.headers().set(HttpHeaderNames.CONTENT_TYPE, mt != null ? mt.getName() : "application/json; charset=UTF-8");
         decorate(rsp, response);
-        //response.headers().set(HttpHeaderNames.CONTENT_LENGTH, rspBuf.array().length);
-        // Close the connection as soon as the message is sent.
-        ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
-        //todo: keep alive?
+        response.headers().set(HttpHeaderNames.CONTENT_LENGTH, response.content().readableBytes());
+
+        if (!rsp.getHeader().isKeepAlive()) {
+            // If keep-alive is off, close the connection once the content is fully written.
+            logger.trace("Closing the Connection@Endpoint due to keep-alive: false.");
+            ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+        } else {
+            response.headers().set(HttpHeaderNames.CONNECTION, HttpHeaders.Values.KEEP_ALIVE);
+            ctx.writeAndFlush(response);
+        }
     }
 
     private void decorate(Response rsp, HttpResponse httpResponse) {

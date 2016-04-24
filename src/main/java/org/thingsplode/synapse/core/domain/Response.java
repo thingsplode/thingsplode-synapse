@@ -58,6 +58,7 @@ public class Response<T> extends AbstractMessage<T> {
         private HttpResponseStatus responseCode = HttpResponseStatus.INTERNAL_SERVER_ERROR;
         private String correlationId;
         private MediaType contentType;
+        private boolean keepAlive = false;
 
         public ResponseHeader(HttpResponseStatus responseCode) {
             this.responseCode = responseCode;
@@ -66,6 +67,7 @@ public class Response<T> extends AbstractMessage<T> {
         public ResponseHeader(Request.RequestHeader header, HttpResponseStatus responseCode) {
             this(responseCode);
             this.correlationId = header.getMsgId();
+            this.keepAlive = header.isKeepalive();
         }
 
         public ResponseHeader(Request.RequestHeader header, HttpResponseStatus responseCode, MediaType media) {
@@ -104,6 +106,13 @@ public class Response<T> extends AbstractMessage<T> {
             this.responseCode = responseCode;
         }
 
+        public boolean isKeepAlive() {
+            return keepAlive;
+        }
+
+        public void setKeepAlive(boolean keepAlive) {
+            this.keepAlive = keepAlive;
+        }
     }
 
 }
