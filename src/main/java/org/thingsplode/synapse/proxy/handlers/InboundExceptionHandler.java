@@ -15,6 +15,7 @@
  */
 package org.thingsplode.synapse.proxy.handlers;
 
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import org.slf4j.Logger;
@@ -25,6 +26,7 @@ import org.thingsplode.synapse.proxy.DispatchedFutureHandler;
  *
  * @author Csaba Tamas
  */
+@ChannelHandler.Sharable
 public class InboundExceptionHandler extends ChannelInboundHandlerAdapter { //extends ChannelDuplexHandler {
 
     private final DispatchedFutureHandler dfh;

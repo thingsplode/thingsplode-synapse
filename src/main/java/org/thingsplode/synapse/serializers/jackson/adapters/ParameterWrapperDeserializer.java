@@ -37,7 +37,7 @@ public class ParameterWrapperDeserializer extends StdDeserializer<ParameterWrapp
     public ParameterWrapperDeserializer() {
         super(ParameterWrapper.class);
     }
-    
+
     @Override
     public ParameterWrapper deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException, JsonProcessingException {
         JsonNode node = jp.readValueAsTree();
@@ -51,15 +51,44 @@ public class ParameterWrapperDeserializer extends StdDeserializer<ParameterWrapp
                     try {
                         String paramid = ((ObjectNode) currentNode).get("paramid").asText();
                         String typeName = ((ObjectNode) currentNode).get("type").asText();
-                        Class paramType = Class.forName(typeName);
+                        Class paramType = null;
+                        if (null != typeName) switch (typeName) {
+                            case "long":
+                                paramType = Long.TYPE;
+                                break;
+                            case "byte":
+                                paramType = Byte.TYPE;
+                                break;
+                            case "short":
+                                paramType = Short.TYPE;
+                                break;
+                            case "int":
+                                paramType = Integer.TYPE;
+                                break;
+                            case "float":
+                                paramType = Float.TYPE;
+                                break;
+                            case "double":
+                                paramType = Double.TYPE;
+                                break;
+                            case "boolean":
+                                paramType = Boolean.TYPE;
+                                break;
+                            case "char":
+                                paramType = Character.TYPE;
+                                break;
+                            default:
+                                paramType = Class.forName(typeName);
+                                break;
+                        }
                         Object parameterObject = jp.getCodec().treeToValue(currentNode.get("value"), paramType);
-                        return pw.add(paramid, paramType, parameterObject);
+                        pw.add(paramid, paramType, parameterObject);
                     } catch (ClassNotFoundException ex) {
                         throw new JsonParseException(jp, ex.getMessage());
                     }
                 }
             }
-            return null;
+            return pw;
         } else {
             return null;
         }

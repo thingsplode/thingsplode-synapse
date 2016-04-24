@@ -16,6 +16,7 @@
 package org.thingsplode.synapse.proxy.handlers;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageDecoder;
 import io.netty.handler.codec.http.FullHttpResponse;
@@ -37,6 +38,7 @@ import org.thingsplode.synapse.proxy.EndpointProxy;
  *
  * @author Csaba Tamas
  */
+@ChannelHandler.Sharable
 public class HttpResponseToResponseDecoder extends MessageToMessageDecoder<HttpResponse> {
 
     private static final Logger logger = LoggerFactory.getLogger(HttpResponseToResponseDecoder.class);

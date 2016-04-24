@@ -16,6 +16,7 @@
 package org.thingsplode.synapse.proxy.handlers;
 
 import io.netty.buffer.Unpooled;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageEncoder;
 import io.netty.handler.codec.http.DefaultFullHttpRequest;
@@ -37,6 +38,7 @@ import org.thingsplode.synapse.util.Util;
  *
  * @author Csaba Tamas
  */
+@ChannelHandler.Sharable
 public class RequestToHttpRequestEncoder extends MessageToMessageEncoder<Request> {
 
     @Override

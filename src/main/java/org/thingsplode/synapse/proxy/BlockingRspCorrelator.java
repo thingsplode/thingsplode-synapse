@@ -17,6 +17,7 @@ package org.thingsplode.synapse.proxy;
 
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
+import io.netty.util.concurrent.ScheduledFuture;
 import java.util.TimerTask;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -35,6 +36,7 @@ public class BlockingRspCorrelator implements DispatchedFutureHandler {
     private final Logger logger = LoggerFactory.getLogger(BlockingRspCorrelator.class);
     private final ArrayBlockingQueue<DispatchedFuture> requestQueue = new ArrayBlockingQueue(1);
     private TimerTask timerTask;
+    private ScheduledFuture schedule;
     private long defaultResponseTimeout = finalDefaultTimeout;
 
     @Override
@@ -43,13 +45,17 @@ public class BlockingRspCorrelator implements DispatchedFutureHandler {
         df.setRequestFiredTime(System.currentTimeMillis());
         long timeout = df.getTimeout() != -1 ? df.getTimeout() : defaultResponseTimeout;
         if (timeout > 0) {
-            df.getChannel().eventLoop().schedule(getTimerTask(), timeout, TimeUnit.MILLISECONDS);
+            schedule = df.getChannel().eventLoop().schedule(getTimerTask(), timeout, TimeUnit.MILLISECONDS);
+
         }
         requestQueue.put(df);
     }
 
     @Override
     public DispatchedFuture<Request, Response> responseReceived(String msgId) {
+        if (schedule != null) {
+            schedule.cancel(false);
+        }
         if (timerTask != null) {
             timerTask.cancel();
         }

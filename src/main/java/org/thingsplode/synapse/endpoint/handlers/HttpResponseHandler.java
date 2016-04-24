@@ -15,7 +15,6 @@
  */
 package org.thingsplode.synapse.endpoint.handlers;
 
-import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
@@ -34,6 +33,7 @@ import org.slf4j.LoggerFactory;
 import org.thingsplode.synapse.core.domain.AbstractMessage;
 import org.thingsplode.synapse.core.domain.MediaType;
 import org.thingsplode.synapse.core.domain.Response;
+import org.thingsplode.synapse.core.domain.ResponseBodyWrapper;
 import org.thingsplode.synapse.serializers.SerializationService;
 import org.thingsplode.synapse.serializers.SynapseSerializer;
 
@@ -51,7 +51,7 @@ public class HttpResponseHandler extends SimpleChannelInboundHandler<Response> {
     protected void channelRead0(ChannelHandlerContext ctx, Response rsp) throws Exception {
         MediaType mt = rsp.getHeader().getContentType();
         SynapseSerializer<String> serializer = serializationService.getSerializer(mt);
-        byte[] payload = serializer.marshall(rsp.getBody());
+        byte[] payload = serializer.marshall(new ResponseBodyWrapper<>(rsp.getBody()));
         FullHttpResponse response = new DefaultFullHttpResponse(
                 HttpVersion.HTTP_1_1, rsp.getHeader().getResponseCode(), Unpooled.wrappedBuffer(payload));
         response.headers().set(HttpHeaderNames.CONTENT_TYPE, mt != null ? mt.getName() : "application/json; charset=UTF-8");

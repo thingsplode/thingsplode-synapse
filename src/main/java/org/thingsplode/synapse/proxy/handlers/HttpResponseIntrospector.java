@@ -16,6 +16,7 @@
 package org.thingsplode.synapse.proxy.handlers;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.FullHttpResponse;
@@ -29,6 +30,7 @@ import org.thingsplode.synapse.util.Util;
  *
  * @author Csaba Tamas
  */
+@ChannelHandler.Sharable
 public class HttpResponseIntrospector extends SimpleChannelInboundHandler<HttpResponse> {
 
     private Logger logger = LoggerFactory.getLogger(HttpResponseIntrospector.class);
@@ -48,11 +50,16 @@ public class HttpResponseIntrospector extends SimpleChannelInboundHandler<HttpRe
                 content.retain();
                 payloadAsSring = new String(dst, Charset.forName("UTF-8"));
             }
-            logger.debug("Message received @Proxy [" + msg.getClass().getName() + "]: \n\n"
+            logger.debug("Message@Proxy received [" + msg.getClass().getName() + "]: \n\n"
                     + "Status: " + msg.status() + "\n"
-                    + hb.toString() + "\n" + "Payload: [" + (!Util.isEmpty(payloadAsSring) ? payloadAsSring + "]\n" : "EMPTY\n"));
+                    + hb.toString() + "\n" + "Payload -> [" + (!Util.isEmpty(payloadAsSring) ? payloadAsSring : "EMPTY") + "]\n");
         }
         ctx.fireChannelRead(msg);
+    }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+        logger.error("Error while introspecting: " + cause.getMessage(), cause);
     }
 
 }

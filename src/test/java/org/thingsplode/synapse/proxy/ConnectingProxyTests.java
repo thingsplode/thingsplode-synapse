@@ -28,7 +28,7 @@ public class ConnectingProxyTests extends AbstractTest{
 
     public void testConnectionRetry() {
         try {
-            EndpointProxy epx = EndpointProxy.create("http://localhost:8080/", Dispatcher.DispatcherPattern.BLOCKING_REQUEST).setRetryConnection(true).start();
+            EndpointProxy epx = EndpointProxy.create("http://localhost:8080/", Dispatcher.DispatcherPattern.BLOCKING_REQUEST).setRetryConnection(true).initialize();
             dispatcher = epx.acquireDispatcher();
         } catch (URISyntaxException | SSLException | InterruptedException th) {
             System.out.println("\n\n\nERROR while setting up: " + BlockingProxyTest.class.getSimpleName() + ". Dumping stack trace: ");

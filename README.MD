@@ -1,4 +1,4 @@
-*Thingsplode Connect - blazingly fast, superlight communication library for anti-fragile cloud architecture.*
+*Thingsplode Connect - blazingly fast, super-light communication library for anti-fragile cloud architecture.*
 
 *Work in progress*
 
@@ -6,7 +6,7 @@
 * shines in embedded environment where CPU cycles are precious;
 * scales in the cloud, when millions of concurrent connections need to be served;
 
-# Main features
+# Packed with features, yet easy to use
 *Thingsplode Connect Proxy*
 Offers containerless REST, WEBSOCKET, MQTT and Domain Socket communication;
 Hides the complexity of micro-service communication for you. It implements:

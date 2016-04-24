@@ -41,7 +41,7 @@ import org.thingsplode.synapse.core.ComponentLifecycle;
 import org.thingsplode.synapse.proxy.handlers.HttpResponseToResponseDecoder;
 import org.thingsplode.synapse.proxy.handlers.InboundExceptionHandler;
 import org.thingsplode.synapse.proxy.handlers.HttpResponseIntrospector;
-import org.thingsplode.synapse.proxy.handlers.RequestHandler;
+import org.thingsplode.synapse.proxy.handlers.RequestEncoder;
 import org.thingsplode.synapse.proxy.handlers.RequestToHttpRequestEncoder;
 import org.thingsplode.synapse.proxy.handlers.ResponseHandler;
 import org.thingsplode.synapse.serializers.SerializationService;
@@ -71,7 +71,14 @@ public class EndpointProxy {
     private DispatchedFutureHandler dfh;
     private boolean retryConnection = false;
 
-    //todo: place connection uri to the aqcuire dispatcher, so one client instance can work with many servers
+    private RequestToHttpRequestEncoder requestToHttpRequestEncoder = new RequestToHttpRequestEncoder();
+    private final RequestEncoder requestEncoder;
+    private HttpResponseIntrospector httpResponseIntrospector = new HttpResponseIntrospector();
+    private HttpResponseToResponseDecoder httResponseToResponseDecoder = new HttpResponseToResponseDecoder();
+    private final ResponseHandler responseHandler;
+    private final InboundExceptionHandler inboundExceptionHandler;
+//todo: place connection uri to the aqcuire dispatcher, so one client instance can work with many servers
+
     private EndpointProxy(String baseUrl, Dispatcher.DispatcherPattern dispatchPattern) throws URISyntaxException {
         this.connectionUri = new URI(baseUrl);
         this.dispatchPattern = dispatchPattern;
@@ -83,16 +90,19 @@ public class EndpointProxy {
                 dfh = new MsgIdRspCorrelator();
                 break;
             case PIPELINING:
-                //toto: dfh = ?;
+                //todo: dfh = ?;
                 break;
         }
+        this.requestEncoder = new RequestEncoder(null, connectionUri.getHost() + ":" + connectionUri.getPort());
+        this.inboundExceptionHandler = new InboundExceptionHandler(dfh);
+        this.responseHandler = new ResponseHandler(dfh);
     }
 
     public static final EndpointProxy create(String baseUrl, Dispatcher.DispatcherPattern dispatchPattern) throws URISyntaxException {
         return new EndpointProxy(baseUrl, dispatchPattern);
     }
 
-    public EndpointProxy start() {
+    public EndpointProxy initialize() {
         b = new Bootstrap();
         try {
             b.group(group)
@@ -106,19 +116,19 @@ public class EndpointProxy {
                             }
                             //todo: tune the values here
                             //p.addLast(new HttpClientCodec());
+                            //p.addLast(new HttpContentDecompressor());
                             p.addLast(new HttpRequestEncoder());
                             p.addLast(new HttpResponseDecoder());
-                            p.addLast(new RequestToHttpRequestEncoder());
-                            p.addLast(new RequestHandler(null, connectionUri.getHost() + ":" + connectionUri.getPort()));
-                            if (introspection) {
-                                p.addLast(new HttpResponseIntrospector());
-                            }
-                            //p.addLast(new HttpContentDecompressor());
-                            //todo: chose one of the two and tune it
                             p.addLast(new HttpObjectAggregator(1048576));
-                            p.addLast(new HttpResponseToResponseDecoder());
-                            p.addLast(new ResponseHandler(dfh));
-                            p.addLast(new InboundExceptionHandler(dfh));
+                            if (introspection) {
+                                p.addLast(httpResponseIntrospector);
+                            }
+                            p.addLast(requestToHttpRequestEncoder);
+                            p.addLast(requestEncoder);
+                            //todo: chose one of the two and tune it
+                            p.addLast(httResponseToResponseDecoder);
+                            p.addLast(responseHandler);
+                            p.addLast(inboundExceptionHandler);
                         }
                     });
             b.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connectTimeout);
@@ -129,7 +139,7 @@ public class EndpointProxy {
                 ForkJoinPool.commonPool().awaitQuiescence(5, TimeUnit.SECONDS);
             }));
         }
-        this.lifecycle = ComponentLifecycle.STARTED;
+        this.lifecycle = ComponentLifecycle.INITIALIZED;
         return this;
 
     }
@@ -140,7 +150,7 @@ public class EndpointProxy {
      * @return
      */
     public EndpointProxy setConnectTimeout(int timeoutInMillis) {
-        if (this.lifecycle == ComponentLifecycle.STARTED) {
+        if (this.lifecycle == ComponentLifecycle.INITIALIZED) {
             throw new IllegalStateException("Please set this value before starting the " + EndpointProxy.class.getSimpleName());
         }
         this.connectTimeout = timeoutInMillis;
@@ -154,7 +164,7 @@ public class EndpointProxy {
      * @return
      */
     public EndpointProxy setRetryConnection(boolean retryConnection) {
-        if (this.lifecycle == ComponentLifecycle.STARTED) {
+        if (this.lifecycle == ComponentLifecycle.INITIALIZED) {
             throw new IllegalStateException("Please set this value before starting the " + EndpointProxy.class.getSimpleName());
         }
         this.retryConnection = retryConnection;
@@ -162,7 +172,7 @@ public class EndpointProxy {
     }
 
     public EndpointProxy enableIntrospection() {
-        if (this.lifecycle == ComponentLifecycle.STARTED) {
+        if (this.lifecycle == ComponentLifecycle.INITIALIZED) {
             throw new IllegalStateException("Please set this value before starting the " + EndpointProxy.class.getSimpleName());
         }
         this.introspection = true;
@@ -216,8 +226,8 @@ public class EndpointProxy {
         }
         //final int dirtyTrickPort = port; //needed because for some reason the compiler does not accept port and unitialized final int, even if there's an else in the if statement above.
 
-        Dispatcher dispatcher = new Dispatcher(retryConnection, dfh);
-        dispatcher.connect(b, this.connectionUri.getHost(), port);
+        Dispatcher dispatcher = new Dispatcher(retryConnection, dfh, b, this.connectionUri.getHost(), port);
+        dispatcher.connect();
         dispatchers.add(dispatcher);
         return dispatcher;
     }

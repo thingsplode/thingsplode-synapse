@@ -79,7 +79,7 @@ public abstract class AbstractTest {
                 }
             });
             t.start();
-            Thread.sleep(4000);
+            Thread.sleep(3000);
         }
 
         @Override
@@ -102,9 +102,10 @@ public abstract class AbstractTest {
         @Override
         protected void before() {
             try {
-                epx = EndpointProxy.create("http://localhost:8080/", Dispatcher.DispatcherPattern.BLOCKING_REQUEST).setRetryConnection(true).start();
+                epx = EndpointProxy.create("http://localhost:8080/", Dispatcher.DispatcherPattern.BLOCKING_REQUEST).
+                        enableIntrospection().
+                        setRetryConnection(true).initialize();
                 dispatcher = epx.acquireDispatcher();
-                Thread.sleep(4000);
             } catch (URISyntaxException | SSLException | InterruptedException th) {
                 System.out.println("\n\n\nERROR while setting up: " + BlockingProxyTest.class.getSimpleName() + ". Dumping stack trace: ");
                 th.printStackTrace();

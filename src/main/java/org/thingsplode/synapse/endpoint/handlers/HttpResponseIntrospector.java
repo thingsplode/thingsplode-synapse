@@ -53,8 +53,9 @@ public class HttpResponseIntrospector extends ChannelOutboundHandlerAdapter {
                 content.retain();
                 payloadAsSring = new String(dst, Charset.forName("UTF-8"));
             }
+            String msgStatus = (((HttpResponse) msg).status() != null ? ((HttpResponse) msg).status().toString() : "NULL");
             logger.debug("Message@Endpoint to be sent: \n\n"
-                    + "Status: " + ((HttpResponse) msg).status() + "\n"
+                    + "Status: " + msgStatus + "\n"
                     + hb.toString() + "\n" + "Payload: [" + (!Util.isEmpty(payloadAsSring) ? payloadAsSring + "]\n" : "EMPTY\n"));
         }
         ctx.write(msg, promise);

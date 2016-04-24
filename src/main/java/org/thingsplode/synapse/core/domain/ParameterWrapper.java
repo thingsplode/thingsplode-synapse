@@ -31,7 +31,7 @@ import org.thingsplode.synapse.serializers.jackson.adapters.ParameterWrapperDese
  * @author Csaba Tamas
  */
 @JsonDeserialize(using = ParameterWrapperDeserializer.class)
-@ApiModel(value = "arameterWrapper", description = "A method parameter wrapper object for the RPC use-case")
+@ApiModel(value = "ParameterWrapper", description = "A method parameter wrapper object for the RPC use-case")
 public class ParameterWrapper implements Serializable {
 
     private final ArrayList<Parameter> params = new ArrayList<>();

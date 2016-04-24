@@ -29,7 +29,6 @@ import org.junit.Test;
 import org.thingsplode.synapse.core.domain.ParameterWrapper;
 import org.thingsplode.synapse.core.domain.Request;
 import org.thingsplode.synapse.core.domain.RequestMethod;
-import org.thingsplode.synapse.core.domain.RequestMethod;
 import org.thingsplode.synapse.core.domain.Response;
 import org.thingsplode.synapse.core.domain.Uri;
 import org.thingsplode.synapse.core.exceptions.SerializationException;

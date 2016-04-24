@@ -15,6 +15,7 @@
  */
 package org.thingsplode.synapse.proxy.handlers;
 
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageEncoder;
 import io.netty.handler.codec.http.HttpHeaderNames;
@@ -28,11 +29,12 @@ import org.thingsplode.synapse.proxy.RequestDecorator;
  *
  * @author Csaba Tamas
  */
-public class RequestHandler extends MessageToMessageEncoder<Request> {
+@ChannelHandler.Sharable
+public class RequestEncoder extends MessageToMessageEncoder<Request> {
 
     private final HashSet<RequestDecorator> decorators;
 
-    public RequestHandler(HashSet<RequestDecorator> decorators, String hostExpression) {
+    public RequestEncoder(HashSet<RequestDecorator> decorators, String hostExpression) {
         if (decorators != null) {
             this.decorators = decorators;
         } else {

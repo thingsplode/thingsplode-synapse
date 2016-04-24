@@ -173,7 +173,7 @@ public class Endpoint {
             channelRegistry.add(channel);
             //channelFuture.channel().closeFuture().sync();
         }
-        lifecycle = ComponentLifecycle.STARTED;
+        lifecycle = ComponentLifecycle.INITIALIZED;
         logger.info("Endpoint [" + endpointId + "] started.");
     }
 

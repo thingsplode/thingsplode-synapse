@@ -20,6 +20,6 @@ package org.thingsplode.synapse.core;
  * @author Csaba Tamas
  */
 public enum ComponentLifecycle {
-    UNITIALIZED, STARTED
+    UNITIALIZED, INITIALIZED
     
 }

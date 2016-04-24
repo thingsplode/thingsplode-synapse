@@ -33,8 +33,7 @@ public abstract class AbstractMessage<T> implements Serializable {
     public final static String PROP_MESSAGE_ID = "Message-id";
     public final static String PROP_CORRELATION_ID = "Correlation-id";
     public final static String PROP_PROTOCOL_VERSION = "Protocol-Version";
-    
-    @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@body_type")
+    @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@body_type", visible = true)
     private T body;
 
     public AbstractMessage() {
@@ -101,7 +100,7 @@ public abstract class AbstractMessage<T> implements Serializable {
             }
         }
     }
-
+    
     public T getBody() {
         return body;
     }
