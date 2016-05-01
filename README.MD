@@ -33,7 +33,9 @@ Hides the complexity of microservice communication for you. It provides:
 - [ ] #6 Endpoint Proxy (Client) authorization;
 - [ ] thingsplode#7 - message authentication;
 
-#6
+#7
+[#7]
+[#7](thingsplode/thingsplode-synapse/issues/7)
 
 ### Pluggable serialization:
 - [x] json with Jackson
