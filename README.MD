@@ -11,11 +11,11 @@
 Supported protocols:
 - [x] REST over HTTP (simplicity);
 - [x] File streaming (download) over HTTP
-- [ ] File streaming (upload) over HTTP - #2
+- [ ] File streaming (upload) over HTTP - [#2](../../issues/2)
 - [ ] REST over HTTPS (simplicity and security);
 - [ ] Websocket (bidirectional communication for mobile and web);
 - [ ] MQTT (small size for IoT);
-- [ ] Unix domain sockets for microservices within the same Docker container (or other host-only communication) (speed) - #3;
+- [ ] Unix domain sockets for microservices within the same Docker container (or other host-only communication) (speed) - [#3](../../issues/3);
 
 ## Simplified microservice communication
 Hides the complexity of microservice communication for you. It provides:
@@ -25,26 +25,19 @@ Hides the complexity of microservice communication for you. It provides:
 - [x] message introspectors on the Endpoint (server) and Endpoint Proxy (client);
 - [ ] load balancer with partitioning / fail-over;
 - [ ] circuit breaker (fast failing of connections);
-- [ ] replicated service registry - #4;
+- [ ] replicated service registry - [#4](../../issues/4);
 - [ ] reliable messaging;
 - [ ] error handling and message resend mechanism;
 - [ ] built-in performance monitoring
-- [ ] api keys - #5;
-- [ ] #6 Endpoint Proxy (Client) authorization;
-- [ ] thingsplode#7 - message authentication;
-
-#7
-[#7]
-[#7](/thingsplode/thingsplode-synapse/issues/7)
-[#7](/issues/7)
-[#7](#7)
-[#7](../../issues/7)
+- [ ] api keys - [#5](../../issues/5);
+- [ ] Endpoint Proxy (Client) authorization - [#6](../../issues/6);
+- [ ] message authentication - [#7](../../issues/7);
 
 ### Pluggable serialization:
 - [x] json with Jackson
 - [ ] json with Gson
 - [ ] message pack
-- [ ] google protocol buffer - #8;
+- [ ] google protocol buffer - [#8](../../issues/8);
 
 ## Synapse Endpoint (Server)
 - [x] request/response pattern
@@ -55,7 +48,7 @@ Hides the complexity of microservice communication for you. It provides:
 ## Synapse Endpoint Proxy (Client)
 - [x] client proxy with sequential/blocking dispatching;
 - [x] client proxy with asynchronous message dispatching;
-- [ ] message pipelining on the Endpoint (Server) side (see HTTP pipelining) - #9;
+- [ ] message pipelining on the Endpoint (Server) side (see HTTP pipelining) - [#9](../../issues/9);
 
 ## Non functional features
 Some architectural choices are supporting the performance of the library:
