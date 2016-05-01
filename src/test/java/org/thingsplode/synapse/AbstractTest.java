@@ -20,23 +20,18 @@ import com.acme.synapse.testdata.services.DummyMarkedEndpoint;
 import com.acme.synapse.testdata.services.EndpointTesterService;
 import io.netty.handler.logging.LogLevel;
 import java.net.InetSocketAddress;
-import org.junit.Rule;
 import org.junit.rules.ExternalResource;
 import org.thingsplode.synapse.endpoint.Endpoint;
 import org.thingsplode.synapse.endpoint.Endpoint.ConnectionProvider;
 import com.acme.synapse.testdata.services.RpcEndpointImpl;
 import com.acme.synapse.testdata.services.core.Address;
 import java.io.FileNotFoundException;
-import java.net.URISyntaxException;
-import javax.net.ssl.SSLException;
 import org.junit.ClassRule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.thingsplode.synapse.core.domain.Event;
 import org.thingsplode.synapse.endpoint.AbstractEventSink;
-import org.thingsplode.synapse.proxy.BlockingProxyTest;
 import org.thingsplode.synapse.proxy.Dispatcher;
-import org.thingsplode.synapse.proxy.EndpointProxy;
 
 /**
  *
@@ -93,39 +88,6 @@ public abstract class AbstractTest {
             return ep;
         }
     };
-
-    @ClassRule
-    public static ExternalResource clientProxy = new ExternalResource() {
-        
-        private EndpointProxy epx;
-
-        @Override
-        protected void before() {
-            try {
-                epx = EndpointProxy.create("http://localhost:8080/", Dispatcher.DispatcherPattern.BLOCKING_REQUEST).
-                        enableIntrospection().
-                        setRetryConnection(true).initialize();
-                dispatcher = epx.acquireDispatcher();
-            } catch (URISyntaxException | SSLException | InterruptedException th) {
-                System.out.println("\n\n\nERROR while setting up: " + BlockingProxyTest.class.getSimpleName() + ". Dumping stack trace: ");
-                th.printStackTrace();
-            }
-        }
-
-        @Override
-        protected void after() {
-            epx.stop();
-        }
-
-        public Dispatcher getDispatcher() {
-            return dispatcher;
-        }
-
-        public EndpointProxy getEpx() {
-            return epx;
-        }
-    };
-
 }
 
 //Todo: remove the content from bellow

@@ -91,7 +91,8 @@ public class EndpointProxy {
                 break;
             case PIPELINING:
                 //todo: dfh = ?;
-                break;
+                throw new UnsupportedOperationException("Method not supported yet.");
+                //break;
         }
         this.requestEncoder = new RequestEncoder(null, connectionUri.getHost() + ":" + connectionUri.getPort());
         this.inboundExceptionHandler = new InboundExceptionHandler(dfh);

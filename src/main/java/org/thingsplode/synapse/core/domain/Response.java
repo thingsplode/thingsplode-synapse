@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import java.util.Optional;
 import org.thingsplode.synapse.serializers.jackson.adapters.HttpResponseStatusDeserializer;
 import org.thingsplode.synapse.serializers.jackson.adapters.HttpResponseStatusSerializer;
 
@@ -49,6 +50,10 @@ public class Response<T> extends AbstractMessage<T> {
 
     public void setHeader(ResponseHeader header) {
         this.header = header;
+    }
+
+    public Optional<String> getHeaderProperty(String propertyKey) {
+        return header != null ? header.getProperty(propertyKey) : Optional.empty();
     }
 
     public static class ResponseHeader extends AbstractMessage.MessageHeader {

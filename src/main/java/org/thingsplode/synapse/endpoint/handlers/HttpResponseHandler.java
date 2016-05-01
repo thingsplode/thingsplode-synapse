@@ -70,8 +70,8 @@ public class HttpResponseHandler extends SimpleChannelInboundHandler<Response> {
     }
 
     private void decorate(Response rsp, HttpResponse httpResponse) {
-        rsp.getHeader().getMessageProperties().keySet().stream().forEach(k -> {
-            httpResponse.headers().set(k, rsp.getHeader().getMessageProperty(k));
+        rsp.getHeader().getProperties().keySet().stream().forEach(k -> {
+            httpResponse.headers().set(k, rsp.getHeader().getProperty(k));
         });
         if (rsp.getHeader().getCorrelationId() != null) {
             httpResponse.headers().set(AbstractMessage.PROP_CORRELATION_ID, rsp.getHeader().getCorrelationId());

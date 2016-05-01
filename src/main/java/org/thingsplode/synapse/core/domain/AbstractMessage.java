@@ -49,7 +49,7 @@ public abstract class AbstractMessage<T> implements Serializable {
         protected String msgId;
         private String protocolVersion;
         private SocketAddress remoteAddress;
-        private final HashMap<String, String> messageProperties = new HashMap<>();
+        private final HashMap<String, String> properties = new HashMap<>();
 
         public MessageHeader() {
         }
@@ -82,21 +82,21 @@ public abstract class AbstractMessage<T> implements Serializable {
             this.remoteAddress = callerAddress;
         }
         
-        public void addMessageProperty(String key, String value) {
-            messageProperties.put(key, value);
+        public void addProperty(String key, String value) {
+            properties.put(key, value);
         }
 
-        public Optional<String> getMessageProperty(String propertyKey) {
-            return Optional.ofNullable(messageProperties.get(propertyKey));
+        public Optional<String> getProperty(String propertyKey) {
+            return Optional.ofNullable(properties.get(propertyKey));
         }
 
-        public HashMap<String, String> getMessageProperties() {
-            return messageProperties;
+        public HashMap<String, String> getProperties() {
+            return properties;
         }
 
-        public void addAllMessageProperties(Iterable<Map.Entry<String, String>> iterable) {
+        public void addAllProperties(Iterable<Map.Entry<String, String>> iterable) {
             if (iterable != null) {
-                iterable.forEach(e -> messageProperties.put(e.getKey(), e.getValue()));
+                iterable.forEach(e -> properties.put(e.getKey(), e.getValue()));
             }
         }
     }

@@ -76,6 +76,7 @@ public class Endpoint {
     public static final String REQUEST_HANDLER = "request_handler";
     public static final String ALL_CHANNEL_GROUP_NAME = "all-open-channels";
     public static final String HTTP_FILE_HANDLER = "http_file_handler";
+    public static final String RESPONSE_SEQUENCER = "response_sequencer";
     public static final String HTTP_RESPONSE_HANDLER = "http_response_handler";
     private static int TERMINATION_TIMEOUT = 60;//number of seconds to wait after the worker threads are shutted down and until those are finishing the last bit of the execution.
     private EventLoopGroup masterGroup = null;//the eventloop group used for the server socket
@@ -93,6 +94,7 @@ public class Endpoint {
     private ServiceRegistry serviceRegistry = new ServiceRegistry();
     private EndpointApiGenerator apiGenerator = null;
     private boolean introspection = false;
+    private boolean pipelining = false;
 
     private Endpoint() {
     }
@@ -134,11 +136,15 @@ public class Endpoint {
                                     p.addLast(new HttpResponseIntrospector());
                                     p.addLast(new HttpRequestIntrospector());
                                 }
-                                p.addLast(HTTP_REQUEST_HANDLER, new HttpRequestHandler(endpointId));
+                                p.addLast(HTTP_REQUEST_HANDLER, new HttpRequestHandler(endpointId, pipelining));
                                 p.addLast(REQUEST_HANDLER, new RequestHandler(serviceRegistry));
                                 if (fileHandler != null) {
                                     p.addLast(evtExecutorGroup, HTTP_FILE_HANDLER, fileHandler);
                                 }
+                                //todo: add pipelining
+//                                if (pipelining) {
+//                                    p.addLast(RESPONSE_SEQUENCER, new ResponseSequencer());
+//                                }
                                 p.addLast(HTTP_RESPONSE_HANDLER, new HttpResponseHandler());
                             }
                         });
@@ -306,6 +312,12 @@ public class Endpoint {
     public Endpoint enableIntrospection() {
         this.introspection = true;
         return this;
+    }
+
+    public Endpoint enablePipelining() {
+        this.pipelining = true;
+        throw new UnsupportedOperationException("Not implemented yet");
+        //return this;
     }
 
     /**

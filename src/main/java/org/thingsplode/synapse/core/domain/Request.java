@@ -73,10 +73,11 @@ public class Request<T extends Serializable> extends AbstractMessage<T> {
     }
 
     public Optional<String> getRequestHeaderProperty(String propertyKey) {
-        return this.header != null ? this.header.getMessageProperty(propertyKey) : Optional.empty();
+        return this.header != null ? this.header.getProperty(propertyKey) : Optional.empty();
     }
 
     public static class RequestHeader extends AbstractMessage.MessageHeader {
+        public static final String MSG_SEQ = "MSG_SEQ";
         private Uri uri;
         private RequestMethod method;
         private boolean keepalive = false;

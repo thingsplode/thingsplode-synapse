@@ -438,7 +438,7 @@ public class ServiceRegistry {
                         break;
                     }
                     case HEADER_PARAM: {
-                        Optional<String> headerValueOpt = header.getMessageProperty(p.paramId);
+                        Optional<String> headerValueOpt = header.getProperty(p.paramId);
                         if (!headerValueOpt.isPresent() && p.required) {
                             throw new MissingParameterException("Header Value", p.paramId);
                         } else {

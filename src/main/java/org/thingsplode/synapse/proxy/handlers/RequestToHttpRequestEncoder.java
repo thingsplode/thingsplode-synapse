@@ -71,7 +71,7 @@ public class RequestToHttpRequestEncoder extends MessageToMessageEncoder<Request
         } else {
             out = new DefaultHttpRequest(HttpVersion.HTTP_1_1, m, in.getHeader().getUri().getPath());
         }
-        in.getHeader().getMessageProperties().forEach((k, v) -> {
+        in.getHeader().getProperties().forEach((k, v) -> {
             out.headers().set(new AsciiString(k), new AsciiString(v));
         });
         return out;

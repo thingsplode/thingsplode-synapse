@@ -50,7 +50,7 @@ public class HttpResponseToResponseDecoder extends MessageToMessageDecoder<HttpR
         }
         //todo: convert to commands too
         Response rsp = new Response(new Response.ResponseHeader(httpResponse.status()));
-        rsp.getHeader().addAllMessageProperties(httpResponse.headers().entries());
+        rsp.getHeader().addAllProperties(httpResponse.headers().entries());
         rsp.getHeader().setMsgId(httpResponse.headers().get(AbstractMessage.PROP_MESSAGE_ID));
         rsp.getHeader().setCorrelationId(httpResponse.headers().get(AbstractMessage.PROP_CORRELATION_ID));
         rsp.getHeader().setProtocolVersion(httpResponse.headers().get(AbstractMessage.PROP_PROTOCOL_VERSION));

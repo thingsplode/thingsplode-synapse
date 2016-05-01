@@ -26,13 +26,13 @@ import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory;
 import java.io.UnsupportedEncodingException;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.thingsplode.synapse.core.domain.AbstractMessage;
 import org.thingsplode.synapse.core.domain.Request;
 import org.thingsplode.synapse.core.domain.RequestMethod;
 import org.thingsplode.synapse.core.domain.Uri;
-import org.thingsplode.synapse.endpoint.ServiceRegistry;
 import static org.thingsplode.synapse.endpoint.handlers.HttpResponseHandler.sendError;
 import org.thingsplode.synapse.util.Util;
 
@@ -52,9 +52,12 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
     private static final String HVALUE_UPGRADE = "Upgrade";
     private final String endpointId;
     private WebSocketServerHandshaker handshaker;
+    private boolean pipelining = false;
+    private final AtomicLong sequence = new AtomicLong(0);
 
-    public HttpRequestHandler(String endpointId) {
+    public HttpRequestHandler(String endpointId, boolean pipelining) {
         this.endpointId = endpointId;
+        this.pipelining = pipelining;
     }
 
     @Override
@@ -96,16 +99,20 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
                 String msgId = msgIdOpt.isPresent() ? msgIdOpt.get().getValue() : null;
                 try {
                     header = new Request.RequestHeader(msgId, new Uri(httpRequest.uri()), RequestMethod.fromHttpMethod(httpRequest.method()));
-                    header.addAllMessageProperties(httpRequest.headers());
+                    header.addAllProperties(httpRequest.headers());
                     if (HttpHeaders.isKeepAlive(httpRequest)) {
                         header.setKeepalive(true);
                     } else {
                         header.setKeepalive(false);
                     }
+                    if (pipelining) {
+                        header.addProperty(Request.RequestHeader.MSG_SEQ, String.valueOf(sequence.getAndIncrement()));
+                    }
                 } catch (UnsupportedEncodingException ex) {
                     logger.error(ex.getMessage(), ex);
                     HttpResponseHandler.sendError(ctx, HttpResponseStatus.BAD_REQUEST, ex.getClass().getSimpleName() + ": " + ex.getMessage());
                 }
+
                 Request request = new Request(header);
                 request.setBody(httpRequest.content());
                 ctx.fireChannelRead(request);
