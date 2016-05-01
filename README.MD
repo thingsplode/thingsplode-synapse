@@ -30,8 +30,8 @@ Hides the complexity of microservice communication for you. It provides:
 - [ ] error handling and message resend mechanism;
 - [ ] built-in performance monitoring
 - [ ] api keys - #5;
-- [ ] Endpoint Proxy (Client) authorization - #6;
-- [ ] message authentication - thingsplode#7;
+- [ ] #6 Endpoint Proxy (Client) authorization;
+- [ ] thingsplode#7 - message authentication;
 
 ### Pluggable serialization:
 - [x] json with Jackson
