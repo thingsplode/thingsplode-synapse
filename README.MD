@@ -9,10 +9,11 @@
 # Packed with features, yet easy to use
 ## Containerless communication
 Supported protocols:
-- [x] REST over HTTP
-- [ ] REST over HTTPS
-- [ ] Websocket
-- [ ] MQTT
+- [x] REST over HTTP (simplicity);
+- [ ] REST over HTTPS (simplicity and security);
+- [ ] Websocket (bidirectional communication for mobile and web);
+- [ ] MQTT (small size for IoT);
+- [ ] Unix domain sockets for microservices within the same Docker container (or other host-only communication) (speed);
 
 ## Simplified microservice communication
 Hides the complexity of microservice communication for you. It provides:
@@ -39,7 +40,7 @@ Hides the complexity of microservice communication for you. It provides:
 - [ ] publish one service over multiple channels (Websocket / Rest / MqTT)
 - [ ] reactive programming
 
-## Synapse Endpoint Proxy (Client)*
+## Synapse Endpoint Proxy (Client)
 - [x] client proxy with sequential/blocking dispatching;
 - [x] client proxy with asynchronous message dispatching;
 - [ ] message pipelining on the Endpoint (Server) side (see HTTP pipelining);
@@ -48,7 +49,6 @@ Hides the complexity of microservice communication for you. It provides:
 Some architectural choices are supporting the performance of the library:
 - [x] non-blocking message processing (speed)
 - [ ] reactive programming in the user space
-- [ ] Unix domain sockets for micro-services within the same Docker container (or other host-only communication) (speed)
 - [ ] memory mapped files for persistence (speed)
 
 # Supported Message patterns
