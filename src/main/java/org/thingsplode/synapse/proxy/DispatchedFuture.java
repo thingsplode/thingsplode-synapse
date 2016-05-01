@@ -74,4 +74,9 @@ public class DispatchedFuture<REQ, RSP> extends CompletableFuture<RSP> {
         this.requestFiredTime = requestFiredTime;
     }
 
+    @Override
+    public String toString() {
+        return "{" + super.toString() + " -> " + "channel.active=" + channel.isActive() + ", timeout=" + timeout + ", requestFiredTime=" + requestFiredTime + '}';
+    }
+    
 }

@@ -29,6 +29,9 @@ Hides the complexity of microservice communication for you. It provides:
 - [ ] reliable messaging;
 - [ ] error handling and message resend mechanism;
 - [ ] built-in performance monitoring
+- [ ] api keys
+- [ ] Endpoint Proxy (Client) authorization
+- [ ] message authentication
 ### Pluggable serialization:
 - [x] json with Jackson
 - [ ] json with Gson
@@ -69,3 +72,6 @@ Some architectural choices are supporting the performance of the library:
 ## Push Notification
 
 - [ ] A notification is sent by the Endpoint service (Server) to the Endpoint Proxty (Client) also with reliable messaging.
+
+# Other features
+- [x] http keepalive support

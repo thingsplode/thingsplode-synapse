@@ -43,7 +43,7 @@ public class ResponseHandler extends SimpleChannelInboundHandler<Response> {
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Response msg) throws Exception {
-        DispatchedFuture df = dfh.responseReceived(null);
+        DispatchedFuture df = dfh.responseReceived(msg.getHeader().getCorrelationId());
         if (df == null) {
             logger.error("Response received but no request token was available. Discarding message.");
         } else {

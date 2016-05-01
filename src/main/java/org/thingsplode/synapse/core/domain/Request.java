@@ -76,11 +76,15 @@ public class Request<T extends Serializable> extends AbstractMessage<T> {
         return this.header != null ? this.header.getProperty(propertyKey) : Optional.empty();
     }
 
-    public static class RequestHeader extends AbstractMessage.MessageHeader {
+    public static class RequestHeader extends MessageHeader {
+
+        /**
+         * Used only internally at the Endpoint to keep track of Request/Response message for message pipelining;
+         */
         public static final String MSG_SEQ = "MSG_SEQ";
-        private Uri uri;
-        private RequestMethod method;
-        private boolean keepalive = false;
+        Uri uri;
+        RequestMethod method;
+        boolean keepalive = false;
 
         public RequestHeader(Uri uri, RequestMethod method) {
             this(null, uri, method);

@@ -56,14 +56,14 @@ public class Response<T> extends AbstractMessage<T> {
         return header != null ? header.getProperty(propertyKey) : Optional.empty();
     }
 
-    public static class ResponseHeader extends AbstractMessage.MessageHeader {
+    public static class ResponseHeader extends MessageHeader {
 
         @JsonSerialize(using = HttpResponseStatusSerializer.class)
         @JsonDeserialize(using = HttpResponseStatusDeserializer.class)
-        private HttpResponseStatus responseCode = HttpResponseStatus.INTERNAL_SERVER_ERROR;
-        private String correlationId;
-        private MediaType contentType;
-        private boolean keepAlive = false;
+        HttpResponseStatus responseCode = HttpResponseStatus.INTERNAL_SERVER_ERROR;
+        String correlationId;
+        MediaType contentType;
+        boolean keepAlive = false;
 
         public ResponseHeader(HttpResponseStatus responseCode) {
             this.responseCode = responseCode;

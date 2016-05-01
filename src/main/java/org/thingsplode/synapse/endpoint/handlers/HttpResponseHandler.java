@@ -39,6 +39,17 @@ import org.thingsplode.synapse.serializers.SerializationService;
 import org.thingsplode.synapse.serializers.SynapseSerializer;
 
 /**
+ * Once the Response is prepared by the business logic, the final touches will
+ * be added by this handler and the Synapse specific Response will be converted
+ * to an HttpResponse.<br>
+ * This handler:
+ * <ul>
+ * <li> will convert the message body object into a serialized message format
+ * (eg. Json);
+ * <li> handle keepalive status
+ * <li> convert Response Message Properties to HTTP headers
+ * <li> prepare additional HTTP specific header values
+ * </ul>
  *
  * @author Csaba Tamas
  */
@@ -73,6 +84,9 @@ public class HttpResponseHandler extends SimpleChannelInboundHandler<Response> {
         rsp.getHeader().getProperties().keySet().stream().forEach(k -> {
             httpResponse.headers().set(k, rsp.getHeader().getProperty(k));
         });
+        if (rsp.getHeader().getMsgId() != null) {
+            httpResponse.headers().set(AbstractMessage.PROP_MESSAGE_ID, rsp.getHeader().getMsgId());
+        }
         if (rsp.getHeader().getCorrelationId() != null) {
             httpResponse.headers().set(AbstractMessage.PROP_CORRELATION_ID, rsp.getHeader().getCorrelationId());
         }

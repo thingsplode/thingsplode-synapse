@@ -45,7 +45,7 @@ public class Dispatcher {
     private int port;
 
     public Dispatcher(boolean retryConnection, DispatchedFutureHandler dispatchedFutureHandler, Bootstrap b, String host, int port) {
-        this(dispatchedFutureHandler,b, host, port);
+        this(dispatchedFutureHandler, b, host, port);
         this.retryConnection = retryConnection;
     }
 
@@ -123,7 +123,7 @@ public class Dispatcher {
                     //the message could not be sent
                     //todo: build a retry mechanism?
 
-                    dispatchedFutureHandler.responseReceived((String) (request.getRequestHeaderProperty(AbstractMessage.PROP_MESSAGE_ID).orElse(null)));
+                    dispatchedFutureHandler.responseReceived(request.getHeader().getMsgId());
                     dispatcherFuture.completeExceptionally(future.cause());
                     future.channel().close();
                 } else if (logger.isDebugEnabled()) {

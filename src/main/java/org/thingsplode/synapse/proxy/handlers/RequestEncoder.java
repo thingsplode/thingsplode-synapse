@@ -22,6 +22,7 @@ import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
 import java.util.HashSet;
 import java.util.List;
+import org.thingsplode.synapse.core.domain.AbstractMessage;
 import org.thingsplode.synapse.core.domain.Request;
 import org.thingsplode.synapse.proxy.RequestDecorator;
 
@@ -47,6 +48,7 @@ public class RequestEncoder extends MessageToMessageEncoder<Request> {
             request.getHeader().addProperty(HttpHeaderNames.ACCEPT_ENCODING.toString(), HttpHeaderValues.GZIP.toString());
             request.getHeader().addProperty(HttpHeaderNames.ACCEPT.toString(), "*/*");
             request.getHeader().addProperty(HttpHeaderNames.USER_AGENT.toString(), "synapse");
+            request.getHeader().addProperty(AbstractMessage.PROP_MESSAGE_ID, request.getHeader().getMsgId());
         });
     }
 

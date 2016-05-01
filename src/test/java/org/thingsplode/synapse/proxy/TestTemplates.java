@@ -18,6 +18,7 @@ package org.thingsplode.synapse.proxy;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import java.io.UnsupportedEncodingException;
 import java.util.UUID;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutionException;
 import org.junit.Assert;
 import org.thingsplode.synapse.core.domain.ParameterWrapper;
@@ -80,11 +81,12 @@ public class TestTemplates {
     }
 
     public static void sequentialTest(String header, Dispatcher dispatcher) throws InterruptedException, UnsupportedEncodingException, ExecutionException {
+        int msgCnt = 10;
         System.out.println("\n\n*** " + header + " > Thread: " + Thread.currentThread().getName());
         Assert.assertNotNull("the dispacther must not be null", dispatcher);
         String serviceMethod = "/com/acme/synapse/testdata/services/RpcEndpointImpl/echoWithTimeout";
         boolean timeout = false;
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < msgCnt; i++) {
             System.out.println("\n\n============== MSG COUNTER [" + i + "] ==============");
             String uuid = UUID.randomUUID().toString();
             ParameterWrapper pw = new ParameterWrapper();
@@ -111,6 +113,38 @@ public class TestTemplates {
             timeout = !timeout;
         }
         System.out.println("-------- EOF " + header + " --------\n\n");
-
+    }
+    
+    public static void burstTest(String header, Dispatcher dispatcher) throws UnsupportedEncodingException, InterruptedException{
+        int msgCnt = 1000;
+        ArrayBlockingQueue requestQueue = new ArrayBlockingQueue(msgCnt);
+        System.out.println("\n\n*** " + header + " > Thread: " + Thread.currentThread().getName());
+        Assert.assertNotNull("the dispacther must not be null", dispatcher);
+        String serviceMethod = "/com/acme/synapse/testdata/services/RpcEndpointImpl/echoWithTimeout";
+        for (int i = 0; i < msgCnt; i++) {
+            System.out.println("\n\n============== MSG COUNTER [" + i + "] ==============");
+            String uuid = UUID.randomUUID().toString();
+            ParameterWrapper pw = new ParameterWrapper();
+            pw.add("arg0", Long.TYPE, 0);
+            pw.add("arg1", String.class, uuid);
+            DispatchedFuture<Request, Response> future = dispatcher.dispatch(Request.create(serviceMethod, RequestMethod.GET, pw), 10000);
+            requestQueue.add(future);
+            future.handle((rsp, ex) -> {
+                if (rsp != null) {
+                    System.out.println("RESPONSE RECEIVED@Test Case => " + (rsp.getHeader() != null ? rsp.getHeader().getResponseCode() : "NULL RSP CODE") + " //Body: " + rsp.getBody());
+                    Assert.assertTrue("Execution should be scuccessfull", rsp.getHeader().getResponseCode().equals(HttpResponseStatus.OK));
+                    Assert.assertTrue("The response type should be string, but is: " + (rsp.getBody() != null ? rsp.getBody().getClass() : "null"), rsp.getBody() instanceof String);
+                    Assert.assertTrue("the response uuid should match the request uuid", ((String) rsp.getBody()).equals(uuid));
+                    requestQueue.remove(future);
+                } else {
+                    System.out.println("\n\nTEST Exception -> " + ex.getMessage() + "| returning -1\n\n");
+                    Assert.fail("None of the request should time out.");
+                }
+                Assert.assertTrue(rsp != null);
+                return "";
+            });
+        }
+        while (!requestQueue.isEmpty()){
+        }
     }
 }

@@ -17,10 +17,6 @@ package org.thingsplode.synapse.core.domain;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import java.io.Serializable;
-import java.net.SocketAddress;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
 import org.thingsplode.synapse.core.exceptions.MarshallerException;
 
 /**
@@ -30,8 +26,8 @@ import org.thingsplode.synapse.core.exceptions.MarshallerException;
  */
 public abstract class AbstractMessage<T> implements Serializable {
 
-    public final static String PROP_MESSAGE_ID = "Message-id";
-    public final static String PROP_CORRELATION_ID = "Correlation-id";
+    public final static String PROP_MESSAGE_ID = "Message-ID";
+    public final static String PROP_CORRELATION_ID = "Correlation-ID";
     public final static String PROP_PROTOCOL_VERSION = "Protocol-Version";
     @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@body_type", visible = true)
     private T body;
@@ -42,63 +38,6 @@ public abstract class AbstractMessage<T> implements Serializable {
     public AbstractMessage(T body) {
         this();
         this.body = body;
-    }
-
-    public static class MessageHeader {
-
-        protected String msgId;
-        private String protocolVersion;
-        private SocketAddress remoteAddress;
-        private final HashMap<String, String> properties = new HashMap<>();
-
-        public MessageHeader() {
-        }
-
-        public MessageHeader(String msgId) {
-            this.msgId = msgId;
-        }
-
-        public String getMsgId() {
-            return msgId;
-        }
-
-        public void setMsgId(String msgId) {
-            this.msgId = msgId;
-        }
-
-        public String getProtocolVersion() {
-            return protocolVersion;
-        }
-
-        public void setProtocolVersion(String protocolVersion) {
-            this.protocolVersion = protocolVersion;
-        }
-
-        public SocketAddress getRemoteAddress() {
-            return remoteAddress;
-        }
-
-        public void setRemoteAddress(SocketAddress callerAddress) {
-            this.remoteAddress = callerAddress;
-        }
-        
-        public void addProperty(String key, String value) {
-            properties.put(key, value);
-        }
-
-        public Optional<String> getProperty(String propertyKey) {
-            return Optional.ofNullable(properties.get(propertyKey));
-        }
-
-        public HashMap<String, String> getProperties() {
-            return properties;
-        }
-
-        public void addAllProperties(Iterable<Map.Entry<String, String>> iterable) {
-            if (iterable != null) {
-                iterable.forEach(e -> properties.put(e.getKey(), e.getValue()));
-            }
-        }
     }
     
     public T getBody() {

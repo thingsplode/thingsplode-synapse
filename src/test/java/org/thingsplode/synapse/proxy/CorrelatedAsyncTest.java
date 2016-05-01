@@ -50,4 +50,9 @@ public class CorrelatedAsyncTest extends AbstractCorrelatedClientTest {
         TestTemplates.sequentialTest("SEQUENTIAL CORRELATED REQUEST EXECUTION TEST", dispatcher);
     }
 
+    @Test
+    public void burstTest() throws UnsupportedEncodingException, InterruptedException {
+        TestTemplates.burstTest("BURST CORRELATED REQUEST EXECUTION TEST", dispatcher);
+    }
+
 }

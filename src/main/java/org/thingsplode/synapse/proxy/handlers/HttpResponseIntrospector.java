@@ -50,7 +50,7 @@ public class HttpResponseIntrospector extends SimpleChannelInboundHandler<HttpRe
                 content.retain();
                 payloadAsSring = new String(dst, Charset.forName("UTF-8"));
             }
-            logger.debug("Message@Proxy received [" + msg.getClass().getName() + "]: \n\n"
+            logger.debug("Message@Proxy received [" + msg.getClass().getSimpleName() + "]: \n\n"
                     + "Status: " + msg.status() + "\n"
                     + hb.toString() + "\n" + "Payload -> [" + (!Util.isEmpty(payloadAsSring) ? payloadAsSring : "EMPTY") + "]\n");
         }

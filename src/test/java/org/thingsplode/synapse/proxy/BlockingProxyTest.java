@@ -73,6 +73,11 @@ public class BlockingProxyTest extends AbstractBlockingClientTest {
     public void sequentialMessageTest() throws InterruptedException, UnsupportedEncodingException, ExecutionException {
         TestTemplates.sequentialTest("SEQUENTIAL BLOCKING REQUEST EXECUTION TEST", dispatcher);
     }
+    
+    @Test
+    public void burstTest() throws UnsupportedEncodingException, InterruptedException{
+        TestTemplates.burstTest("BURST BLOCKING REQUEST EXECUTION TEST", dispatcher);
+    }
    
     //todo: testing already bound exception
     //todo: broadcast test: //defaultDispatcher.broadcast(Request.create("/com/acme/synapse/testdata/services/RpcEndpointImpl/ping", Request.RequestHeader.RequestMethod.GET));
