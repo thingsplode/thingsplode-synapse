@@ -33,6 +33,8 @@ Hides the complexity of microservice communication for you. It provides:
 - [ ] #6 Endpoint Proxy (Client) authorization;
 - [ ] thingsplode#7 - message authentication;
 
+#6
+
 ### Pluggable serialization:
 - [x] json with Jackson
 - [ ] json with Gson
