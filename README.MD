@@ -31,7 +31,8 @@ Hides the complexity of microservice communication for you. It provides:
 - [ ] built-in performance monitoring
 - [ ] api keys - #5;
 - [ ] Endpoint Proxy (Client) authorization - #6;
-- [ ] message authentication - #7;
+- [ ] message authentication - thingsplode#7;
+
 ### Pluggable serialization:
 - [x] json with Jackson
 - [ ] json with Gson
