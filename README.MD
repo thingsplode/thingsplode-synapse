@@ -11,11 +11,11 @@
 Supported protocols:
 - [x] REST over HTTP (simplicity);
 - [x] File streaming (download) over HTTP
-- [ ] File streaming (upload) over HTTP
+- [ ] File streaming (upload) over HTTP - #2
 - [ ] REST over HTTPS (simplicity and security);
 - [ ] Websocket (bidirectional communication for mobile and web);
 - [ ] MQTT (small size for IoT);
-- [ ] Unix domain sockets for microservices within the same Docker container (or other host-only communication) (speed);
+- [ ] Unix domain sockets for microservices within the same Docker container (or other host-only communication) (speed) - #3;
 
 ## Simplified microservice communication
 Hides the complexity of microservice communication for you. It provides:
@@ -25,18 +25,18 @@ Hides the complexity of microservice communication for you. It provides:
 - [x] message introspectors on the Endpoint (server) and Endpoint Proxy (client);
 - [ ] load balancer with partitioning / fail-over;
 - [ ] circuit breaker (fast failing of connections);
-- [ ] replicated service registry;
+- [ ] replicated service registry - #4;
 - [ ] reliable messaging;
 - [ ] error handling and message resend mechanism;
 - [ ] built-in performance monitoring
-- [ ] api keys
-- [ ] Endpoint Proxy (Client) authorization
-- [ ] message authentication
+- [ ] api keys - #5;
+- [ ] Endpoint Proxy (Client) authorization - #6;
+- [ ] message authentication - #7;
 ### Pluggable serialization:
 - [x] json with Jackson
 - [ ] json with Gson
 - [ ] message pack
-- [ ] google protocol buffer
+- [ ] google protocol buffer - #8;
 
 ## Synapse Endpoint (Server)
 - [x] request/response pattern
@@ -47,7 +47,7 @@ Hides the complexity of microservice communication for you. It provides:
 ## Synapse Endpoint Proxy (Client)
 - [x] client proxy with sequential/blocking dispatching;
 - [x] client proxy with asynchronous message dispatching;
-- [ ] message pipelining on the Endpoint (Server) side (see HTTP pipelining);
+- [ ] message pipelining on the Endpoint (Server) side (see HTTP pipelining) - #9;
 
 ## Non functional features
 Some architectural choices are supporting the performance of the library:
