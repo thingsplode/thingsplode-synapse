@@ -10,6 +10,8 @@
 ## Containerless communication
 Supported protocols:
 - [x] REST over HTTP (simplicity);
+- [x] File streaming (download) over HTTP
+- [ ] File streaming (upload) over HTTP
 - [ ] REST over HTTPS (simplicity and security);
 - [ ] Websocket (bidirectional communication for mobile and web);
 - [ ] MQTT (small size for IoT);
@@ -38,7 +40,6 @@ Hides the complexity of microservice communication for you. It provides:
 - [x] rpc pattern
 - [ ] publish/subscribe patterns
 - [ ] publish one service over multiple channels (Websocket / Rest / MqTT)
-- [ ] reactive programming
 
 ## Synapse Endpoint Proxy (Client)
 - [x] client proxy with sequential/blocking dispatching;
@@ -55,16 +56,16 @@ Some architectural choices are supporting the performance of the library:
 
 ## Request/Response
 
-- [x] The client service sends a Request to the serving service and expects a Response;
+- [x] The Endpoint Proxy (Client) dispatches a Request to the Endpoint service (Server) and expects a Response;
 
 ## Event
 
-- [ ] The client can signal events towards the service service (server) in a fire and forget manner.
+- [ ] The Endpoint Proxy can signal events towards the Endpoint service (Server) in a fire and forget manner (also with activated reliable messaging).
 
 ## Command/Result
 
-- [ ] The serving service sends commands to the client and expects a command execution result.
+- [ ] The Endpoint service (Server) sends commands to the Endpoint Proxy (Client) and expects a Command Execution Result.
 
 ## Push Notification
 
-- [ ] A notification is sent by the serving service to the client.
+- [ ] A notification is sent by the Endpoint service (Server) to the Endpoint Proxty (Client) also with reliable messaging.
