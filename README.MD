@@ -1,6 +1,6 @@
-*Thingsplode Connect - blazingly fast, super-light communication library for anti-fragile cloud architecture.*
+*Thingsplode Synapse - blazingly fast, super-light communication library for anti-fragile cloud architecture.*
 
-*Work in progress*
+*_Work in progress_*
 
 # Use cases
 * shines in embedded environment where CPU cycles are precious;
