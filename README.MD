@@ -35,7 +35,8 @@ Hides the complexity of microservice communication for you. It provides:
 
 #7
 [#7]
-[#7](thingsplode/thingsplode-synapse/issues/7)
+[#7](/thingsplode/thingsplode-synapse/issues/7)
+[#7](issues/7)
 
 ### Pluggable serialization:
 - [x] json with Jackson
