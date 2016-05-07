@@ -29,6 +29,7 @@ public abstract class AbstractMessage<T> implements Serializable {
     public final static String PROP_MESSAGE_ID = "Message-ID";
     public final static String PROP_CORRELATION_ID = "Correlation-ID";
     public final static String PROP_PROTOCOL_VERSION = "Protocol-Version";
+    public final static String PROP_BODY_TYPE = "Body-Type";
     @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@body_type", visible = true)
     private T body;
 
@@ -39,7 +40,7 @@ public abstract class AbstractMessage<T> implements Serializable {
         this();
         this.body = body;
     }
-    
+
     public T getBody() {
         return body;
     }
@@ -58,6 +59,11 @@ public abstract class AbstractMessage<T> implements Serializable {
         } catch (ClassCastException ex) {
             throw new MarshallerException("The expected message is not type of " + type.getSimpleName() + ": " + ex.getMessage(), HttpStatus.EXPECTATION_FAILED, ex);
         }
+    }
+
+    @Override
+    public String toString() {
+        return "AbstractMessage{" + "body=" + body != null ? body.getClass().getSimpleName() : "null" + '}';
     }
 
 }

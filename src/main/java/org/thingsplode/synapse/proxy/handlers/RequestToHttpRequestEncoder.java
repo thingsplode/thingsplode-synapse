@@ -28,6 +28,7 @@ import io.netty.handler.codec.http.HttpVersion;
 import io.netty.util.AsciiString;
 import java.util.List;
 import java.util.Optional;
+import org.thingsplode.synapse.core.domain.AbstractMessage;
 import org.thingsplode.synapse.core.domain.MediaType;
 import org.thingsplode.synapse.core.domain.Request;
 import org.thingsplode.synapse.core.exceptions.SerializationException;
@@ -47,33 +48,36 @@ public class RequestToHttpRequestEncoder extends MessageToMessageEncoder<Request
         out.add(outMsg);
     }
 
-    private HttpRequest convert(Request in) throws SerializationException {
-        if (in == null || in.getHeader() == null) {
+    private HttpRequest convert(Request request) throws SerializationException {
+        if (request == null || request.getHeader() == null) {
             return null;
         }
         HttpMethod m = null;
-        if (in.getHeader().getMethod() != null) {
-            m = HttpMethod.valueOf(in.getHeader().getMethod().toString());
-        } else if (in.getHeader().getUri() != null && !Util.isEmpty(in.getHeader().getUri().getQuery())) {
+        if (request.getHeader().getMethod() != null) {
+            m = HttpMethod.valueOf(request.getHeader().getMethod().toString());
+        } else if (request.getHeader().getUri() != null && !Util.isEmpty(request.getHeader().getUri().getQuery())) {
             m = HttpMethod.GET;
-        } else if (in.getBody() != null) {
+        } else if (request.getBody() != null) {
             m = HttpMethod.PUT;
         } else {
             m = HttpMethod.GET;
         }
         final HttpRequest out;
-        if (in.getBody() != null) {
-            Optional<String> contentTypeOpt = in.getRequestHeaderProperty(HttpHeaderNames.ACCEPT.toString());
+        if (request.getBody() != null) {
+            Optional<String> contentTypeOpt = request.getRequestHeaderProperty(HttpHeaderNames.ACCEPT.toString());
             MediaType mt = contentTypeOpt.isPresent() ? new MediaType(contentTypeOpt.get()) : new MediaType(MediaType.APPLICATION_JSON);
-            byte[] payload = EndpointProxy.SERIALIZATION_SERVICE.getSerializer(mt).marshall(in.getBody());
-            out = new DefaultFullHttpRequest(HttpVersion.HTTP_1_0, m, in.getHeader().getUri().getPath(), Unpooled.wrappedBuffer(payload));
+            request.getHeader().addProperty(AbstractMessage.PROP_BODY_TYPE, request.getBody().getClass().getCanonicalName());
+            byte[] payload = EndpointProxy.SERIALIZATION_SERVICE.getSerializer(mt).marshall(request.getBody());
+            out = new DefaultFullHttpRequest(HttpVersion.HTTP_1_0, m, request.getHeader().getUri().getPath(), Unpooled.wrappedBuffer(payload));
             out.headers().add(HttpHeaderNames.CONTENT_LENGTH, payload.length);
         } else {
-            out = new DefaultHttpRequest(HttpVersion.HTTP_1_1, m, in.getHeader().getUri().getPath());
+            out = new DefaultHttpRequest(HttpVersion.HTTP_1_1, m, request.getHeader().getUri().getPath());
         }
-        in.getHeader().getProperties().forEach((k, v) -> {
-            out.headers().set(new AsciiString(k), new AsciiString(v));
-        });
+        if (request.getHeader() != null && request.getHeader().getProperties() != null) {
+            request.getHeader().getProperties().forEach((k, v) -> {
+                out.headers().set(new AsciiString(k), new AsciiString(v != null ? v : ""));
+            });
+        }
         return out;
     }
 }

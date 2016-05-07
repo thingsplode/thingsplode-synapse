@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.thingsplode.synapse.util.Util;
 
 /**
  *
@@ -43,6 +44,9 @@ public class MediaType {
     private final Map<String, String> parameters = new HashMap<>();
 
     public MediaType(String segment) {
+        if (Util.isEmpty(segment)){
+            segment = "text/plain";
+        }
         this.name = segment;
         String[] pieces = segment.split("\\s*;\\s*");
         Matcher matcher = MEDIA_TYPE_PATTERN.matcher(pieces[0]);

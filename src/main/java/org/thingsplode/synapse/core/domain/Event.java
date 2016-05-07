@@ -16,6 +16,7 @@
 package org.thingsplode.synapse.core.domain;
 
 import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
 
 /**
  *
@@ -30,5 +31,18 @@ public class Event<T extends Serializable> extends Request<T> {
 
     public Event(RequestHeader header, T body) {
         super(header, body);
+    }
+
+    public static Event create(String uri) throws UnsupportedEncodingException {
+        return new Event(new RequestHeader(new Uri(uri), RequestMethod.POST));
+    }
+
+    public static Event create(String uri, Serializable body) throws UnsupportedEncodingException {
+        return new Event(new RequestHeader(new Uri(uri), RequestMethod.POST), body);
+    }
+
+    @Override
+    public String toString() {
+        return "Event{" + super.toString() + '}';
     }
 }

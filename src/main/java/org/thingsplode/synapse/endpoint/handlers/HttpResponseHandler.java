@@ -29,12 +29,13 @@ import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.util.CharsetUtil;
+import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.thingsplode.synapse.core.domain.AbstractMessage;
 import org.thingsplode.synapse.core.domain.MediaType;
 import org.thingsplode.synapse.core.domain.Response;
-import org.thingsplode.synapse.core.domain.ResponseBodyWrapper;
+import org.thingsplode.synapse.core.domain.EmptyBody;
 import org.thingsplode.synapse.serializers.SerializationService;
 import org.thingsplode.synapse.serializers.SynapseSerializer;
 
@@ -63,7 +64,11 @@ public class HttpResponseHandler extends SimpleChannelInboundHandler<Response> {
     protected void channelRead0(ChannelHandlerContext ctx, Response rsp) throws Exception {
         MediaType mt = rsp.getHeader().getContentType();
         SynapseSerializer<String> serializer = serializationService.getSerializer(mt);
-        byte[] payload = serializer.marshall(new ResponseBodyWrapper<>(rsp.getBody()));
+
+        if (rsp.getBody() != null) {
+            rsp.getHeader().addProperty(AbstractMessage.PROP_BODY_TYPE, rsp.getBody().getClass().getCanonicalName());
+        }
+        byte[] payload = serializer.marshall(rsp.getBody() != null ? rsp.getBody() : new EmptyBody());
         FullHttpResponse response = new DefaultFullHttpResponse(
                 HttpVersion.HTTP_1_1, rsp.getHeader().getResponseCode(), Unpooled.wrappedBuffer(payload));
         response.headers().set(HttpHeaderNames.CONTENT_TYPE, mt != null ? mt.getName() : "application/json; charset=UTF-8");
@@ -82,7 +87,10 @@ public class HttpResponseHandler extends SimpleChannelInboundHandler<Response> {
 
     private void decorate(Response rsp, HttpResponse httpResponse) {
         rsp.getHeader().getProperties().keySet().stream().forEach(k -> {
-            httpResponse.headers().set(k, rsp.getHeader().getProperty(k));
+            Optional<String> headerValueOpt = rsp.getHeader().getProperty(k);
+            if (headerValueOpt.isPresent()) {
+                httpResponse.headers().set(k, headerValueOpt.get());
+            }
         });
         if (rsp.getHeader().getMsgId() != null) {
             httpResponse.headers().set(AbstractMessage.PROP_MESSAGE_ID, rsp.getHeader().getMsgId());

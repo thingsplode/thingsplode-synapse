@@ -19,11 +19,10 @@ import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.thingsplode.synapse.core.domain.AbstractMessage;
+import org.thingsplode.synapse.core.domain.Event;
 import org.thingsplode.synapse.core.domain.Request;
 import org.thingsplode.synapse.core.domain.Response;
 
@@ -43,13 +42,15 @@ public class Dispatcher {
     private Bootstrap b;
     private String host;
     private int port;
+    private MessageIdGeneratorStrategy idGeneratorStrategy;
 
-    public Dispatcher(boolean retryConnection, DispatchedFutureHandler dispatchedFutureHandler, Bootstrap b, String host, int port) {
+    public Dispatcher(boolean retryConnection, DispatchedFutureHandler dispatchedFutureHandler, MessageIdGeneratorStrategy idGeneratorStrategy, Bootstrap b, String host, int port) {
         this(dispatchedFutureHandler, b, host, port);
+        this.idGeneratorStrategy = idGeneratorStrategy;
         this.retryConnection = retryConnection;
     }
 
-    public Dispatcher(DispatchedFutureHandler dispatchedFutureHandler, Bootstrap b, String host, int port) {
+    private Dispatcher(DispatchedFutureHandler dispatchedFutureHandler, Bootstrap b, String host, int port) {
         this.b = b;
         this.host = host;
         this.port = port;
@@ -89,18 +90,7 @@ public class Dispatcher {
         CORRELATED_ASYNC;
     };
 
-    /**
-     * It will send a request in a fire&forget fashion, not expecting a
-     * response;
-     *
-     * @param event
-     * @return
-     */
-    public ChannelFuture broadcast(Request event) {
-        return channel.writeAndFlush(event);
-    }
-
-    public DispatchedFuture<Request, Response> dispatch(Request request, long requestTimeout) throws InterruptedException {
+    private void checkChannel() throws InterruptedException {
         if (!channel.isActive()) {
             if (!this.destroying) {
                 logger.info("Channel is inactive. Trying to reconnect the proxy...");
@@ -109,7 +99,19 @@ public class Dispatcher {
                 throw new IllegalStateException("The channel is closed and the dispatcher is a process of shutdown.");
             }
         }
-        request.getHeader().setMsgId(UUID.randomUUID().toString());
+    }
+
+    /**
+     *
+     * @param request {@link Request} or {@link Event}
+     * @param requestTimeout in milliseconds
+     * @return {@link DispatchedFuture}
+     * @throws InterruptedException when the channel is inactive and
+     * reconnection is interrupted
+     */
+    public DispatchedFuture<Request, Response> dispatch(Request request, long requestTimeout) throws InterruptedException {
+        checkChannel();
+        request.getHeader().setMsgId(idGeneratorStrategy.getNextId());
         DispatchedFuture<Request, Response> dispatcherFuture = new DispatchedFuture<>(request, channel, requestTimeout);
         if (pattern != null && (pattern == DispatcherPattern.CORRELATED_ASYNC || pattern == DispatcherPattern.BLOCKING_REQUEST)) {
             dispatchedFutureHandler.beforeDispatch(dispatcherFuture);
@@ -122,12 +124,11 @@ public class Dispatcher {
                 if (!future.isSuccess()) {
                     //the message could not be sent
                     //todo: build a retry mechanism?
-
                     dispatchedFutureHandler.responseReceived(request.getHeader().getMsgId());
                     dispatcherFuture.completeExceptionally(future.cause());
                     future.channel().close();
-                } else if (logger.isDebugEnabled()) {
-                    logger.debug("Request message is succesfully dispatched with Msg. Id.: " + request.getHeader().getMsgId());
+                } else if (logger.isTraceEnabled()) {
+                    logger.trace("Request message is succesfully dispatched with Msg. Id.: " + request.getHeader().getMsgId());
                 }
             }
         });

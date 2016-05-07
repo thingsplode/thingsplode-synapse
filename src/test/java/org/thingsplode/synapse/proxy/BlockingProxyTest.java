@@ -15,16 +15,23 @@
  */
 package org.thingsplode.synapse.proxy;
 
+import com.acme.synapse.testdata.services.core.Address;
+import io.netty.handler.codec.http.HttpResponseStatus;
+import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import javax.net.ssl.SSLException;
 import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.thingsplode.synapse.AbstractBlockingClientTest;
+import org.thingsplode.synapse.TestEventProcessor;
+import org.thingsplode.synapse.core.domain.Event;
 
 /**
  *
@@ -73,12 +80,51 @@ public class BlockingProxyTest extends AbstractBlockingClientTest {
     public void sequentialMessageTest() throws InterruptedException, UnsupportedEncodingException, ExecutionException {
         TestTemplates.sequentialTest("SEQUENTIAL BLOCKING REQUEST EXECUTION TEST", dispatcher);
     }
-    
+
     @Test
-    public void burstTest() throws UnsupportedEncodingException, InterruptedException{
+    public void burstTest() throws UnsupportedEncodingException, InterruptedException {
         TestTemplates.burstTest("BURST BLOCKING REQUEST EXECUTION TEST", dispatcher);
     }
-   
+
+    @Test
+    public void eventTestWithWrongAddress() throws UnsupportedEncodingException, InterruptedException, ExecutionException {
+        //TestTemplates.testEvent("BLOCKING EVENT", dispatcher);
+        System.out.println("\n\n*** " + "BLOCKING EVENT WITH WRONG TARGET" + " > Thread: " + Thread.currentThread().getName());
+        boolean success = dispatcher.dispatch(Event.create("/default/"), 1000).handle((rsp, ex) -> {
+            if (rsp != null) {
+                System.out.println("\n\nResponse@Test received with status: [" + rsp.getHeader().getResponseCode().toString() + "]");
+                return rsp.getHeader().getResponseCode() == HttpResponseStatus.ACCEPTED;
+
+            } else {
+                ex.printStackTrace();
+                return false;
+            }
+        }).get();
+        //Event<Serializable> event = TestEventProcessor.eventQueue.poll(10, TimeUnit.MINUTES);
+    }
+
+    @Test
+    public void eventTest() throws UnsupportedEncodingException, InterruptedException, ExecutionException {
+        System.out.println("\n\n*** " + "BLOCKING EVENT" + " > Thread: " + Thread.currentThread().getName());
+        Event evt = Event.create("/default/consume");
+        evt.setBody(new Address("some street", "soem country", 53600));
+        boolean success = dispatcher.dispatch(evt, 30000).handle((rsp, ex) -> {
+            if (rsp != null) {
+                System.out.println("\n\nResponse@Test received with status: [" + rsp.getHeader().getResponseCode().toString() + "]");
+                return rsp.getHeader().getResponseCode().equals(HttpResponseStatus.ACCEPTED);
+            } else {
+                ex.printStackTrace();
+                return false;
+            }
+        }).get();
+        Assert.assertTrue("the message must succeed.", success);
+        Event<Serializable> event = TestEventProcessor.eventQueue.poll(10, TimeUnit.SECONDS);
+        Assert.assertTrue("Event must not be null", event != null);
+    }
+
+    //todo: test with service published in the root context /
+    //events should be processed with:  202 Accepted
+    //swagger reads from the class path and list services which might not be published
     //todo: testing already bound exception
     //todo: broadcast test: //defaultDispatcher.broadcast(Request.create("/com/acme/synapse/testdata/services/RpcEndpointImpl/ping", Request.RequestHeader.RequestMethod.GET));
 }

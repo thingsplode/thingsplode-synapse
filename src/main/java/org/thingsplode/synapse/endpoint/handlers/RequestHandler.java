@@ -20,6 +20,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import java.nio.charset.Charset;
+import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.thingsplode.synapse.core.domain.FileRequest;
@@ -37,6 +38,7 @@ import org.thingsplode.synapse.endpoint.ServiceRegistry;
 public class RequestHandler extends SimpleChannelInboundHandler<Request> {
 
     private final ServiceRegistry registry;
+    private final Pattern filePattern = Pattern.compile("\\/(.*)(.\\/)(.*)\\.[a-z]{3}");
     private static final Logger logger = LoggerFactory.getLogger(RequestHandler.class);
 
     public RequestHandler(ServiceRegistry registry) {
@@ -45,23 +47,27 @@ public class RequestHandler extends SimpleChannelInboundHandler<Request> {
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Request request) throws Exception {
-        Response response;
-        try {
-            if (request.getBody() == null || request.getBody() instanceof ByteBuf) {
-                ByteBuf content = (ByteBuf) request.getBody();
-                byte[] dst = new byte[content.capacity()];
-                content.getBytes(0, dst);
-                String json = new String(dst, Charset.forName("UTF-8"));
-                response = registry.invokeWithParsable(request.getHeader(), json);
-            } else {
-                response = new Response(new Response.ResponseHeader(request.getHeader(), HttpResponseStatus.valueOf(HttpStatus.BAD_REQUEST.value()), new MediaType("text/plain; charset=UTF-8")), "Body type not supported.");
+        Response response = null;
+        boolean fileDownload = filePattern.matcher(request.getHeader().getUri().getPath()).find();
+        if (!fileDownload) {
+
+            try {
+                if (request.getBody() == null || request.getBody() instanceof ByteBuf) {
+                    ByteBuf content = (ByteBuf) request.getBody();
+                    byte[] dst = new byte[content.capacity()];
+                    content.getBytes(0, dst);
+                    String json = new String(dst, Charset.forName("UTF-8"));
+                    response = registry.invokeWithParsable(request.getHeader(), json);
+                } else {
+                    response = new Response(new Response.ResponseHeader(request.getHeader(), HttpResponseStatus.valueOf(HttpStatus.BAD_REQUEST.value()), new MediaType("text/plain; charset=UTF-8")), "Body type not supported.");
+                }
+            } catch (SynapseException ex) {
+                logger.error("Error processing REST request: " + ex.getMessage(), ex);
+                response = new Response(new Response.ResponseHeader(request.getHeader(), HttpResponseStatus.valueOf(ex.getResponseStatus().value()), new MediaType("text/plain; charset=UTF-8")), ex.getClass().getSimpleName() + ": " + ex.getMessage());
             }
-        } catch (SynapseException ex) {
-            logger.error("Error processing REST request: " + ex.getMessage(), ex);
-            response = new Response(new Response.ResponseHeader(request.getHeader(), HttpResponseStatus.valueOf(ex.getResponseStatus().value()), new MediaType("text/plain; charset=UTF-8")), ex.getClass().getSimpleName() + ": " + ex.getMessage());
         }
 
-        if (response.getHeader().getResponseCode() == HttpResponseStatus.NOT_FOUND) {
+        if (fileDownload || response == null || response.getHeader().getResponseCode() == HttpResponseStatus.NOT_FOUND) {
             FileRequest fr = new FileRequest(request.getHeader());
             ctx.fireChannelRead(fr);
         } else {

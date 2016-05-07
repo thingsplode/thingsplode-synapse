@@ -37,6 +37,7 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -160,6 +161,14 @@ public class ServiceRegistry {
                     }
                 }
 
+                Optional<String> bodyTypeOpt = header.getProperty(AbstractMessage.PROP_BODY_TYPE);
+                if (bodyTypeOpt.isPresent()) {
+                    try {
+                        clazz = Class.forName(bodyTypeOpt.get());
+                    } catch (ClassNotFoundException ex) {
+                        logger.warn("Body type header was value provided with value [" + bodyTypeOpt.get() + "], but the class is not found. Falling back to parameter based determination of the body type.");
+                    }
+                }
                 requestBodyObject = serializationService.getPreferredSerializer(null).unMarshall(clazz, (String) requestBody);
                 if (wrapBodyFlag == WrapFlag.REQUEST) {
                     requestBodyObject = new Request(header, (Serializable) requestBodyObject);
@@ -178,8 +187,10 @@ public class ServiceRegistry {
     Response invoke(Request.RequestHeader header, MethodContext mc, Object requestBodyObject) throws MissingParameterException, ExecutionException {
         try {
             Object result = mc.method.invoke(mc.serviceInstance, mc.extractInvocationArguments(header, requestBodyObject));
-            if (result == null) {
+            if (result == null && !(mc.serviceInstance instanceof AbstractEventSink)) {
                 return new Response(new Response.ResponseHeader(header, HttpResponseStatus.OK));
+            } else if (result == null && mc.serviceInstance instanceof AbstractEventSink) {
+                return new Response(new Response.ResponseHeader(header, HttpResponseStatus.ACCEPTED));
             } else if (result instanceof Response) {
                 ((Response) result).getHeader().setCorrelationId(header.getMsgId());
                 return (Response) result;

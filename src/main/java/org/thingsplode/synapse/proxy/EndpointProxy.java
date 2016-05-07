@@ -32,6 +32,7 @@ import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashSet;
+import java.util.UUID;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 import javax.net.ssl.SSLException;
@@ -77,6 +78,7 @@ public class EndpointProxy {
     private HttpResponseToResponseDecoder httResponseToResponseDecoder = new HttpResponseToResponseDecoder();
     private final ResponseHandler responseHandler;
     private final InboundExceptionHandler inboundExceptionHandler;
+    private MessageIdGeneratorStrategy msgIdGeneratorStrategy;
 //todo: place connection uri to the aqcuire dispatcher, so one client instance can work with many servers
 
     private EndpointProxy(String baseUrl, Dispatcher.DispatcherPattern dispatchPattern) throws URISyntaxException {
@@ -92,7 +94,7 @@ public class EndpointProxy {
             case PIPELINING:
                 //todo: dfh = ?;
                 throw new UnsupportedOperationException("Method not supported yet.");
-                //break;
+            //break;
         }
         this.requestEncoder = new RequestEncoder(null, connectionUri.getHost() + ":" + connectionUri.getPort());
         this.inboundExceptionHandler = new InboundExceptionHandler(dfh);
@@ -154,6 +156,11 @@ public class EndpointProxy {
             throw new IllegalStateException("Please set this value before starting the " + EndpointProxy.class.getSimpleName());
         }
         this.connectTimeout = timeoutInMillis;
+        return this;
+    }
+
+    public EndpointProxy msgIdGeneratorStrategy(MessageIdGeneratorStrategy strategy) {
+        this.msgIdGeneratorStrategy = strategy;
         return this;
     }
 
@@ -225,8 +232,10 @@ public class EndpointProxy {
             sslContext = SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build();
         }
         //final int dirtyTrickPort = port; //needed because for some reason the compiler does not accept port and unitialized final int, even if there's an else in the if statement above.
-
-        Dispatcher dispatcher = new Dispatcher(retryConnection, dfh, b, this.connectionUri.getHost(), port);
+        if (this.msgIdGeneratorStrategy == null) {
+            this.msgIdGeneratorStrategy = () -> UUID.randomUUID().toString();
+        }
+        Dispatcher dispatcher = new Dispatcher(retryConnection, dfh, msgIdGeneratorStrategy, b, this.connectionUri.getHost(), port);
         dispatcher.connect();
         dispatchers.add(dispatcher);
         return dispatcher;

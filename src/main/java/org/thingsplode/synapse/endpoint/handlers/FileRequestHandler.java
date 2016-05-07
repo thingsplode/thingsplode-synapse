@@ -134,6 +134,7 @@ public final class FileRequestHandler extends SimpleChannelInboundHandler<FileRe
         
         if (uri.get().endsWith("/")){
             HttpResponseHandler.sendRedirect(ctx, uri.get() + "index.html");
+            return;
         }
 
         File file =  null;

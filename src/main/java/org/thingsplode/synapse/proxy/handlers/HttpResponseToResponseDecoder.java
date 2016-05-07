@@ -22,6 +22,7 @@ import io.netty.handler.codec.MessageToMessageDecoder;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpResponse;
+import io.netty.handler.codec.http.HttpResponseStatus;
 import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Optional;
@@ -30,8 +31,8 @@ import org.slf4j.LoggerFactory;
 import org.thingsplode.synapse.core.domain.AbstractMessage;
 import org.thingsplode.synapse.core.domain.MediaType;
 import org.thingsplode.synapse.core.domain.Response;
-import org.thingsplode.synapse.core.domain.ResponseBodyWrapper;
 import org.thingsplode.synapse.proxy.EndpointProxy;
+import org.thingsplode.synapse.util.Util;
 
 /**
  * The Handler of an HTTP Response, response initiated by a client request;
@@ -57,18 +58,31 @@ public class HttpResponseToResponseDecoder extends MessageToMessageDecoder<HttpR
         rsp.getHeader().setContentType(new MediaType(httpResponse.headers().get(HttpHeaderNames.CONTENT_TYPE)));
         rsp.getHeader().setRemoteAddress(ctx.channel().remoteAddress());
 
-        if (httpResponse instanceof FullHttpResponse) {
+        if (httpResponse instanceof FullHttpResponse && marshalledBodyExpected(httpResponse.status())) {
             ByteBuf contentBuffer = ((FullHttpResponse) httpResponse).content();
             byte[] dst = new byte[contentBuffer.capacity()];
             contentBuffer.getBytes(0, dst);
             String jsonResponse = new String(dst, Charset.forName("UTF-8"));
-
-            Object o = EndpointProxy.SERIALIZATION_SERVICE.getSerializer(getMediaType(httpResponse)).unMarshall(ResponseBodyWrapper.class, jsonResponse);
-            if (o != null && (o instanceof ResponseBodyWrapper)) {
-                rsp.setBody(((ResponseBodyWrapper) o).getBody());
+            String bodyType = httpResponse.headers().get(AbstractMessage.PROP_BODY_TYPE);
+            if (Util.notEmpty(bodyType)) {
+                try {
+                    Class clz = Class.forName(bodyType);
+                    Object payload = EndpointProxy.SERIALIZATION_SERVICE.getSerializer(getMediaType(httpResponse)).unMarshall(clz, jsonResponse);
+                    rsp.setBody(payload);
+                } catch (ClassNotFoundException cnfe) {
+                    logger.warn("There's a body of type [" + bodyType + "] on the response, but the corresponding class cannot be found. Skipping the deserialization of the body.");
+                }
+            } else if (Util.isEmpty(bodyType) && Util.notEmpty(jsonResponse)) {
+                logger.warn("Body serialization will be skipped due to missing body type info on the header.");
             }
         }
         out.add(rsp);
+    }
+
+    private boolean marshalledBodyExpected(HttpResponseStatus status) {
+        return (status.equals(HttpResponseStatus.ACCEPTED))
+                || (status.equals(HttpResponseStatus.OK))
+                || (status.equals(HttpResponseStatus.CREATED));
     }
 
     private MediaType getMediaType(HttpResponse response) {

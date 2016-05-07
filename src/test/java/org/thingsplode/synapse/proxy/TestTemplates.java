@@ -21,11 +21,13 @@ import java.util.UUID;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutionException;
 import org.junit.Assert;
+import org.thingsplode.synapse.TestEventProcessor;
 import org.thingsplode.synapse.core.domain.ParameterWrapper;
 import org.thingsplode.synapse.core.domain.Request;
 import org.thingsplode.synapse.core.domain.RequestMethod;
 import org.thingsplode.synapse.core.domain.Response;
 import org.thingsplode.synapse.core.exceptions.RequestTimeoutException;
+import org.thingsplode.synapse.core.domain.Event;
 
 /**
  *
@@ -114,8 +116,8 @@ public class TestTemplates {
         }
         System.out.println("-------- EOF " + header + " --------\n\n");
     }
-    
-    public static void burstTest(String header, Dispatcher dispatcher) throws UnsupportedEncodingException, InterruptedException{
+
+    public static void burstTest(String header, Dispatcher dispatcher) throws UnsupportedEncodingException, InterruptedException {
         int msgCnt = 1000;
         ArrayBlockingQueue requestQueue = new ArrayBlockingQueue(msgCnt);
         System.out.println("\n\n*** " + header + " > Thread: " + Thread.currentThread().getName());
@@ -144,7 +146,13 @@ public class TestTemplates {
                 return "";
             });
         }
-        while (!requestQueue.isEmpty()){
+        while (!requestQueue.isEmpty()) {
         }
+    }
+
+    public static void testEvent(String header, Dispatcher dispatcher) throws UnsupportedEncodingException, InterruptedException {
+        //System.out.println("\n\n*** " + header + " > Thread: " + Thread.currentThread().getName());
+        //dispatcher.broadcast(Event.create("/default/")).await();
+        //TestEventProcessor.eventQueue.take();
     }
 }

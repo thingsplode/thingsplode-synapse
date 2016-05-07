@@ -57,7 +57,7 @@ public class HttpRequestIntrospector extends SimpleChannelInboundHandler<HttpReq
             logger.debug("Message@Endpoint received: \n\n"
                     + "Uri: " + msg.uri() + "\n"
                     + "Method: " + msg.method() + "\n"
-                    + hb.toString() + "\n" + "Payload: " + (!Util.isEmpty(payloadAsSring) ? payloadAsSring + "\n" : "EMPTY\n"));
+                    + hb.toString() + "\n" + "Payload -> " + (!Util.isEmpty(payloadAsSring) ? payloadAsSring + "\n" : "EMPTY\n"));
         } else if (msg instanceof FullHttpRequest) {
             ((FullHttpRequest) msg).content().retain();
         }

@@ -25,6 +25,7 @@ import java.util.List;
 import org.thingsplode.synapse.core.domain.AbstractMessage;
 import org.thingsplode.synapse.core.domain.Request;
 import org.thingsplode.synapse.proxy.RequestDecorator;
+import org.thingsplode.synapse.util.Util;
 
 /**
  *
@@ -48,7 +49,9 @@ public class RequestEncoder extends MessageToMessageEncoder<Request> {
             request.getHeader().addProperty(HttpHeaderNames.ACCEPT_ENCODING.toString(), HttpHeaderValues.GZIP.toString());
             request.getHeader().addProperty(HttpHeaderNames.ACCEPT.toString(), "*/*");
             request.getHeader().addProperty(HttpHeaderNames.USER_AGENT.toString(), "synapse");
-            request.getHeader().addProperty(AbstractMessage.PROP_MESSAGE_ID, request.getHeader().getMsgId());
+            if (Util.notEmpty(request.getHeader().getMsgId())) {
+                request.getHeader().addProperty(AbstractMessage.PROP_MESSAGE_ID, request.getHeader().getMsgId());
+            }
         });
     }
 

@@ -24,13 +24,10 @@ import org.junit.rules.ExternalResource;
 import org.thingsplode.synapse.endpoint.Endpoint;
 import org.thingsplode.synapse.endpoint.Endpoint.ConnectionProvider;
 import com.acme.synapse.testdata.services.RpcEndpointImpl;
-import com.acme.synapse.testdata.services.core.Address;
 import java.io.FileNotFoundException;
 import org.junit.ClassRule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.thingsplode.synapse.core.domain.Event;
-import org.thingsplode.synapse.endpoint.AbstractEventSink;
 import org.thingsplode.synapse.proxy.Dispatcher;
 
 /**
@@ -62,12 +59,7 @@ public abstract class AbstractTest {
                             .publish(new EndpointTesterService())
                             .publish(new CrudTestEndpointService())
                             .publish(new DummyMarkedEndpoint())
-                            .publish("/default/", new AbstractEventSink<Address>(Address.class) {
-                                @Override
-                                protected void eventReceived(Event<Address> event) {
-                                    System.out.println("Event Received: " + event.getBody());
-                                }
-                            });
+                            .publish("/default/", new TestEventProcessor());
                     ep.start();
                 } catch (InterruptedException | FileNotFoundException ex) {
                     logger.error("Error while initializing test: " + ex.getMessage(), ex);

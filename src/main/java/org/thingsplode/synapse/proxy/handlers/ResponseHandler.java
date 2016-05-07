@@ -53,8 +53,11 @@ public class ResponseHandler extends SimpleChannelInboundHandler<Response> {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        logger.error("Exception caught while expecting response: " + cause.getMessage());
+        if (logger.isDebugEnabled()) {
+            logger.error(cause.getClass().getSimpleName() + "Exception caught while expecting response: " + cause.getMessage(), cause);
+        }
         dfh.responseReceived(null).completeExceptionally(cause);
+
     }
 
 }
