@@ -64,16 +64,16 @@ import org.thingsplode.synapse.serializers.SynapseSerializer;
  */
 @ChannelHandler.Sharable
 public class HttpResponseHandler extends SimpleChannelInboundHandler<Response> {
-    
+
     private static final Logger logger = LoggerFactory.getLogger(HttpResponseHandler.class);
     public static String SEC_WEBSOCKET_KEY_SALT = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
-    private final SerializationService serializationService = new SerializationService();
-    
+    private final SerializationService serializationService = SerializationService.getInstance();
+
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Response rsp) throws Exception {
         MediaType mt = rsp.getHeader().getContentType();
         SynapseSerializer<String> serializer = serializationService.getSerializer(mt);
-        
+
         if (rsp.getBody() != null) {
             rsp.getHeader().addProperty(AbstractMessage.PROP_BODY_TYPE, rsp.getBody().getClass().getCanonicalName());
         }
@@ -83,21 +83,23 @@ public class HttpResponseHandler extends SimpleChannelInboundHandler<Response> {
         response.headers().set(HttpHeaderNames.CONTENT_TYPE, mt != null ? mt.getName() : "application/json; charset=UTF-8");
         decorate(rsp, response);
         response.headers().set(HttpHeaderNames.CONTENT_LENGTH, response.content().readableBytes());
-        
+
         writeResponseWithKeepaliveHandling(ctx, response, rsp.getHeader().isKeepAlive());
     }
-    
+
     private static ChannelFuture writeResponseWithKeepaliveHandling(ChannelHandlerContext ctx, FullHttpResponse response, boolean keepalive) {
         if (!keepalive) {
             // If keep-alive is off, close the connection once the content is fully written.
             logger.trace("Closing the Connection@Endpoint due to keep-alive: false.");
             return ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
         } else {
-            response.headers().set(HttpHeaderNames.CONNECTION, HttpHeaders.Values.KEEP_ALIVE);
+            if (!response.headers().contains(HttpHeaderNames.CONNECTION)) {
+                response.headers().set(HttpHeaderNames.CONNECTION, HttpHeaders.Values.KEEP_ALIVE);
+            }
             return ctx.writeAndFlush(response);
         }
     }
-    
+
     private void decorate(Response rsp, HttpResponse httpResponse) {
         rsp.getHeader().getProperties().keySet().stream().forEach(k -> {
             Optional<String> headerValueOpt = rsp.getHeader().getProperty(k);
@@ -112,17 +114,17 @@ public class HttpResponseHandler extends SimpleChannelInboundHandler<Response> {
             httpResponse.headers().set(AbstractMessage.PROP_CORRELATION_ID, rsp.getHeader().getCorrelationId());
         }
     }
-    
+
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         logger.error("Error while preparing response: " + cause.getMessage(), cause);
         sendError(ctx, HttpResponseStatus.INTERNAL_SERVER_ERROR, cause.getClass().getSimpleName() + ": " + cause.getMessage());
     }
-    
+
     public static void sendError(ChannelHandlerContext ctx, HttpResponseStatus status, String errorMsg) {
         sendError(ctx, status, errorMsg, null);
     }
-    
+
     public static void sendError(ChannelHandlerContext ctx, HttpResponseStatus status, String errorMsg, HttpRequest request) {
         FullHttpResponse response = new DefaultFullHttpResponse(
                 HttpVersion.HTTP_1_1, status, Unpooled.copiedBuffer("Failure: " + errorMsg + "\r\n", CharsetUtil.UTF_8));
@@ -141,8 +143,8 @@ public class HttpResponseHandler extends SimpleChannelInboundHandler<Response> {
             }
         });
     }
-    
-    static void sendWebsocketUpgradeResponse(ChannelHandlerContext ctx, HttpRequest request) {
+
+    static ChannelFuture sendWebsocketUpgradeResponse(ChannelHandlerContext ctx, HttpRequest request) {
         ByteBuf content = Unpooled.copiedBuffer("upgrading to websocket...", CharsetUtil.UTF_8);
         FullHttpResponse response = new DefaultFullHttpResponse(
                 HttpVersion.HTTP_1_1, HttpResponseStatus.SWITCHING_PROTOCOLS, content);
@@ -165,10 +167,9 @@ public class HttpResponseHandler extends SimpleChannelInboundHandler<Response> {
             //tell the client we support everything he needs
             response.headers().set(HttpHeaderNames.SEC_WEBSOCKET_PROTOCOL, request.headers().get(HttpHeaderNames.SEC_WEBSOCKET_PROTOCOL));
         }
-        response.headers().set(HttpHeaderNames.SEC_WEBSOCKET_PROTOCOL, request);
-        writeResponseWithKeepaliveHandling(ctx, response, request != null ? HttpHeaders.isKeepAlive(request) : false);
+        return writeResponseWithKeepaliveHandling(ctx, response, (request != null ? HttpHeaders.isKeepAlive(request) : false));
     }
-    
+
     static void sendRedirect(ChannelHandlerContext ctx, String newUrl, Request.RequestHeader header) {
         logger.debug("Redirecting request to {}", newUrl);
         ByteBuf content = Unpooled.copiedBuffer("redirect to index.html", CharsetUtil.UTF_8);
@@ -181,5 +182,5 @@ public class HttpResponseHandler extends SimpleChannelInboundHandler<Response> {
         response.headers().set(HttpHeaderNames.CONTENT_LENGTH, response.content().readableBytes());
         writeResponseWithKeepaliveHandling(ctx, response, header != null ? header.isKeepalive() : false);
     }
-    
+
 }
