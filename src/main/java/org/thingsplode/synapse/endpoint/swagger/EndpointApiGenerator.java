@@ -33,8 +33,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.thingsplode.synapse.core.annotations.RequestMapping;
 import org.thingsplode.synapse.core.annotations.Service;
-import org.thingsplode.synapse.core.domain.MediaType;
-import org.thingsplode.synapse.core.domain.Response;
+import org.thingsplode.synapse.core.MediaType;
+import org.thingsplode.synapse.core.Response;
 import org.thingsplode.synapse.util.Util;
 import org.thingsplode.synapse.core.annotations.RequestProperty;
 

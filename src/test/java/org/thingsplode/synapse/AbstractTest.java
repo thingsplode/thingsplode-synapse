@@ -54,6 +54,7 @@ public abstract class AbstractTest {
                             .transportType(Endpoint.TransportType.HTTP_REST)
                             .enableFileHandler(System.getProperty("java.io.tmpdir"))
                             .enableSwagger("1.0", null)
+                            .enabledWebsocket()
                             .enableIntrospection()
                             .publish(new RpcEndpointImpl())
                             .publish(new EndpointTesterService())

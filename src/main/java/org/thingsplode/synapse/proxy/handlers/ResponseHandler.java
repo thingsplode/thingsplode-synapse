@@ -20,7 +20,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.thingsplode.synapse.core.domain.Response;
+import org.thingsplode.synapse.core.Response;
 import org.thingsplode.synapse.proxy.DispatchedFuture;
 import org.thingsplode.synapse.proxy.DispatchedFutureHandler;
 

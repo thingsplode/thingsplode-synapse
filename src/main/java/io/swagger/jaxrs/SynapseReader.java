@@ -415,7 +415,7 @@ public class SynapseReader extends Reader {
             a.add(apiOperation.httpMethod().toLowerCase());
             return a;
         } else if (method.getAnnotation(RequestMapping.class) != null) {
-            List<String> l = Arrays.asList(method.getAnnotation(RequestMapping.class).method()).stream().map((org.thingsplode.synapse.core.domain.RequestMethod rm) -> rm.toString().toLowerCase()).collect(Collectors.toList());
+            List<String> l = Arrays.asList(method.getAnnotation(RequestMapping.class).method()).stream().map((org.thingsplode.synapse.core.RequestMethod rm) -> rm.toString().toLowerCase()).collect(Collectors.toList());
             if (l.isEmpty()) {
                 if (method.getParameterCount() > 0 && (method.getAnnotations().length == 0 || method.getAnnotation(RequestBody.class) != null)) {
                     //if there are parameters but not annotated at all or the RequestBody annotation is used

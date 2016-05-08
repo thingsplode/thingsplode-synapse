@@ -22,15 +22,17 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.UUID;
+import static javafx.scene.input.KeyCode.T;
 import org.apache.log4j.BasicConfigurator;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.thingsplode.synapse.core.domain.ParameterWrapper;
-import org.thingsplode.synapse.core.domain.Request;
-import org.thingsplode.synapse.core.domain.RequestMethod;
-import org.thingsplode.synapse.core.domain.Response;
-import org.thingsplode.synapse.core.domain.Uri;
+import org.thingsplode.synapse.core.AbstractMessage;
+import org.thingsplode.synapse.core.ParameterWrapper;
+import org.thingsplode.synapse.core.Request;
+import org.thingsplode.synapse.core.RequestMethod;
+import org.thingsplode.synapse.core.Response;
+import org.thingsplode.synapse.core.Uri;
 import org.thingsplode.synapse.core.exceptions.SerializationException;
 import org.thingsplode.synapse.serializers.jackson.JacksonSerializer;
 
@@ -103,12 +105,15 @@ public class AbstractParserTest {
     @Test
     public void testMarshallingRequestObject() throws UnsupportedEncodingException, SerializationException {
         Request<Device> r = (Request<Device>) Request.create(UUID.randomUUID().toString(), new Uri("/1221221/devices/add"), RequestMethod.GET, Device.createTestDevice());
+        r.getHeader().setKeepalive(true);
+        r.getHeader().addProperty("Custom-Property", "CustomValue");
         String json = getSerializer().marshallToWireformat(r);
         System.out.println(json);
-        Request ur = getSerializer().unMarshall(Request.class, json);
+        AbstractMessage ur = getSerializer().unMarshall(AbstractMessage.class, json);
         Assert.assertNotNull(ur);
-        Assert.assertTrue(ur.getHeader().getMethod() == RequestMethod.GET);
-        Assert.assertTrue(ur.getHeader().getUri().getPath().equalsIgnoreCase("/1221221/devices/add"));
+        Assert.assertTrue("it must be a type of request", ur instanceof Request);
+        Assert.assertTrue(((Request)ur).getHeader().getMethod() == RequestMethod.GET);
+        Assert.assertTrue(((Request)ur).getHeader().getUri().getPath().equalsIgnoreCase("/1221221/devices/add"));
     }
     
     @Test
@@ -125,7 +130,7 @@ public class AbstractParserTest {
     }
     
     @Test
-    public void testMarshallingTuple() throws UnsupportedEncodingException, SerializationException{
+    public void testMarshallingTuple() throws UnsupportedEncodingException, SerializationException {
         Request<Tuple<Integer, Integer>> reqForMultiply = new Request<>(new Request.RequestHeader(null, new Uri("/test/user@name/messages/multiply"), RequestMethod.fromHttpMethod(HttpMethod.GET)), new Tuple<>(10, 100));
         String json = getSerializer().marshallToWireformat(reqForMultiply);
         System.out.println(json);

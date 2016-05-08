@@ -23,9 +23,9 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.thingsplode.synapse.core.domain.HttpStatus;
-import org.thingsplode.synapse.core.domain.Request;
-import org.thingsplode.synapse.core.domain.Response;
+import org.thingsplode.synapse.core.HttpStatus;
+import org.thingsplode.synapse.core.Request;
+import org.thingsplode.synapse.core.Response;
 import org.thingsplode.synapse.core.exceptions.RequestTimeoutException;
 import org.thingsplode.synapse.core.exceptions.SynapseException;
 

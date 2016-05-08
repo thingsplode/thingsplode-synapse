@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsplode.synapse.core.domain;
+package org.thingsplode.synapse.core;
 
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
@@ -24,7 +24,7 @@ import java.io.UnsupportedEncodingException;
  * @param <T>
  */
 public class Event<T extends Serializable> extends Request<T> {
-
+    
     public Event(RequestHeader header) {
         super(header);
     }

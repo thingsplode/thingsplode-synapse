@@ -51,7 +51,6 @@ import org.thingsplode.synapse.serializers.SerializationService;
  *
  * @author Csaba Tamas
  */
-//todo: remove this -> http://netty.io/4.0/xref/io/netty/example/http/snoop/package-summary.html
 //todo: support for basic authentication (//todo: support for basic authentication )
 //todo: dispatching strategy (worker pool, ringbuffer, single threaded)
 //todo: port already binded

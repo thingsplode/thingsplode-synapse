@@ -15,7 +15,7 @@
  */
 package org.thingsplode.synapse.proxy;
 
-import org.thingsplode.synapse.core.domain.Request;
+import org.thingsplode.synapse.core.Request;
 
 /**
  *

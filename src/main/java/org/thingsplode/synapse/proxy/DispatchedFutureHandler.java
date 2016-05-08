@@ -16,8 +16,8 @@
 package org.thingsplode.synapse.proxy;
 
 import java.util.TimerTask;
-import org.thingsplode.synapse.core.domain.Request;
-import org.thingsplode.synapse.core.domain.Response;
+import org.thingsplode.synapse.core.Request;
+import org.thingsplode.synapse.core.Response;
 
 /**
  *

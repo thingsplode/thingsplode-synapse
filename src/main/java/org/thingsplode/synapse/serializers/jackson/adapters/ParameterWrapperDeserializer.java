@@ -26,7 +26,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.IOException;
 import java.util.Iterator;
-import org.thingsplode.synapse.core.domain.ParameterWrapper;
+import org.thingsplode.synapse.core.ParameterWrapper;
 
 /**
  *

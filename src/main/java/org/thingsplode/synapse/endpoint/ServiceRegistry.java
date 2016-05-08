@@ -37,26 +37,25 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.thingsplode.synapse.core.SynapseEndpointServiceMarker;
-import org.thingsplode.synapse.core.domain.Uri;
+import org.thingsplode.synapse.core.Uri;
 import org.thingsplode.synapse.core.annotations.PathVariable;
 import org.thingsplode.synapse.core.annotations.RequestBody;
 import org.thingsplode.synapse.core.annotations.RequestMapping;
 import org.thingsplode.synapse.core.annotations.RequestParam;
 import org.thingsplode.synapse.core.annotations.Service;
-import org.thingsplode.synapse.core.domain.AbstractMessage;
-import org.thingsplode.synapse.core.domain.Event;
-import org.thingsplode.synapse.core.domain.MediaType;
-import org.thingsplode.synapse.core.domain.ParameterWrapper;
-import org.thingsplode.synapse.core.domain.Request;
-import org.thingsplode.synapse.core.domain.RequestMethod;
-import org.thingsplode.synapse.core.domain.Response;
+import org.thingsplode.synapse.core.AbstractMessage;
+import org.thingsplode.synapse.core.Event;
+import org.thingsplode.synapse.core.MediaType;
+import org.thingsplode.synapse.core.ParameterWrapper;
+import org.thingsplode.synapse.core.Request;
+import org.thingsplode.synapse.core.RequestMethod;
+import org.thingsplode.synapse.core.Response;
 import org.thingsplode.synapse.core.exceptions.ExecutionException;
 import org.thingsplode.synapse.core.exceptions.MethodNotFoundException;
 import org.thingsplode.synapse.core.exceptions.MissingParameterException;
@@ -434,7 +433,7 @@ public class ServiceRegistry {
                         if (messageBody == null || !(messageBody instanceof ParameterWrapper)) {
                             throw new MissingParameterException(header.getUri().getPath(), p.paramId);
                         }
-                        Optional<org.thingsplode.synapse.core.domain.ParameterWrapper.Parameter> pOpt = ((ParameterWrapper) messageBody).getParameterByName(p.paramId);
+                        Optional<org.thingsplode.synapse.core.ParameterWrapper.Parameter> pOpt = ((ParameterWrapper) messageBody).getParameterByName(p.paramId);
                         if (pOpt.isPresent()) {
                             methodParams.add(pOpt.get().getValue());
                         }

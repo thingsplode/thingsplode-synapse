@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsplode.synapse.core.domain;
+package org.thingsplode.synapse.core;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import java.io.Serializable;
@@ -24,6 +24,7 @@ import org.thingsplode.synapse.core.exceptions.MarshallerException;
  * @author Csaba Tamas
  * @param <T>
  */
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@msg_type", visible = true)
 public abstract class AbstractMessage<T> implements Serializable {
 
     public final static String PROP_MESSAGE_ID = "Message-ID";

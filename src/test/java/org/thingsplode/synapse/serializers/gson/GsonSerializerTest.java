@@ -15,8 +15,6 @@
  */
 package org.thingsplode.synapse.serializers.gson;
 
-import org.thingsplode.synapse.serializers.gson.GsonSerializer;
-import org.thingsplode.synapse.serializers.AbstractParserTest;
 import org.thingsplode.synapse.serializers.SynapseSerializer;
 
 /**

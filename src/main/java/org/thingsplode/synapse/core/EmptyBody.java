@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 tamas.csaba@gmail.com.
+ * Copyright 2016 Csaba Tamas.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,12 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsplode.synapse.core.domain;
+package org.thingsplode.synapse.core;
 
 /**
  *
  * @author Csaba Tamas
+
  */
-public class CommandResult extends AbstractMessage {
-    
+public class EmptyBody {
+
 }

@@ -26,19 +26,24 @@ import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaders;
+import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
-import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.util.CharsetUtil;
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
 import java.util.Optional;
+import java.util.logging.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.thingsplode.synapse.core.domain.AbstractMessage;
-import org.thingsplode.synapse.core.domain.MediaType;
-import org.thingsplode.synapse.core.domain.Response;
-import org.thingsplode.synapse.core.domain.EmptyBody;
-import org.thingsplode.synapse.core.domain.Request;
+import org.thingsplode.synapse.core.AbstractMessage;
+import org.thingsplode.synapse.core.MediaType;
+import org.thingsplode.synapse.core.Response;
+import org.thingsplode.synapse.core.EmptyBody;
+import org.thingsplode.synapse.core.Request;
 import org.thingsplode.synapse.serializers.SerializationService;
 import org.thingsplode.synapse.serializers.SynapseSerializer;
 
@@ -59,15 +64,16 @@ import org.thingsplode.synapse.serializers.SynapseSerializer;
  */
 @ChannelHandler.Sharable
 public class HttpResponseHandler extends SimpleChannelInboundHandler<Response> {
-
+    
     private static final Logger logger = LoggerFactory.getLogger(HttpResponseHandler.class);
+    public static String SEC_WEBSOCKET_KEY_SALT = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
     private final SerializationService serializationService = new SerializationService();
-
+    
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Response rsp) throws Exception {
         MediaType mt = rsp.getHeader().getContentType();
         SynapseSerializer<String> serializer = serializationService.getSerializer(mt);
-
+        
         if (rsp.getBody() != null) {
             rsp.getHeader().addProperty(AbstractMessage.PROP_BODY_TYPE, rsp.getBody().getClass().getCanonicalName());
         }
@@ -77,21 +83,21 @@ public class HttpResponseHandler extends SimpleChannelInboundHandler<Response> {
         response.headers().set(HttpHeaderNames.CONTENT_TYPE, mt != null ? mt.getName() : "application/json; charset=UTF-8");
         decorate(rsp, response);
         response.headers().set(HttpHeaderNames.CONTENT_LENGTH, response.content().readableBytes());
-
+        
         writeResponseWithKeepaliveHandling(ctx, response, rsp.getHeader().isKeepAlive());
     }
-
-    private static void writeResponseWithKeepaliveHandling(ChannelHandlerContext ctx, FullHttpResponse response, boolean keepalive) {
+    
+    private static ChannelFuture writeResponseWithKeepaliveHandling(ChannelHandlerContext ctx, FullHttpResponse response, boolean keepalive) {
         if (!keepalive) {
             // If keep-alive is off, close the connection once the content is fully written.
             logger.trace("Closing the Connection@Endpoint due to keep-alive: false.");
-            ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+            return ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
         } else {
             response.headers().set(HttpHeaderNames.CONNECTION, HttpHeaders.Values.KEEP_ALIVE);
-            ctx.writeAndFlush(response);
+            return ctx.writeAndFlush(response);
         }
     }
-
+    
     private void decorate(Response rsp, HttpResponse httpResponse) {
         rsp.getHeader().getProperties().keySet().stream().forEach(k -> {
             Optional<String> headerValueOpt = rsp.getHeader().getProperty(k);
@@ -106,40 +112,74 @@ public class HttpResponseHandler extends SimpleChannelInboundHandler<Response> {
             httpResponse.headers().set(AbstractMessage.PROP_CORRELATION_ID, rsp.getHeader().getCorrelationId());
         }
     }
-
+    
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         logger.error("Error while preparing response: " + cause.getMessage(), cause);
         sendError(ctx, HttpResponseStatus.INTERNAL_SERVER_ERROR, cause.getClass().getSimpleName() + ": " + cause.getMessage());
     }
-
+    
     public static void sendError(ChannelHandlerContext ctx, HttpResponseStatus status, String errorMsg) {
+        sendError(ctx, status, errorMsg, null);
+    }
+    
+    public static void sendError(ChannelHandlerContext ctx, HttpResponseStatus status, String errorMsg, HttpRequest request) {
         FullHttpResponse response = new DefaultFullHttpResponse(
                 HttpVersion.HTTP_1_1, status, Unpooled.copiedBuffer("Failure: " + errorMsg + "\r\n", CharsetUtil.UTF_8));
         response.headers().set(HttpHeaderNames.CONTENT_TYPE, "text/plain; charset=UTF-8");
-        // Close the connection as soon as the error message is sent.
-        ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE).addListener((ChannelFutureListener) (ChannelFuture future) -> {
+        response.headers().set(HttpHeaderNames.CONTENT_LENGTH, response.content().readableBytes());
+        if (request != null && request.headers().contains(AbstractMessage.PROP_MESSAGE_ID)) {
+            response.headers().set(AbstractMessage.PROP_CORRELATION_ID, request.headers().get(AbstractMessage.PROP_MESSAGE_ID));
+        }
+        writeResponseWithKeepaliveHandling(ctx, response, request != null ? HttpHeaders.isKeepAlive(request) : false).addListener((ChannelFutureListener) (ChannelFuture future) -> {
             Throwable th = future.cause();
             if (th != null) {
                 logger.error("Sending response from Endpoint was not successful: " + th.getMessage(), th);
             }
             if (logger.isDebugEnabled() && future.isSuccess()) {
-                logger.debug("Response message was succesfully dispatched at the endpoint.");
+                logger.debug("Error Response message was succesfully dispatched at the endpoint.");
             }
         });
     }
-
+    
+    static void sendWebsocketUpgradeResponse(ChannelHandlerContext ctx, HttpRequest request) {
+        ByteBuf content = Unpooled.copiedBuffer("upgrading to websocket...", CharsetUtil.UTF_8);
+        FullHttpResponse response = new DefaultFullHttpResponse(
+                HttpVersion.HTTP_1_1, HttpResponseStatus.SWITCHING_PROTOCOLS, content);
+        response.headers().set(HttpHeaderNames.UPGRADE, HttpRequestHandler.UPGRADE_TO_WEBSOCKET);
+        response.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderNames.UPGRADE);
+        if (request != null && request.headers().contains(HttpHeaderNames.SEC_WEBSOCKET_KEY)) {
+            try {
+                //prepare a salt-ed, hashed base64 encoded accept challenge as requested by the specification
+                String secWebsocketKey = request.headers().get(HttpHeaderNames.SEC_WEBSOCKET_KEY) + SEC_WEBSOCKET_KEY_SALT;
+                MessageDigest cript = MessageDigest.getInstance("SHA-1");
+                cript.reset();
+                cript.update(secWebsocketKey.getBytes("utf8"));
+                String base64EncodedHashedSecWsAccept = Base64.getEncoder().encodeToString(cript.digest());
+                response.headers().set(HttpHeaderNames.SEC_WEBSOCKET_ACCEPT, base64EncodedHashedSecWsAccept);
+            } catch (NoSuchAlgorithmException | UnsupportedEncodingException ex) {
+                logger.warn("Should prepare a [" + HttpHeaderNames.SEC_WEBSOCKET_ACCEPT.toString() + "] header, however failed due to -> " + ex.getClass().getSimpleName() + " with message: " + ex.getMessage());
+            }
+        }
+        if (request != null && request.headers().contains(HttpHeaderNames.SEC_WEBSOCKET_PROTOCOL)) {
+            //tell the client we support everything he needs
+            response.headers().set(HttpHeaderNames.SEC_WEBSOCKET_PROTOCOL, request.headers().get(HttpHeaderNames.SEC_WEBSOCKET_PROTOCOL));
+        }
+        response.headers().set(HttpHeaderNames.SEC_WEBSOCKET_PROTOCOL, request);
+        writeResponseWithKeepaliveHandling(ctx, response, request != null ? HttpHeaders.isKeepAlive(request) : false);
+    }
+    
     static void sendRedirect(ChannelHandlerContext ctx, String newUrl, Request.RequestHeader header) {
         logger.debug("Redirecting request to {}", newUrl);
         ByteBuf content = Unpooled.copiedBuffer("redirect to index.html", CharsetUtil.UTF_8);
         FullHttpResponse response = new DefaultFullHttpResponse(
                 HttpVersion.HTTP_1_1, HttpResponseStatus.TEMPORARY_REDIRECT, content);
         response.headers().set(HttpHeaderNames.LOCATION, newUrl);
-        if (header.getMsgId() != null) {
+        if (header != null && header.getMsgId() != null) {
             response.headers().set(AbstractMessage.PROP_CORRELATION_ID, header.getMsgId());
         }
         response.headers().set(HttpHeaderNames.CONTENT_LENGTH, response.content().readableBytes());
-        writeResponseWithKeepaliveHandling(ctx, response, header.isKeepalive());
+        writeResponseWithKeepaliveHandling(ctx, response, header != null ? header.isKeepalive() : false);
     }
-
+    
 }

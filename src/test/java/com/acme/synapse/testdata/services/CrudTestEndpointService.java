@@ -27,8 +27,8 @@ import org.thingsplode.synapse.core.annotations.PathVariable;
 import org.thingsplode.synapse.core.annotations.RequestBody;
 import org.thingsplode.synapse.core.annotations.RequestMapping;
 import org.thingsplode.synapse.core.annotations.Service;
-import org.thingsplode.synapse.core.domain.RequestMethod;
-import org.thingsplode.synapse.core.domain.Response;
+import org.thingsplode.synapse.core.RequestMethod;
+import org.thingsplode.synapse.core.Response;
 
 /**
  *

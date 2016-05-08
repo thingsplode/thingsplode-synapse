@@ -13,31 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsplode.synapse.core.domain;
-
-import java.io.Serializable;
+package org.thingsplode.synapse.core;
 
 /**
- *
+ * Inbound requests (eg. HTTP requests) first are evaluated as service request (requesting a service execution). If that step is failing, the request is converted
+ * to a {@link FileRequest} and passed forward on the pipeline (if the file service is enabled on the Endpoint). If the path describes an actual file, the file will be served.
  * @author Csaba Tamas
- * @param <T>
  */
-public class Parameter<T extends Serializable> {
+public class FileRequest extends Request<String> {
 
-    private final String name;
-    private final T value;
-
-    public Parameter(String name, T value) {
-        this.name = name;
-        this.value = value;
+    public FileRequest() {
     }
-
-    public String getName() {
-        return name;
+    
+    public FileRequest(RequestHeader header) {
+        super(header);
     }
-
-    public T getValue() {
-        return value;
-    }
-
 }

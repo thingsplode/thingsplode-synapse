@@ -28,9 +28,9 @@ import java.util.List;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.thingsplode.synapse.core.domain.AbstractMessage;
-import org.thingsplode.synapse.core.domain.MediaType;
-import org.thingsplode.synapse.core.domain.Response;
+import org.thingsplode.synapse.core.AbstractMessage;
+import org.thingsplode.synapse.core.MediaType;
+import org.thingsplode.synapse.core.Response;
 import org.thingsplode.synapse.proxy.EndpointProxy;
 import org.thingsplode.synapse.util.Util;
 

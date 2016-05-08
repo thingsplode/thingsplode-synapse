@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsplode.synapse.core.domain;
+package org.thingsplode.synapse.core;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.util.Optional;
-import org.thingsplode.synapse.core.domain.Request.RequestHeader;
+import org.thingsplode.synapse.core.Request.RequestHeader;
 
 /**
  *

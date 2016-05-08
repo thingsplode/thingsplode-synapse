@@ -15,6 +15,8 @@
  */
 package org.thingsplode.synapse.core.domain;
 
+import org.thingsplode.synapse.core.MediaType;
+import org.thingsplode.synapse.core.MediaRange;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;

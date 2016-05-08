@@ -78,6 +78,7 @@ public class Endpoint {
     public static final String HTTP_FILE_HANDLER = "http_file_handler";
     public static final String RESPONSE_SEQUENCER = "response_sequencer";
     public static final String HTTP_RESPONSE_HANDLER = "http_response_handler";
+    public static final String WS_REQUEST_HANDLER = "ws_request_handler";
     private static int TERMINATION_TIMEOUT = 60;//number of seconds to wait after the worker threads are shutted down and until those are finishing the last bit of the execution.
     private EventLoopGroup masterGroup = null;//the eventloop group used for the server socket
     private EventLoopGroup workerGroup = null;//the event loop group used for the connected clients
@@ -95,6 +96,7 @@ public class Endpoint {
     private EndpointApiGenerator apiGenerator = null;
     private boolean introspection = false;
     private boolean pipelining = false;
+    private boolean websocketSupport = false;
 
     private Endpoint() {
     }
@@ -136,7 +138,7 @@ public class Endpoint {
                                     p.addLast(new HttpResponseIntrospector());
                                     p.addLast(new HttpRequestIntrospector());
                                 }
-                                p.addLast(HTTP_REQUEST_HANDLER, new HttpRequestHandler(endpointId, pipelining));
+                                p.addLast(HTTP_REQUEST_HANDLER, new HttpRequestHandler(endpointId, pipelining, websocketSupport));
                                 p.addLast(REQUEST_HANDLER, new RequestHandler(serviceRegistry));
                                 if (fileHandler != null) {
                                     p.addLast(evtExecutorGroup, HTTP_FILE_HANDLER, fileHandler);
@@ -318,6 +320,11 @@ public class Endpoint {
         this.pipelining = true;
         throw new UnsupportedOperationException("Not implemented yet");
         //return this;
+    }
+
+    public Endpoint enabledWebsocket() {
+        this.websocketSupport = true;
+        return this;
     }
 
     /**

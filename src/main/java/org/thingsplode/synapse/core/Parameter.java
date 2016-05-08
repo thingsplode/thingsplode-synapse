@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Csaba Tamas.
+ * Copyright 2016 tamas.csaba@gmail.com.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,13 +13,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsplode.synapse.core.domain;
+package org.thingsplode.synapse.core;
+
+import java.io.Serializable;
 
 /**
  *
  * @author Csaba Tamas
-
+ * @param <T>
  */
-public class EmptyBody {
+public class Parameter<T extends Serializable> {
+
+    private final String name;
+    private final T value;
+
+    public Parameter(String name, T value) {
+        this.name = name;
+        this.value = value;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public T getValue() {
+        return value;
+    }
 
 }

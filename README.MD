@@ -33,10 +33,6 @@ Hides the complexity of microservice communication for you. It provides:
 - [ ] Endpoint Proxy (Client) authentication and authorization - [#6](../../issues/6);
 - [ ] message authentication - [#7](../../issues/7);
 
-### Configurable message dispatching modes
-- [x] sequential blocking client
-- [x] correlated asynchronous message dispatching
-- [ ] message pipelining
 
 ### Pluggable serialization:
 - [x] json with Jackson

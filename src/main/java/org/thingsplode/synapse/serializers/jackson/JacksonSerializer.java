@@ -31,7 +31,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import org.thingsplode.synapse.core.domain.MediaRange;
+import org.thingsplode.synapse.core.MediaRange;
 import org.thingsplode.synapse.core.exceptions.SerializationException;
 import org.thingsplode.synapse.serializers.SynapseSerializer;
 import org.thingsplode.synapse.util.Util;

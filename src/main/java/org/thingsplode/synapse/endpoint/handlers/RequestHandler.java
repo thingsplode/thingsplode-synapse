@@ -23,11 +23,11 @@ import java.nio.charset.Charset;
 import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.thingsplode.synapse.core.domain.FileRequest;
-import org.thingsplode.synapse.core.domain.HttpStatus;
-import org.thingsplode.synapse.core.domain.MediaType;
-import org.thingsplode.synapse.core.domain.Request;
-import org.thingsplode.synapse.core.domain.Response;
+import org.thingsplode.synapse.core.FileRequest;
+import org.thingsplode.synapse.core.HttpStatus;
+import org.thingsplode.synapse.core.MediaType;
+import org.thingsplode.synapse.core.Request;
+import org.thingsplode.synapse.core.Response;
 import org.thingsplode.synapse.core.exceptions.SynapseException;
 import org.thingsplode.synapse.endpoint.ServiceRegistry;
 
@@ -52,12 +52,14 @@ public class RequestHandler extends SimpleChannelInboundHandler<Request> {
         if (!fileDownload) {
 
             try {
-                if (request.getBody() == null || request.getBody() instanceof ByteBuf) {
+                if (request.getBody() == null && (request.getBody() instanceof ByteBuf)) {
                     ByteBuf content = (ByteBuf) request.getBody();
                     byte[] dst = new byte[content.capacity()];
                     content.getBytes(0, dst);
                     String json = new String(dst, Charset.forName("UTF-8"));
                     response = registry.invokeWithParsable(request.getHeader(), json);
+                } else if (request.getBody() != null) {
+                    response = registry.invokeWithObject(request.getHeader(), request.getBody());
                 } else {
                     response = new Response(new Response.ResponseHeader(request.getHeader(), HttpResponseStatus.valueOf(HttpStatus.BAD_REQUEST.value()), new MediaType("text/plain; charset=UTF-8")), "Body type not supported.");
                 }

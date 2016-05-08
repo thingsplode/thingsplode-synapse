@@ -20,7 +20,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import org.thingsplode.synapse.core.domain.HttpStatus;
+import org.thingsplode.synapse.core.HttpStatus;
 
 /**
  *

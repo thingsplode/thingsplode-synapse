@@ -17,7 +17,7 @@ package org.thingsplode.synapse;
 
 import java.io.Serializable;
 import java.util.concurrent.ArrayBlockingQueue;
-import org.thingsplode.synapse.core.domain.Event;
+import org.thingsplode.synapse.core.Event;
 import org.thingsplode.synapse.endpoint.AbstractEventSink;
 
 /**

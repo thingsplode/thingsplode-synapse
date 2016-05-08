@@ -15,7 +15,7 @@
  */
 package org.thingsplode.synapse.core.exceptions;
 
-import org.thingsplode.synapse.core.domain.HttpStatus;
+import org.thingsplode.synapse.core.HttpStatus;
 
 /**
  *

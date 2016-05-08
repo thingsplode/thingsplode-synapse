@@ -15,6 +15,7 @@
  */
 package org.thingsplode.synapse.core.domain;
 
+import org.thingsplode.synapse.core.Uri;
 import java.io.UnsupportedEncodingException;
 import org.junit.Assert;
 import org.junit.Test;

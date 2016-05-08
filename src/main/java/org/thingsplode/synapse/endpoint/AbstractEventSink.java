@@ -17,7 +17,7 @@ package org.thingsplode.synapse.endpoint;
 
 import java.io.Serializable;
 import org.thingsplode.synapse.core.annotations.RequestBody;
-import org.thingsplode.synapse.core.domain.Event;
+import org.thingsplode.synapse.core.Event;
 
 /**
  *

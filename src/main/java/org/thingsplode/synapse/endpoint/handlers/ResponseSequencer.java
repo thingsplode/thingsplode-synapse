@@ -23,8 +23,8 @@ import java.util.Optional;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicLong;
-import org.thingsplode.synapse.core.domain.Request;
-import org.thingsplode.synapse.core.domain.Response;
+import org.thingsplode.synapse.core.Request;
+import org.thingsplode.synapse.core.Response;
 
 /**
  * It will order into a FIFO order the responses for message pipelining (see HTTP pipelining).

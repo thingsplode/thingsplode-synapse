@@ -55,9 +55,9 @@ import javax.activation.MimetypesFileTypeMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.thingsplode.synapse.endpoint.swagger.Loader;
-import org.thingsplode.synapse.core.domain.FileRequest;
-import org.thingsplode.synapse.core.domain.Request;
-import org.thingsplode.synapse.core.domain.Request.RequestHeader;
+import org.thingsplode.synapse.core.FileRequest;
+import org.thingsplode.synapse.core.Request;
+import org.thingsplode.synapse.core.Request.RequestHeader;
 import org.thingsplode.synapse.util.Util;
 
 /**

@@ -40,8 +40,8 @@ import org.thingsplode.synapse.core.annotations.PathVariable;
 import org.thingsplode.synapse.core.annotations.RequestBody;
 import org.thingsplode.synapse.core.annotations.RequestParam;
 import org.thingsplode.synapse.core.annotations.Service;
-import org.thingsplode.synapse.core.domain.ParameterWrapper;
-import org.thingsplode.synapse.core.domain.Request;
+import org.thingsplode.synapse.core.ParameterWrapper;
+import org.thingsplode.synapse.core.Request;
 import org.thingsplode.synapse.core.annotations.RequestProperty;
 
 /**

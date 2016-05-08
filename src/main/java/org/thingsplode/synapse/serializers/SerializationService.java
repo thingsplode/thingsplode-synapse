@@ -15,8 +15,8 @@
  */
 package org.thingsplode.synapse.serializers;
 
-import org.thingsplode.synapse.core.domain.MediaRange;
-import org.thingsplode.synapse.core.domain.MediaType;
+import org.thingsplode.synapse.core.MediaRange;
+import org.thingsplode.synapse.core.MediaType;
 import org.thingsplode.synapse.serializers.jackson.JacksonSerializer;
 
 /**

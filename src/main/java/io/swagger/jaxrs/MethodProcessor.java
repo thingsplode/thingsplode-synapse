@@ -123,7 +123,7 @@ public class MethodProcessor {
             // pick out response from method declaration
             //handle Response types
             if (method.getGenericReturnType() instanceof ParameterizedType 
-                    && org.thingsplode.synapse.core.domain.Response.class.isAssignableFrom((Class<?>)((ParameterizedType)method.getGenericReturnType()).getRawType())) {
+                    && org.thingsplode.synapse.core.Response.class.isAssignableFrom((Class<?>)((ParameterizedType)method.getGenericReturnType()).getRawType())) {
                 responseType = ((ParameterizedType)method.getGenericReturnType()).getActualTypeArguments()[0];
             } else {
                 responseType = method.getGenericReturnType();

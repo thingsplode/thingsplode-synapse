@@ -22,8 +22,8 @@ import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
 import java.util.HashSet;
 import java.util.List;
-import org.thingsplode.synapse.core.domain.AbstractMessage;
-import org.thingsplode.synapse.core.domain.Request;
+import org.thingsplode.synapse.core.AbstractMessage;
+import org.thingsplode.synapse.core.Request;
 import org.thingsplode.synapse.proxy.RequestDecorator;
 import org.thingsplode.synapse.util.Util;
 

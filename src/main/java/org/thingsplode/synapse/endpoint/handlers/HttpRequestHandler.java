@@ -18,6 +18,7 @@ package org.thingsplode.synapse.endpoint.handlers;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.FullHttpRequest;
+import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -29,11 +30,13 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.thingsplode.synapse.core.domain.AbstractMessage;
-import org.thingsplode.synapse.core.domain.Request;
-import org.thingsplode.synapse.core.domain.RequestMethod;
-import org.thingsplode.synapse.core.domain.Uri;
+import org.thingsplode.synapse.core.AbstractMessage;
+import org.thingsplode.synapse.core.Request;
+import org.thingsplode.synapse.core.RequestMethod;
+import org.thingsplode.synapse.core.Uri;
+import org.thingsplode.synapse.endpoint.Endpoint;
 import static org.thingsplode.synapse.endpoint.handlers.HttpResponseHandler.sendError;
+import org.thingsplode.synapse.serializers.SerializationService;
 import org.thingsplode.synapse.util.Util;
 
 /**
@@ -49,15 +52,16 @@ import org.thingsplode.synapse.util.Util;
 public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
 
     private static final Logger logger = LoggerFactory.getLogger(HttpRequestHandler.class);
-    private static final String HVALUE_UPGRADE = "Upgrade";
+    public static final String UPGRADE_TO_WEBSOCKET = "websocket";
     private final String endpointId;
-    private WebSocketServerHandshaker handshaker;
     private boolean pipelining = false;
     private final AtomicLong sequence = new AtomicLong(0);
+    private boolean websocketSupport = false;
 
-    public HttpRequestHandler(String endpointId, boolean pipelining) {
+    public HttpRequestHandler(String endpointId, boolean pipelining, boolean websocketSupport) {
         this.endpointId = endpointId;
         this.pipelining = pipelining;
+        this.websocketSupport = websocketSupport;
     }
 
     @Override
@@ -71,56 +75,70 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
                 return;
             }
 
-            if (httpRequest.method() == HttpMethod.HEAD
-                    || httpRequest.method() == HttpMethod.PATCH
-                    || httpRequest.method() == HttpMethod.TRACE
-                    || httpRequest.method() == HttpMethod.CONNECT
-                    || httpRequest.method() == HttpMethod.OPTIONS) {
-                HttpResponseHandler.sendError(ctx, HttpResponseStatus.FORBIDDEN, "Method forbidden (The following are not supported: HEAD, PATCH, TRACE, CONNECT, OPTIONS).");
+            if (httpRequest.method().equals(HttpMethod.HEAD)
+                    || httpRequest.method().equals(HttpMethod.PATCH)
+                    || httpRequest.method().equals(HttpMethod.TRACE)
+                    || httpRequest.method().equals(HttpMethod.CONNECT)
+                    || httpRequest.method().equals(HttpMethod.OPTIONS)) {
+                HttpResponseHandler.sendError(ctx, HttpResponseStatus.FORBIDDEN, "Method forbidden (The following are not supported: HEAD, PATCH, TRACE, CONNECT, OPTIONS).", httpRequest);
                 return;
             }
 
-            String upgradeHeader = httpRequest.headers().get(HVALUE_UPGRADE);
-            if (!Util.isEmpty(upgradeHeader) && "websocket".equalsIgnoreCase(upgradeHeader)) {
-                // Handshake. Ideally you'd want to configure your websocket uri
-                String url = "ws://" + httpRequest.headers().get("Host") + "/" + endpointId;
-                //todo: configure frame size
-                WebSocketServerHandshakerFactory wsFactory = new WebSocketServerHandshakerFactory(url, null, false);
-                handshaker = wsFactory.newHandshaker(httpRequest);
-                if (handshaker == null) {
-                    WebSocketServerHandshakerFactory.sendUnsupportedVersionResponse(ctx.channel());
-                } else {
-                    handshaker.handshake(ctx.channel(), httpRequest);
-                }
+            //check websocket upgrade request
+            String upgradeHeader = httpRequest.headers().get(HttpHeaderNames.UPGRADE);
+            if (!Util.isEmpty(upgradeHeader) && UPGRADE_TO_WEBSOCKET.equalsIgnoreCase(upgradeHeader)) {
+                //case websocket upgrade request is detected -> Prepare websocket handshake
+                upgradeToWebsocket(ctx, httpRequest);
             } else {
-                //simple http request
-                Request.RequestHeader header = null;
-                Optional<Entry<String, String>> msgIdOpt = httpRequest.headers().entries().stream().filter(e -> e.getKey().equalsIgnoreCase(AbstractMessage.PROP_MESSAGE_ID)).findFirst();
-                String msgId = msgIdOpt.isPresent() ? msgIdOpt.get().getValue() : null;
-                try {
-                    header = new Request.RequestHeader(msgId, new Uri(httpRequest.uri()), RequestMethod.fromHttpMethod(httpRequest.method()));
-                    header.addAllProperties(httpRequest.headers());
-                    if (HttpHeaders.isKeepAlive(httpRequest)) {
-                        header.setKeepalive(true);
-                    } else {
-                        header.setKeepalive(false);
-                    }
-                    if (pipelining) {
-                        header.addProperty(Request.RequestHeader.MSG_SEQ, String.valueOf(sequence.getAndIncrement()));
-                    }
-                } catch (UnsupportedEncodingException ex) {
-                    logger.error(ex.getMessage(), ex);
-                    HttpResponseHandler.sendError(ctx, HttpResponseStatus.BAD_REQUEST, ex.getClass().getSimpleName() + ": " + ex.getMessage());
-                }
+                //case simple http request
+                Request request = new Request(prepareHeader(ctx, httpRequest));
 
-                Request request = new Request(header);
+                //no information about the object type / it will be processed in a later stage
+                //todo: with requestbodytype header value early deserialization would be possible, however not beneficial in routing cases
                 request.setBody(httpRequest.content());
                 ctx.fireChannelRead(request);
             }
         } catch (Exception ex) {
             logger.error("Channel read error: " + ex.getMessage(), ex);
-            HttpResponseHandler.sendError(ctx, HttpResponseStatus.INTERNAL_SERVER_ERROR, ex.getClass().getSimpleName() + ": " + ex.getMessage());
+            HttpResponseHandler.sendError(ctx, HttpResponseStatus.INTERNAL_SERVER_ERROR, ex.getClass().getSimpleName() + ": " + ex.getMessage(), httpRequest);
         }
+    }
+
+    private void upgradeToWebsocket(ChannelHandlerContext ctx, FullHttpRequest httpRequest) {
+
+        String wsUrl = "ws://" + httpRequest.headers().get(HttpHeaderNames.HOST) + "/" + endpointId;
+        //todo: configure frame size
+        WebSocketServerHandshakerFactory wsHandshakeFactory = new WebSocketServerHandshakerFactory(wsUrl, null, false);
+        WebSocketServerHandshaker handshaker = wsHandshakeFactory.newHandshaker(httpRequest);
+        if (handshaker == null) {
+            WebSocketServerHandshakerFactory.sendUnsupportedVersionResponse(ctx.channel());
+        } else {
+            handshaker.handshake(ctx.channel(), httpRequest);
+        }
+        ctx.pipeline().addAfter(Endpoint.HTTP_REQUEST_HANDLER, Endpoint.WS_REQUEST_HANDLER, new WebsocketHandler(handshaker));
+        HttpResponseHandler.sendWebsocketUpgradeResponse(ctx, httpRequest);
+    }
+
+    private Request.RequestHeader prepareHeader(ChannelHandlerContext ctx, FullHttpRequest httpRequest) {
+        Request.RequestHeader header = null;
+        Optional<Entry<String, String>> msgIdOpt = httpRequest.headers().entries().stream().filter(e -> e.getKey().equalsIgnoreCase(AbstractMessage.PROP_MESSAGE_ID)).findFirst();
+        String msgId = msgIdOpt.isPresent() ? msgIdOpt.get().getValue() : null;
+        try {
+            header = new Request.RequestHeader(msgId, new Uri(httpRequest.uri()), RequestMethod.fromHttpMethod(httpRequest.method()));
+            header.addAllProperties(httpRequest.headers());
+            if (HttpHeaders.isKeepAlive(httpRequest)) {
+                header.setKeepalive(true);
+            } else {
+                header.setKeepalive(false);
+            }
+            if (pipelining) {
+                header.addProperty(Request.RequestHeader.MSG_SEQ, String.valueOf(sequence.getAndIncrement()));
+            }
+        } catch (UnsupportedEncodingException ex) {
+            logger.error(ex.getMessage(), ex);
+            HttpResponseHandler.sendError(ctx, HttpResponseStatus.BAD_REQUEST, ex.getClass().getSimpleName() + ": " + ex.getMessage(), httpRequest);
+        }
+        return header;
     }
 
     @Override

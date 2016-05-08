@@ -28,12 +28,12 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import org.junit.Assert;
 import org.thingsplode.synapse.TestEventProcessor;
-import org.thingsplode.synapse.core.domain.ParameterWrapper;
-import org.thingsplode.synapse.core.domain.Request;
-import org.thingsplode.synapse.core.domain.RequestMethod;
-import org.thingsplode.synapse.core.domain.Response;
+import org.thingsplode.synapse.core.ParameterWrapper;
+import org.thingsplode.synapse.core.Request;
+import org.thingsplode.synapse.core.RequestMethod;
+import org.thingsplode.synapse.core.Response;
 import org.thingsplode.synapse.core.exceptions.RequestTimeoutException;
-import org.thingsplode.synapse.core.domain.Event;
+import org.thingsplode.synapse.core.Event;
 
 /**
  *

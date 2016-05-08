@@ -20,7 +20,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import org.thingsplode.synapse.core.domain.Request;
+import org.thingsplode.synapse.core.Request;
 
 /**
  * The value of the method parameter is delivered via a Request Property (the HTTP headers are converted to Request Properties in the {@link Request.RequestHeader});<br>

@@ -13,15 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsplode.synapse.core.domain;
-
-import java.io.Serializable;
+package org.thingsplode.synapse.core;
 
 /**
  *
  * @author Csaba Tamas
- * @param <T>
  */
-public class Command<T extends Serializable> extends AbstractMessage<T> {
+public class PushNotification extends AbstractMessage {
     
 }
