@@ -31,12 +31,7 @@ import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.util.CharsetUtil;
-import java.io.UnsupportedEncodingException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Base64;
 import java.util.Optional;
-import java.util.logging.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.thingsplode.synapse.core.AbstractMessage;
@@ -142,32 +137,6 @@ public class HttpResponseHandler extends SimpleChannelInboundHandler<Response> {
                 logger.debug("Error Response message was succesfully dispatched at the endpoint.");
             }
         });
-    }
-
-    static ChannelFuture sendWebsocketUpgradeResponse(ChannelHandlerContext ctx, HttpRequest request) {
-        ByteBuf content = Unpooled.copiedBuffer("upgrading to websocket...", CharsetUtil.UTF_8);
-        FullHttpResponse response = new DefaultFullHttpResponse(
-                HttpVersion.HTTP_1_1, HttpResponseStatus.SWITCHING_PROTOCOLS, content);
-        response.headers().set(HttpHeaderNames.UPGRADE, HttpRequestHandler.UPGRADE_TO_WEBSOCKET);
-        response.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderNames.UPGRADE);
-        if (request != null && request.headers().contains(HttpHeaderNames.SEC_WEBSOCKET_KEY)) {
-            try {
-                //prepare a salt-ed, hashed base64 encoded accept challenge as requested by the specification
-                String secWebsocketKey = request.headers().get(HttpHeaderNames.SEC_WEBSOCKET_KEY) + SEC_WEBSOCKET_KEY_SALT;
-                MessageDigest cript = MessageDigest.getInstance("SHA-1");
-                cript.reset();
-                cript.update(secWebsocketKey.getBytes("utf8"));
-                String base64EncodedHashedSecWsAccept = Base64.getEncoder().encodeToString(cript.digest());
-                response.headers().set(HttpHeaderNames.SEC_WEBSOCKET_ACCEPT, base64EncodedHashedSecWsAccept);
-            } catch (NoSuchAlgorithmException | UnsupportedEncodingException ex) {
-                logger.warn("Should prepare a [" + HttpHeaderNames.SEC_WEBSOCKET_ACCEPT.toString() + "] header, however failed due to -> " + ex.getClass().getSimpleName() + " with message: " + ex.getMessage());
-            }
-        }
-        if (request != null && request.headers().contains(HttpHeaderNames.SEC_WEBSOCKET_PROTOCOL)) {
-            //tell the client we support everything he needs
-            response.headers().set(HttpHeaderNames.SEC_WEBSOCKET_PROTOCOL, request.headers().get(HttpHeaderNames.SEC_WEBSOCKET_PROTOCOL));
-        }
-        return writeResponseWithKeepaliveHandling(ctx, response, (request != null ? HttpHeaders.isKeepAlive(request) : false));
     }
 
     static void sendRedirect(ChannelHandlerContext ctx, String newUrl, Request.RequestHeader header) {
