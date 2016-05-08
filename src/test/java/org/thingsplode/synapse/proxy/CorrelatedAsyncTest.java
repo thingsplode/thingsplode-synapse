@@ -42,7 +42,7 @@ public class CorrelatedAsyncTest extends AbstractCorrelatedClientTest {
     //the timeout generator should close the connection // but what will happen with non-http protocols
     @Test()
     public void baseCorrelatedRequestTest() throws InterruptedException, URISyntaxException, SSLException, UnsupportedEncodingException, ExecutionException {
-        TestTemplates.normalRequestTest("SEQUENTIAL CORRELATED REQUEST EXECUTION TEST", dispatcher);
+        TestTemplates.normalRequestTest("BASE CORRELATED REQUEST EXECUTION TEST", dispatcher);
     }
 
     @Test
@@ -55,4 +55,28 @@ public class CorrelatedAsyncTest extends AbstractCorrelatedClientTest {
         TestTemplates.burstTest("BURST CORRELATED REQUEST EXECUTION TEST", dispatcher);
     }
 
+    @Test
+    public void eventTestWithWrongAddress() throws UnsupportedEncodingException, InterruptedException, ExecutionException {
+        TestTemplates.eventTestWithWrongAddress("CORRELATED EVENT WITH WRONG TARGET", dispatcher);
+
+    }
+
+    @Test
+    public void eventTest() throws UnsupportedEncodingException, InterruptedException, ExecutionException {
+        TestTemplates.eventTest("CORRELATED EVENT NORMAL", dispatcher);
+    }
+
+    @Test
+    public void burstEventTest() throws UnsupportedEncodingException, InterruptedException {
+        TestTemplates.burstEventTest("CORRELATED BURST EVENT TEST", dispatcher);
+    }
+
+    @Test
+    public void combinedErrorTest() throws InterruptedException, UnsupportedEncodingException, ExecutionException{
+        TestTemplates.eventTestWithWrongAddress("CORRELATED EVENT WITH WRONG TARGET", dispatcher);
+        // a redirect utan a csatornat lezarja a server, de meg elotte egy pillanattal ki lesz dispatcholva 
+        // a kov. keres.
+        TestTemplates.normalRequestTest("BASE CORRELATED REQUEST EXECUTION TEST", dispatcher);
+    }
+    
 }

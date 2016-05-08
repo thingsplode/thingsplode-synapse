@@ -72,7 +72,7 @@ public class HttpResponseToResponseDecoder extends MessageToMessageDecoder<HttpR
                 } catch (ClassNotFoundException cnfe) {
                     logger.warn("There's a body of type [" + bodyType + "] on the response, but the corresponding class cannot be found. Skipping the deserialization of the body.");
                 }
-            } else if (Util.isEmpty(bodyType) && Util.notEmpty(jsonResponse)) {
+            } else if (Util.isEmpty(bodyType) && Util.notEmpty(jsonResponse) && logger.isDebugEnabled()) {
                 logger.warn("Body serialization will be skipped due to missing body type info on the header.");
             }
         }

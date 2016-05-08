@@ -59,7 +59,7 @@ public class HttpResponseIntrospector extends SimpleChannelInboundHandler<HttpRe
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        logger.error("Error while introspecting: " + cause.getMessage(), cause);
+        logger.error("Error while introspecting HttpResponse: " + cause.getMessage(), cause);
     }
 
 }

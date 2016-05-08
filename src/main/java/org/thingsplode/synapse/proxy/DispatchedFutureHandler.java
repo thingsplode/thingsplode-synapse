@@ -60,4 +60,6 @@ public interface DispatchedFutureHandler {
     public abstract DispatchedFuture<Request, Response> responseReceived(String msgId);
 
     abstract TimerTask getTimerTask();
+    
+    abstract void evictActiveRequests();
 }

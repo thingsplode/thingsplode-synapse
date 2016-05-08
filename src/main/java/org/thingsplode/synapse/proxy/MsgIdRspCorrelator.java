@@ -19,9 +19,11 @@ import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.thingsplode.synapse.core.domain.HttpStatus;
 import org.thingsplode.synapse.core.domain.Request;
 import org.thingsplode.synapse.core.domain.Response;
 import org.thingsplode.synapse.core.exceptions.RequestTimeoutException;
+import org.thingsplode.synapse.core.exceptions.SynapseException;
 import org.thingsplode.synapse.util.Util;
 
 /**
@@ -29,7 +31,7 @@ import org.thingsplode.synapse.util.Util;
  * @author Csaba Tamas
  */
 public class MsgIdRspCorrelator extends SchedulingDispatchedFutureHandler {
-    
+
     private final Logger logger = LoggerFactory.getLogger(MsgIdRspCorrelator.class);
     private long defaultResponseTimeout = finalDefaultTimeout;
     private final ConcurrentHashMap<String, DispatchedFuture<Request, Response>> requestMsgRegistry;//msg id/msg correlation entry map
@@ -37,7 +39,7 @@ public class MsgIdRspCorrelator extends SchedulingDispatchedFutureHandler {
     public MsgIdRspCorrelator() {
         super();
         this.requestMsgRegistry = new ConcurrentHashMap<>();//ConcurrentHashMap
-        
+
     }
 
     /**
@@ -54,15 +56,15 @@ public class MsgIdRspCorrelator extends SchedulingDispatchedFutureHandler {
             logger.warn(String.format("Did not registered Message Entry because is NULL"));
             return;
         }
-        
+
         if (msgEntry.getRequest() == null || msgEntry.getRequest().getHeader() == null) {
             throw new IllegalArgumentException("At this stage the " + Request.class.getSimpleName() + " and its header should have been already set.");
         } else if (Util.isEmpty(msgEntry.getRequest().getHeader().getMsgId())) {
             throw new IllegalArgumentException("The " + MsgIdRspCorrelator.class.getSimpleName() + "requires a unique message id");
         }
-        
+
         String msgId = msgEntry.getRequest().getHeader().getMsgId();
-        
+
         if (msgId != null) {
             msgEntry.setRequestFiredTime(System.currentTimeMillis());
             DispatchedFuture oldMsgEntry = requestMsgRegistry.put(msgId, msgEntry);
@@ -72,9 +74,9 @@ public class MsgIdRspCorrelator extends SchedulingDispatchedFutureHandler {
         } else {
             logger.warn(String.format("Skipping the registration of a %s because the Message ID [%s]", MSG_ENTRY_NAME, msgId));
         }
-        
-        if (logger.isDebugEnabled()) {
-            logger.debug(debugStatuses());
+
+        if (logger.isTraceEnabled()) {
+            logger.trace(traceStatuses());
         }
     }
 
@@ -106,7 +108,7 @@ public class MsgIdRspCorrelator extends SchedulingDispatchedFutureHandler {
      *
      * @return
      */
-    public String debugStatuses() {
+    public String traceStatuses() {
         /**
          * This part is called only of there's already trouble. The debug
          * information is very much needed in order to be able to reproduce the
@@ -118,22 +120,30 @@ public class MsgIdRspCorrelator extends SchedulingDispatchedFutureHandler {
         });
         requestMapBuilder.append("**** END OF SESSION REGISTRY ****\n");
         return requestMapBuilder.toString();
-        
+
     }
-    
+
     @Override
     public TimerTask getTimerTask() {
-        
+
         return new SessionTimerTask();
     }
-    
+
     @Override
     public void setDefaultTimeout(Long responseTimeout) {
         this.defaultResponseTimeout = responseTimeout;
     }
-    
+
+    @Override
+    public void evictActiveRequests() {
+        requestMsgRegistry.keySet().stream().forEach((String msgId) -> {
+            DispatchedFuture<Request, Response> d = requestMsgRegistry.remove(msgId);
+            d.completeExceptionally(new SynapseException("Pending responses are evicted", HttpStatus.BAD_GATEWAY));
+        });
+    }
+
     class SessionTimerTask extends TimerTask {
-        
+
         @Override
         public void run() {
             try {
@@ -150,15 +160,15 @@ public class MsgIdRspCorrelator extends SchedulingDispatchedFutureHandler {
                         if (logger.isTraceEnabled()) {
                             logger.trace(String.format("Generating timeout for a %s with message ID [%s] because [now - fires = %s > %s]", MSG_ENTRY_NAME, msgID, diffInSec, msgTimeout));
                         }
-                        DispatchedFuture msgWrapper = responseReceived(msgID);
-                        msgWrapper.completeExceptionally(new RequestTimeoutException("Waiting for message has timed out [" + msgTimeout + "]ms in " + MsgIdRspCorrelator.class.getSimpleName()));
+                        DispatchedFuture dispatchedFuture = responseReceived(msgID);
+                        dispatchedFuture.completeExceptionally(new RequestTimeoutException("Waiting for message has timed out [" + msgTimeout + "]ms in " + MsgIdRspCorrelator.class.getSimpleName()));
                     }
                 });
             } catch (Throwable th) {
                 logger.warn("There was an error in the correlation timer task execution: " + th.getMessage(), th);
             }
-            
+
         }
     }
-    
+
 }

@@ -26,7 +26,7 @@ import org.thingsplode.synapse.endpoint.AbstractEventSink;
  */
 public class TestEventProcessor extends AbstractEventSink<Serializable> {
 
-    public static ArrayBlockingQueue<Event<Serializable>> eventQueue = new ArrayBlockingQueue<>(1);
+    public static ArrayBlockingQueue<Event<Serializable>> eventQueue = new ArrayBlockingQueue<>(1000);
     
     public TestEventProcessor() {
         super(Serializable.class);

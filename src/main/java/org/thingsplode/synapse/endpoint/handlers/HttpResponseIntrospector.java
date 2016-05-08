@@ -21,7 +21,9 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.ChannelPromise;
 import io.netty.handler.codec.http.FullHttpResponse;
+import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpResponse;
+import io.netty.handler.codec.http.LastHttpContent;
 import java.nio.charset.Charset;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,25 +40,30 @@ public class HttpResponseIntrospector extends ChannelOutboundHandlerAdapter {
 
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
-        if (msg == null || !(msg instanceof HttpResponse)) {
-            logger.warn("Message@Endpoint <to be sent>: not an instance of HTTPResponse or NULL.");
+        if (msg == null || !(msg instanceof HttpResponse) || !(msg instanceof HttpContent)) {
+            logger.warn("Message@Endpoint <to be sent>: not an instance of HTTPResponse or HttpContent or NULL.");
         } else if (logger.isDebugEnabled()) {
-            final StringBuilder hb = new StringBuilder();
-            ((HttpResponse) msg).headers().entries().forEach(e -> {
-                hb.append(e.getKey()).append(" : ").append(e.getValue()).append("\n");
-            });
-            String payloadAsSring = null;
-            if (msg instanceof FullHttpResponse) {
-                ByteBuf content = ((FullHttpResponse) msg).content();
-                byte[] dst = content.copy().array();
-                //content.copy().getBytes(0, dst);
-                content.retain();
-                payloadAsSring = new String(dst, Charset.forName("UTF-8"));
+            if (!(msg instanceof HttpResponse)) {
+                HttpContent content = (HttpContent)msg;
+                logger.debug("Message@Endpoint to be sent: http content -> " + content.toString());
+            } else {
+                final StringBuilder hb = new StringBuilder();
+                ((HttpResponse) msg).headers().entries().forEach(e -> {
+                    hb.append(e.getKey()).append(" : ").append(e.getValue()).append("\n");
+                });
+                String payloadAsSring = null;
+                if (msg instanceof FullHttpResponse) {
+                    ByteBuf content = ((FullHttpResponse) msg).content();
+                    byte[] dst = content.copy().array();
+                    //content.copy().getBytes(0, dst);
+                    content.retain();
+                    payloadAsSring = new String(dst, Charset.forName("UTF-8"));
+                }
+                String msgStatus = (((HttpResponse) msg).status() != null ? ((HttpResponse) msg).status().toString() : "NULL");
+                logger.debug("Message@Endpoint to be sent: \n\n"
+                        + "Status: " + msgStatus + "\n"
+                        + hb.toString() + "\n" + "Payload: [" + (!Util.isEmpty(payloadAsSring) ? payloadAsSring + "]\n" : "EMPTY\n"));
             }
-            String msgStatus = (((HttpResponse) msg).status() != null ? ((HttpResponse) msg).status().toString() : "NULL");
-            logger.debug("Message@Endpoint to be sent: \n\n"
-                    + "Status: " + msgStatus + "\n"
-                    + hb.toString() + "\n" + "Payload: [" + (!Util.isEmpty(payloadAsSring) ? payloadAsSring + "]\n" : "EMPTY\n"));
         }
         ctx.write(msg, promise);
     }

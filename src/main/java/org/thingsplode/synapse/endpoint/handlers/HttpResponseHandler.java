@@ -15,6 +15,7 @@
  */
 package org.thingsplode.synapse.endpoint.handlers;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
@@ -28,6 +29,7 @@ import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
+import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.util.CharsetUtil;
 import java.util.Optional;
 import org.slf4j.Logger;
@@ -36,6 +38,7 @@ import org.thingsplode.synapse.core.domain.AbstractMessage;
 import org.thingsplode.synapse.core.domain.MediaType;
 import org.thingsplode.synapse.core.domain.Response;
 import org.thingsplode.synapse.core.domain.EmptyBody;
+import org.thingsplode.synapse.core.domain.Request;
 import org.thingsplode.synapse.serializers.SerializationService;
 import org.thingsplode.synapse.serializers.SynapseSerializer;
 
@@ -75,7 +78,11 @@ public class HttpResponseHandler extends SimpleChannelInboundHandler<Response> {
         decorate(rsp, response);
         response.headers().set(HttpHeaderNames.CONTENT_LENGTH, response.content().readableBytes());
 
-        if (!rsp.getHeader().isKeepAlive()) {
+        writeResponseWithKeepaliveHandling(ctx, response, rsp.getHeader().isKeepAlive());
+    }
+
+    private static void writeResponseWithKeepaliveHandling(ChannelHandlerContext ctx, FullHttpResponse response, boolean keepalive) {
+        if (!keepalive) {
             // If keep-alive is off, close the connection once the content is fully written.
             logger.trace("Closing the Connection@Endpoint due to keep-alive: false.");
             ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
@@ -122,12 +129,17 @@ public class HttpResponseHandler extends SimpleChannelInboundHandler<Response> {
         });
     }
 
-    static void sendRedirect(ChannelHandlerContext ctx, String newUrl) {
+    static void sendRedirect(ChannelHandlerContext ctx, String newUrl, Request.RequestHeader header) {
         logger.debug("Redirecting request to {}", newUrl);
+        ByteBuf content = Unpooled.copiedBuffer("redirect to index.html", CharsetUtil.UTF_8);
         FullHttpResponse response = new DefaultFullHttpResponse(
-                HttpVersion.HTTP_1_1, HttpResponseStatus.TEMPORARY_REDIRECT, Unpooled.copiedBuffer("redirect to index.html", CharsetUtil.UTF_8));
+                HttpVersion.HTTP_1_1, HttpResponseStatus.TEMPORARY_REDIRECT, content);
         response.headers().set(HttpHeaderNames.LOCATION, newUrl);
-        ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+        if (header.getMsgId() != null) {
+            response.headers().set(AbstractMessage.PROP_CORRELATION_ID, header.getMsgId());
+        }
+        response.headers().set(HttpHeaderNames.CONTENT_LENGTH, response.content().readableBytes());
+        writeResponseWithKeepaliveHandling(ctx, response, header.isKeepalive());
     }
 
 }

@@ -20,7 +20,6 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageEncoder;
 import io.netty.handler.codec.http.DefaultFullHttpRequest;
-import io.netty.handler.codec.http.DefaultHttpRequest;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpRequest;
@@ -71,7 +70,7 @@ public class RequestToHttpRequestEncoder extends MessageToMessageEncoder<Request
             out = new DefaultFullHttpRequest(HttpVersion.HTTP_1_0, m, request.getHeader().getUri().getPath(), Unpooled.wrappedBuffer(payload));
             out.headers().add(HttpHeaderNames.CONTENT_LENGTH, payload.length);
         } else {
-            out = new DefaultHttpRequest(HttpVersion.HTTP_1_1, m, request.getHeader().getUri().getPath());
+            out = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, m, request.getHeader().getUri().getPath());
         }
         if (request.getHeader() != null && request.getHeader().getProperties() != null) {
             request.getHeader().getProperties().forEach((k, v) -> {

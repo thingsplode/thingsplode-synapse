@@ -126,14 +126,14 @@ public final class FileRequestHandler extends SimpleChannelInboundHandler<FileRe
             for (Entry<Pattern,String> e : this.redirects.entrySet()){
                 if (e.getKey().matcher(uri.get()).matches()){
                     System.out.println("Matched for redirect: " + uri.get());
-                    HttpResponseHandler.sendRedirect(ctx, createRedirectUrl(req.getHeader(), e.getValue()));
+                    HttpResponseHandler.sendRedirect(ctx, createRedirectUrl(req.getHeader(), e.getValue()), req.getHeader());
                     break;
                 }
             }   
         }
         
         if (uri.get().endsWith("/")){
-            HttpResponseHandler.sendRedirect(ctx, uri.get() + "index.html");
+            HttpResponseHandler.sendRedirect(ctx, uri.get() + "index.html", req.getHeader());
             return;
         }
 

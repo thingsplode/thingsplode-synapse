@@ -182,7 +182,8 @@ public class Dispatcher {
             }
             channel.closeFuture().addListener((ChannelFutureListener) (ChannelFuture future) -> {
                 if (future.isSuccess()) {
-                    logger.debug("Channel@Proxy is closed.");
+                    logger.debug("Channel@Proxy is closed / evicting active requests.");
+                    dispatchedFutureHandler.evictActiveRequests();
                 }
             });
         } catch (Exception ex) {
