@@ -64,7 +64,7 @@ public class RequestToHttpRequestEncoder extends MessageToMessageEncoder<Request
         final HttpRequest out;
         if (request.getBody() != null) {
             Optional<String> contentTypeOpt = request.getRequestHeaderProperty(HttpHeaderNames.ACCEPT.toString());
-            MediaType mt = contentTypeOpt.isPresent() ? new MediaType(contentTypeOpt.get()) : new MediaType(MediaType.APPLICATION_JSON);
+            MediaType mt = contentTypeOpt.isPresent() ? new MediaType(contentTypeOpt.get()) : new MediaType(MediaType.APPLICATION_JSON_CT);
             request.getHeader().addProperty(AbstractMessage.PROP_BODY_TYPE, request.getBody().getClass().getCanonicalName());
             byte[] payload = EndpointProxy.SERIALIZATION_SERVICE.getSerializer(mt).marshall(request.getBody());
             out = new DefaultFullHttpRequest(HttpVersion.HTTP_1_0, m, request.getHeader().getUri().getPath(), Unpooled.wrappedBuffer(payload));

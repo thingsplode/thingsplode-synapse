@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 tamas.csaba@gmail.com.
+ * Copyright 2016 Csaba Tamas.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,23 +20,23 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-import io.netty.handler.codec.http.HttpResponseStatus;
 import java.io.IOException;
+import org.thingsplode.synapse.core.MediaType;
 
 /**
  *
  * @author Csaba Tamas
  */
-public class HttpResponseStatusDeserializer extends StdDeserializer<HttpResponseStatus> {
+public class MediaTypeDeserializer extends StdDeserializer<MediaType> {
 
-    public HttpResponseStatusDeserializer() {
-        super(HttpResponseStatus.class);
+    public MediaTypeDeserializer() {
+        super(MediaType.class);
     }
 
     @Override
-    public HttpResponseStatus deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException, JsonProcessingException {
-        JsonNode node = jp.readValueAsTree();
-        return HttpResponseStatus.valueOf(node.asInt());
+    public MediaType deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
+        JsonNode node = p.readValueAsTree();
+        String mediaTypeText = node.get("media_type").asText();
+        return new MediaType(mediaTypeText);
     }
-
 }

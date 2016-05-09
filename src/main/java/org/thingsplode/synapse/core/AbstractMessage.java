@@ -26,11 +26,12 @@ import org.thingsplode.synapse.core.exceptions.MarshallerException;
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@msg_type", visible = true)
 public abstract class AbstractMessage<T> implements Serializable {
-
+    public final static String PROP_RCV_CHANNEL = "Receive-Channel";
     public final static String PROP_MESSAGE_ID = "Message-ID";
     public final static String PROP_CORRELATION_ID = "Correlation-ID";
     public final static String PROP_PROTOCOL_VERSION = "Protocol-Version";
     public final static String PROP_BODY_TYPE = "Body-Type";
+    public final static String PROP_KEY_HTTP = "HTTP";
     @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@body_type", visible = true)
     private T body;
 

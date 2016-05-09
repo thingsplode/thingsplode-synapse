@@ -22,7 +22,6 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.UUID;
-import static javafx.scene.input.KeyCode.T;
 import org.apache.log4j.BasicConfigurator;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -117,6 +116,19 @@ public class AbstractParserTest {
     }
     
     @Test
+    public void testMarshallingEmptyRequestObject() throws UnsupportedEncodingException, SerializationException{
+        Request r = Request.create(UUID.randomUUID().toString(), new Uri("/com/acme/synapse/testdata/services/RpcEndpointImpl/ping"), RequestMethod.GET);
+        r.getHeader().setKeepalive(true);
+        String json = getSerializer().marshallToWireformat(r);
+        System.out.println(json);
+        AbstractMessage ur = getSerializer().unMarshall(AbstractMessage.class, json);
+        Assert.assertNotNull(ur);
+        Assert.assertTrue("it must be a type of request", ur instanceof Request);
+        Assert.assertTrue(((Request)ur).getHeader().getMethod() == RequestMethod.GET);
+        Assert.assertTrue(((Request)ur).getHeader().getUri().getPath().equalsIgnoreCase("/com/acme/synapse/testdata/services/RpcEndpointImpl/ping"));
+    }
+    
+    @Test
     public void testMarshallingResponseObjects() throws SerializationException {
         Response r = new Response<>(new Response.ResponseHeader(HttpResponseStatus.OK), new ArrayList());
         String json = getSerializer().marshallToWireformat(r);
@@ -124,7 +136,7 @@ public class AbstractParserTest {
         Response<ArrayList> ur = getSerializer().unMarshall(Response.class, json);
         Assert.assertNotNull(ur);
         Assert.assertTrue(ur.getHeader() != null);
-        Assert.assertTrue(ur.getHeader().getResponseCode() == HttpResponseStatus.OK);
+        Assert.assertTrue(ur.getHeader().getResponseCode().equals(HttpResponseStatus.OK));
         Assert.assertNotNull(ur.getBody());
         Assert.assertTrue(ur.getBody().isEmpty());
     }

@@ -76,7 +76,7 @@ public class ServiceRegistry {
 
     private Routes routes;
     private Pattern urlParamPattern = Pattern.compile("\\{(.*?)\\}", Pattern.CASE_INSENSITIVE);
-    private SerializationService serializationService = new SerializationService();
+    private SerializationService serializationService = SerializationService.getInstance();
     private static final Logger logger = LoggerFactory.getLogger(ServiceRegistry.class);
 
     public ServiceRegistry() {

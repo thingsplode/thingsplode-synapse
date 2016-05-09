@@ -15,6 +15,8 @@
  */
 package org.thingsplode.synapse.endpoint.handlers;
 
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.FullHttpRequest;
@@ -36,8 +38,8 @@ import org.thingsplode.synapse.core.RequestMethod;
 import org.thingsplode.synapse.core.Uri;
 import org.thingsplode.synapse.endpoint.Endpoint;
 import static org.thingsplode.synapse.endpoint.handlers.HttpResponseHandler.sendError;
-import org.thingsplode.synapse.serializers.SerializationService;
 import org.thingsplode.synapse.util.Util;
+import static org.thingsplode.synapse.endpoint.handlers.HttpResponseHandler.sendError;
 
 /**
  *
@@ -89,6 +91,7 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
             if (!Util.isEmpty(upgradeHeader) && UPGRADE_TO_WEBSOCKET.equalsIgnoreCase(upgradeHeader)) {
                 //case websocket upgrade request is detected -> Prepare websocket handshake
                 upgradeToWebsocket(ctx, httpRequest);
+                return;
             } else {
                 //case simple http request
                 Request request = new Request(prepareHeader(ctx, httpRequest));
@@ -113,10 +116,24 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
         if (handshaker == null) {
             WebSocketServerHandshakerFactory.sendUnsupportedVersionResponse(ctx.channel());
         } else {
-            handshaker.handshake(ctx.channel(), httpRequest);
+            handshaker.handshake(ctx.channel(), httpRequest).addListener((ChannelFutureListener) new ChannelFutureListener() {
+                @Override
+                public void operationComplete(ChannelFuture future) throws Exception {
+                    if (future.isSuccess()) {
+                        logger.debug("Switching to websocket. Replacing the " + Endpoint.HTTP_RESPONSE_HANDLER + " with " + Endpoint.WS_RESPONSE_HANDLER);
+                        ctx.pipeline().addAfter(Endpoint.HTTP_REQUEST_HANDLER, Endpoint.WS_REQUEST_HANDLER, new WebsocketRequestHandler(handshaker));
+                        ctx.pipeline().replace(Endpoint.HTTP_RESPONSE_HANDLER, Endpoint.WS_RESPONSE_HANDLER, new WebsocketResponseHandler());
+                    } else {
+                        String msg = "Dispatching upgrade acknowledgement was not successfull due to ";
+                        if (future.cause() != null) {
+                            logger.error(msg + future.cause().getClass().getSimpleName() + " with message: " + future.cause().getMessage(), future.cause());
+                        } else {
+                            logger.error(msg + " unknown reasons.");
+                        }
+                    }
+                }
+            });
         }
-        ctx.pipeline().addAfter(Endpoint.HTTP_REQUEST_HANDLER, Endpoint.WS_REQUEST_HANDLER, new WebsocketHandler(handshaker));
-        HttpResponseHandler.sendWebsocketUpgradeResponse(ctx, httpRequest);
     }
 
     private Request.RequestHeader prepareHeader(ChannelHandlerContext ctx, FullHttpRequest httpRequest) {
@@ -134,6 +151,7 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
             if (pipelining) {
                 header.addProperty(Request.RequestHeader.MSG_SEQ, String.valueOf(sequence.getAndIncrement()));
             }
+            header.addProperty(AbstractMessage.PROP_RCV_CHANNEL, AbstractMessage.PROP_KEY_HTTP);
         } catch (UnsupportedEncodingException ex) {
             logger.error(ex.getMessage(), ex);
             HttpResponseHandler.sendError(ctx, HttpResponseStatus.BAD_REQUEST, ex.getClass().getSimpleName() + ": " + ex.getMessage(), httpRequest);

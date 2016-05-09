@@ -15,28 +15,51 @@
  */
 package org.thingsplode.synapse.core;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.thingsplode.synapse.serializers.jackson.adapters.MediaTypeDeserializer;
+import org.thingsplode.synapse.serializers.jackson.adapters.MediaTypeSerializer;
 import org.thingsplode.synapse.util.Util;
 
 /**
  *
  * @author Csaba Tamas
  */
+@JsonDeserialize(using = MediaTypeDeserializer.class)
+@JsonSerialize(using = MediaTypeSerializer.class)
 public class MediaType {
 
     /**
      * "application/json; charset=UTF-8"
      */
-    public static final String APPLICATION_JSON = "application/json; charset=UTF-8";
     private static final String MEDIA_TYPE_REGEX = "(\\S+?|\\*)/(\\S+?|\\*)";
     private static final Pattern MEDIA_TYPE_PATTERN = Pattern.compile(MEDIA_TYPE_REGEX);
     private static final String PARAMETER_REGEX = "(\\w+?)(?:\\s*?=\\s*?(\\S+?))";
     private static final Pattern PARAMETER_PATTERN = Pattern.compile(PARAMETER_REGEX);
+    /**
+     * application/json; charset=UTF-8
+     */
+    public static final String APPLICATION_JSON_CT = "application/json; charset=UTF-8";
 
+    /**
+     * text/plain; charset=UTF-8
+     */
+    public static final String TEXT_PLAIN_CT = "text/plain; charset=UTF-8";
+
+    /**
+     * application/json; charset=UTF-8
+     */
+    public static final MediaType APPLICATION_JSON = new MediaType(APPLICATION_JSON_CT);
+
+    /**
+     * text/plain; charset=UTF-8
+     */
+    public static final MediaType TEXT_PLAIN = new MediaType(TEXT_PLAIN_CT);
     private final String name;
     private String type;
     private String subtype;
@@ -44,7 +67,7 @@ public class MediaType {
     private final Map<String, String> parameters = new HashMap<>();
 
     public MediaType(String segment) {
-        if (Util.isEmpty(segment)){
+        if (Util.isEmpty(segment)) {
             segment = "text/plain";
         }
         this.name = segment;
@@ -55,7 +78,7 @@ public class MediaType {
             this.type = matcher.group(1);
             this.subtype = matcher.group(2);
         }
-        
+
         for (int i = 1; i < pieces.length; ++i) {
             Matcher p = PARAMETER_PATTERN.matcher(pieces[i]);
 

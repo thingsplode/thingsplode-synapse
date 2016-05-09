@@ -18,6 +18,7 @@ package org.thingsplode.synapse.proxy;
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import javax.net.ssl.SSLException;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -25,6 +26,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.thingsplode.synapse.AbstractBlockingClientTest;
+import org.thingsplode.synapse.TestEventProcessor;
 
 /**
  *
@@ -94,6 +96,14 @@ public class BlockingProxyTest extends AbstractBlockingClientTest {
     public void burstEventTest() throws UnsupportedEncodingException, InterruptedException {
         TestTemplates.burstEventTest("BLOCKING BURST EVENT TEST", dispatcher);
     }
+    
+    //@Test
+    public void blockingTest() throws InterruptedException{
+        TestEventProcessor.eventQueue.poll(10, TimeUnit.MINUTES);
+    }
+    
+    //todo: dispatching on multiple threads....
+    //todo: error 400 Body type not supported -> message is missing
     //todo: test with service published in the root context /
     //todo: test swagger defintions
     //todo: swagger reads from the class path and list services which might not be published

@@ -20,14 +20,16 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import java.nio.charset.Charset;
+import java.util.Optional;
 import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.thingsplode.synapse.core.AbstractMessage;
 import org.thingsplode.synapse.core.FileRequest;
-import org.thingsplode.synapse.core.HttpStatus;
 import org.thingsplode.synapse.core.MediaType;
 import org.thingsplode.synapse.core.Request;
 import org.thingsplode.synapse.core.Response;
+import org.thingsplode.synapse.core.exceptions.MethodNotFoundException;
 import org.thingsplode.synapse.core.exceptions.SynapseException;
 import org.thingsplode.synapse.endpoint.ServiceRegistry;
 
@@ -50,31 +52,41 @@ public class RequestHandler extends SimpleChannelInboundHandler<Request> {
         Response response = null;
         boolean fileDownload = filePattern.matcher(request.getHeader().getUri().getPath()).find();
         if (!fileDownload) {
-
             try {
-                if (request.getBody() == null && (request.getBody() instanceof ByteBuf)) {
+                if (request.getBody() != null && (request.getBody() instanceof ByteBuf)) {
                     ByteBuf content = (ByteBuf) request.getBody();
                     byte[] dst = new byte[content.capacity()];
                     content.getBytes(0, dst);
                     String json = new String(dst, Charset.forName("UTF-8"));
                     response = registry.invokeWithParsable(request.getHeader(), json);
-                } else if (request.getBody() != null) {
-                    response = registry.invokeWithObject(request.getHeader(), request.getBody());
                 } else {
-                    response = new Response(new Response.ResponseHeader(request.getHeader(), HttpResponseStatus.valueOf(HttpStatus.BAD_REQUEST.value()), new MediaType("text/plain; charset=UTF-8")), "Body type not supported.");
-                }
+                    response = registry.invokeWithObject(request.getHeader(), request.getBody());
+                } 
+                //else {
+                //    response = new Response(new Response.ResponseHeader(request.getHeader(), HttpResponseStatus.valueOf(HttpStatus.BAD_REQUEST.value()), new MediaType("text/plain; charset=UTF-8")), RequestHandler.class.getSimpleName() + ": Body type not supported.");
+                //}
+            } catch (MethodNotFoundException mex) {
+                //simple listing, no stack trace (normal issue)
+                logger.warn("Couldn't process request due to " + mex.getClass().getSimpleName() + " with message: " + mex.getMessage());
+                response = new Response(new Response.ResponseHeader(request.getHeader(), HttpResponseStatus.valueOf(mex.getResponseStatus().value()), MediaType.TEXT_PLAIN), mex.getClass().getSimpleName() + ": " + mex.getMessage());
             } catch (SynapseException ex) {
+                //it could be an internal issue
                 logger.error("Error processing REST request: " + ex.getMessage(), ex);
-                response = new Response(new Response.ResponseHeader(request.getHeader(), HttpResponseStatus.valueOf(ex.getResponseStatus().value()), new MediaType("text/plain; charset=UTF-8")), ex.getClass().getSimpleName() + ": " + ex.getMessage());
+                response = new Response(new Response.ResponseHeader(request.getHeader(), HttpResponseStatus.valueOf(ex.getResponseStatus().value()), MediaType.TEXT_PLAIN), ex.getClass().getSimpleName() + ": " + ex.getMessage());
             }
         }
 
-        if (fileDownload || response == null || response.getHeader().getResponseCode() == HttpResponseStatus.NOT_FOUND) {
+        if (fileDownload || response == null || isFileDownloadRetriable(request, response)) {
             FileRequest fr = new FileRequest(request.getHeader());
             ctx.fireChannelRead(fr);
         } else {
             ctx.fireChannelRead(response);
         }
+    }
+
+    private boolean isFileDownloadRetriable(Request request, Response response) {
+        Optional<String> rcvChOpt = request.getHeader().getProperty(AbstractMessage.PROP_RCV_CHANNEL);
+        return response.getHeader().getResponseCode().equals(HttpResponseStatus.NOT_FOUND) && rcvChOpt.isPresent() && rcvChOpt.get().equalsIgnoreCase(AbstractMessage.PROP_KEY_HTTP);
     }
 
 }

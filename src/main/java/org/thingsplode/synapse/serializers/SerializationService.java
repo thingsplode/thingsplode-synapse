@@ -25,7 +25,21 @@ import org.thingsplode.synapse.serializers.jackson.JacksonSerializer;
  */
 public class SerializationService {
 
+    private static SerializationService instance = null;
+
     private final JacksonSerializer jacksonSerializer = new JacksonSerializer(true);
+
+    private SerializationService() {
+    }
+
+    public static SerializationService getInstance() {
+        if (instance == null) {
+            synchronized (SerializationService.class) {
+                instance = new SerializationService();
+            }
+        }
+        return instance;
+    }
 
     public SynapseSerializer<String> getPreferredSerializer(MediaRange mediaRange) {
         return jacksonSerializer;

@@ -86,7 +86,7 @@ public class HttpResponseToResponseDecoder extends MessageToMessageDecoder<HttpR
     }
 
     private MediaType getMediaType(HttpResponse response) {
-        String mediaType = getHeaderValue(response, HttpHeaderNames.CONTENT_TYPE.toString()).orElse(MediaType.APPLICATION_JSON);
+        String mediaType = getHeaderValue(response, HttpHeaderNames.CONTENT_TYPE.toString()).orElse(MediaType.APPLICATION_JSON_CT);
         return new MediaType(mediaType);
     }
 

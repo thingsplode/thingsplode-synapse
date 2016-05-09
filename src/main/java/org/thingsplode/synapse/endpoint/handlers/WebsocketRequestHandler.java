@@ -28,26 +28,27 @@ import io.netty.handler.codec.http.websocketx.WebSocketServerHandshaker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.thingsplode.synapse.core.AbstractMessage;
+import org.thingsplode.synapse.core.Request;
 import org.thingsplode.synapse.serializers.SerializationService;
 
 /**
  *
  * @author Csaba Tamas
  */
-public class WebsocketHandler extends SimpleChannelInboundHandler<WebSocketFrame> {
+public class WebsocketRequestHandler extends SimpleChannelInboundHandler<WebSocketFrame> {
 
+    private static final Logger logger = LoggerFactory.getLogger(WebsocketRequestHandler.class);
     private final WebSocketServerHandshaker handshaker;
     private StringBuilder contentBuilder = null;
-    private static final Logger logger = LoggerFactory.getLogger(WebsocketHandler.class);
-    private final SerializationService serializationService = new SerializationService();
+    private final SerializationService serializationService = SerializationService.getInstance();
 
-    public WebsocketHandler(WebSocketServerHandshaker handShaker) {
+    public WebsocketRequestHandler(WebSocketServerHandshaker handShaker) {
         this.handshaker = handShaker;
     }
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, WebSocketFrame frame) throws Exception {
-
+        System.out.println("websocket frame is received of type --> " + frame.getClass().getCanonicalName());
         if (frame instanceof CloseWebSocketFrame) {
             //ctx.channel().writeAndFlush(new TextWebSocketFrame(response));
             handshaker.close(ctx.channel(), (CloseWebSocketFrame) frame.retain());
@@ -83,6 +84,9 @@ public class WebsocketHandler extends SimpleChannelInboundHandler<WebSocketFrame
         if (frame.isFinalFragment()) {
             AbstractMessage msg = serializationService.getPreferredSerializer(null).unMarshall(AbstractMessage.class, contentBuilder.toString());
             contentBuilder = null;
+            if (msg instanceof Request) {
+                ((Request) msg).getHeader().setKeepalive(true);
+            }
             ctx.fireChannelRead(msg);
         }
 

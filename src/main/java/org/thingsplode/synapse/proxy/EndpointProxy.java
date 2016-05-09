@@ -56,7 +56,7 @@ import org.thingsplode.synapse.serializers.SerializationService;
 //todo: port already binded
 public class EndpointProxy {
 
-    public final static SerializationService SERIALIZATION_SERVICE = new SerializationService();
+    public final static SerializationService SERIALIZATION_SERVICE = SerializationService.getInstance();
 
     private final Logger logger = LoggerFactory.getLogger(EndpointProxy.class);
     private final URI connectionUri;

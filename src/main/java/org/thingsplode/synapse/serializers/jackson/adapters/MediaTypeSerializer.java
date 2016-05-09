@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 tamas.csaba@gmail.com.
+ * Copyright 2016 Csaba Tamas.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,22 +18,22 @@ package org.thingsplode.synapse.serializers.jackson.adapters;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import io.netty.handler.codec.http.HttpResponseStatus;
 import java.io.IOException;
+import org.thingsplode.synapse.core.MediaType;
 
 /**
  *
  * @author Csaba Tamas
  */
-public class HttpResponseStatusSerializer extends StdSerializer<HttpResponseStatus> {
-    
-    public HttpResponseStatusSerializer() {
-        super(HttpResponseStatus.class);
+public class MediaTypeSerializer extends StdSerializer<MediaType> {
+
+    public MediaTypeSerializer() {
+        super(MediaType.class);
     }
-    
+
     @Override
-    public void serialize(HttpResponseStatus value, JsonGenerator gen, SerializerProvider provider) throws IOException {
-        gen.writeNumber(value.code());
+    public void serialize(MediaType mediaType, JsonGenerator gen, SerializerProvider provider) throws IOException {
+        gen.writeString(mediaType.getName() != null ? mediaType.getName() : "");
     }
     
 }

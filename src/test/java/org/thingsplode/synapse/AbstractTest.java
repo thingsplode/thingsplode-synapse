@@ -56,6 +56,7 @@ public abstract class AbstractTest {
                             .enableSwagger("1.0", null)
                             .enabledWebsocket()
                             .enableIntrospection()
+                            .enabledWebsocket()
                             .publish(new RpcEndpointImpl())
                             .publish(new EndpointTesterService())
                             .publish(new CrudTestEndpointService())

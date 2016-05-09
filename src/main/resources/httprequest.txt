@@ -39,3 +39,43 @@ System.out.println("method: " + req.method().name() + " uri: " + req.uri() + " v
     image/webp,
     */*;
         q=0.8
+
+
+{
+  "@msg_type" : "org.thingsplode.synapse.core.Request",
+  "body" : {
+    "@body_type" : "com.acme.synapse.testdata.services.core.Device",
+    "id" : 112,
+    "logical_name" : "test device logical name",
+    "treshold" : 32,
+    "sub_devices" : [ {
+      "id" : 114,
+      "logical_name" : "subdevice 1 logical name",
+      "treshold" : 2147483647
+    }, {
+      "id" : 115,
+      "logical_name" : "subdevice 2 logical name",
+      "treshold" : -2147483648
+    } ],
+    "address" : {
+      "street" : "some street",
+      "country" : "SOME CNTRY",
+      "postal_code" : 5050
+    },
+    "service_period" : {
+      "x" : "2016-04-09T15:40:11.160+0000",
+      "y" : "2016-04-30T15:40:11.160+0000"
+    }
+  },
+  "header" : {
+    "msgId" : "807bdb2f-ba2a-42b4-a289-9c23d6621cbf",
+    "uri" : {
+      "path" : "/1221221/devices/add"
+    },
+    "method" : "GET",
+    "properties" : {
+      "Custom-Property" : "CustomValue"
+    },
+    "keepalive" : true
+  }
+}

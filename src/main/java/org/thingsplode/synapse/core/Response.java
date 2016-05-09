@@ -60,6 +60,7 @@ public class Response<T> extends AbstractMessage<T> {
 
         @JsonSerialize(using = HttpResponseStatusSerializer.class)
         @JsonDeserialize(using = HttpResponseStatusDeserializer.class)
+        @JsonProperty(value = "response_code")
         HttpResponseStatus responseCode = HttpResponseStatus.INTERNAL_SERVER_ERROR;
         String correlationId;
         MediaType contentType;
@@ -81,7 +82,7 @@ public class Response<T> extends AbstractMessage<T> {
         }
 
         @JsonCreator
-        public ResponseHeader(@JsonProperty("msgId") String msgId, @JsonProperty("correlationId") String correlationId, @JsonProperty("responseCode") HttpResponseStatus responseCode) {
+        public ResponseHeader(@JsonProperty("msgId") String msgId, @JsonProperty("correlationId") String correlationId, @JsonProperty("response_code") HttpResponseStatus responseCode) {
             this.responseCode = responseCode;
             super.msgId = msgId;
             this.correlationId = correlationId;

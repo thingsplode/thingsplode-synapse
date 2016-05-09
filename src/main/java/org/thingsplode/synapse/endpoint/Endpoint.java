@@ -56,7 +56,7 @@ import org.thingsplode.synapse.endpoint.handlers.FileRequestHandler;
 import org.thingsplode.synapse.endpoint.handlers.HttpRequestIntrospector;
 import org.thingsplode.synapse.endpoint.handlers.HttpRequestHandler;
 import org.thingsplode.synapse.endpoint.handlers.HttpResponseHandler;
-import org.thingsplode.synapse.endpoint.handlers.HttpResponseIntrospector;
+import org.thingsplode.synapse.endpoint.handlers.ResponseIntrospector;
 import org.thingsplode.synapse.endpoint.handlers.RequestHandler;
 import org.thingsplode.synapse.endpoint.swagger.EndpointApiGenerator;
 import org.thingsplode.synapse.util.NetworkUtil;
@@ -78,6 +78,7 @@ public class Endpoint {
     public static final String HTTP_FILE_HANDLER = "http_file_handler";
     public static final String RESPONSE_SEQUENCER = "response_sequencer";
     public static final String HTTP_RESPONSE_HANDLER = "http_response_handler";
+    public static final String WS_RESPONSE_HANDLER = "ws_response_handler";
     public static final String WS_REQUEST_HANDLER = "ws_request_handler";
     private static int TERMINATION_TIMEOUT = 60;//number of seconds to wait after the worker threads are shutted down and until those are finishing the last bit of the execution.
     private EventLoopGroup masterGroup = null;//the eventloop group used for the server socket
@@ -135,10 +136,11 @@ public class Endpoint {
                                 p.addLast(HTTP_DECODER, new HttpRequestDecoder());
                                 p.addLast(HTTP_AGGREGATOR, new HttpObjectAggregator(1048576));
                                 if (introspection) {
-                                    p.addLast(new HttpResponseIntrospector());
+                                    p.addLast(new ResponseIntrospector());
                                     p.addLast(new HttpRequestIntrospector());
                                 }
                                 p.addLast(HTTP_REQUEST_HANDLER, new HttpRequestHandler(endpointId, pipelining, websocketSupport));
+                                //p.addLast(evtExecutorGroup, HTTP_REQUEST_HANDLER, new HttpRequestHandler(endpointId, pipelining, websocketSupport));
                                 p.addLast(REQUEST_HANDLER, new RequestHandler(serviceRegistry));
                                 if (fileHandler != null) {
                                     p.addLast(evtExecutorGroup, HTTP_FILE_HANDLER, fileHandler);
