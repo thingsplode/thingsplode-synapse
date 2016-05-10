@@ -20,6 +20,7 @@ import javax.net.ssl.SSLException;
 import org.junit.ClassRule;
 import org.junit.rules.ExternalResource;
 import static org.thingsplode.synapse.AbstractTest.dispatcher;
+import org.thingsplode.synapse.endpoint.Endpoint;
 import org.thingsplode.synapse.proxy.BlockingProxyTest;
 import org.thingsplode.synapse.proxy.Dispatcher;
 import org.thingsplode.synapse.proxy.EndpointProxy;
@@ -41,7 +42,7 @@ public class AbstractBlockingClientTest extends AbstractTest {
                 epx = EndpointProxy.create("http://localhost:8080/", Dispatcher.DispatcherPattern.BLOCKING_REQUEST).
                         enableIntrospection().
                         setRetryConnection(true).initialize();
-                dispatcher = epx.acquireDispatcher();
+                dispatcher = epx.acquireDispatcher(Endpoint.TransportType.HTTP_REST);
             } catch (URISyntaxException | SSLException | InterruptedException th) {
                 System.out.println("\n\n\nERROR while setting up: " + BlockingProxyTest.class.getSimpleName() + ". Dumping stack trace: ");
                 th.printStackTrace();

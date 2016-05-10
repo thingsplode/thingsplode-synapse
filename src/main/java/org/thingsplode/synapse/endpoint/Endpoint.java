@@ -43,8 +43,10 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.SocketException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ForkJoinPool;
@@ -88,7 +90,7 @@ public class Endpoint {
     private ConnectionProvider connections;
     private LogLevel logLevel;
     private final ServerBootstrap bootstrap = new ServerBootstrap();
-    private TransportType transportType = TransportType.DOMAIN_SOCKET;
+    private List<TransportType> transportTypes = new ArrayList<>();
     private Protocol protocol = Protocol.JSON;
     private ComponentLifecycle lifecycle = ComponentLifecycle.UNITIALIZED;
     private FileRequestHandler fileHandler = null;
@@ -97,7 +99,6 @@ public class Endpoint {
     private EndpointApiGenerator apiGenerator = null;
     private boolean introspection = false;
     private boolean pipelining = false;
-    private boolean websocketSupport = false;
 
     private Endpoint() {
     }
@@ -124,7 +125,8 @@ public class Endpoint {
             logger.debug("Starting endpoint [" + endpointId + "].");
             this.initGroups();
             this.bootstrap.group(this.masterGroup, this.workerGroup);
-            if (transportType.equals(TransportType.HTTP_REST)) {
+            boolean ws = transportTypes.contains(TransportType.WEBSOCKET_REST);
+            if (transportTypes.contains(TransportType.HTTP_REST) || ws) {
                 this.bootstrap.
                         channel(NioServerSocketChannel.class)
                         .childOption(ChannelOption.SO_KEEPALIVE, true)
@@ -139,7 +141,7 @@ public class Endpoint {
                                     p.addLast(new ResponseIntrospector());
                                     p.addLast(new HttpRequestIntrospector());
                                 }
-                                p.addLast(HTTP_REQUEST_HANDLER, new HttpRequestHandler(endpointId, pipelining, websocketSupport));
+                                p.addLast(HTTP_REQUEST_HANDLER, new HttpRequestHandler(endpointId, pipelining, ws));
                                 //p.addLast(evtExecutorGroup, HTTP_REQUEST_HANDLER, new HttpRequestHandler(endpointId, pipelining, websocketSupport));
                                 p.addLast(REQUEST_HANDLER, new RequestHandler(serviceRegistry));
                                 if (fileHandler != null) {
@@ -264,11 +266,14 @@ public class Endpoint {
         /**
          * Default
          */
+        /**
+         * Default
+         */
         HTTP_REST,
         /**
          *
          */
-        WEBSOCKET_STOMP,
+        WEBSOCKET_REST,
         /**
          *
          */
@@ -324,11 +329,6 @@ public class Endpoint {
         //return this;
     }
 
-    public Endpoint enabledWebsocket() {
-        this.websocketSupport = true;
-        return this;
-    }
-
     /**
      *
      * @param version
@@ -374,8 +374,8 @@ public class Endpoint {
         return this;
     }
 
-    public Endpoint transportType(TransportType transportType) {
-        this.transportType = transportType;
+    public Endpoint addTransportType(TransportType transportType) {
+        this.transportTypes.add(transportType);
         return this;
     }
 
@@ -388,7 +388,12 @@ public class Endpoint {
         return protocol;
     }
 
-    public TransportType getTransportType() {
-        return transportType;
+    public boolean containsTransportType(TransportType transportType) {
+        Optional<TransportType> ttOpt = this.transportTypes.stream().filter(tt -> tt == transportType).findFirst();
+        return ttOpt.isPresent();
+    }
+
+    public List<TransportType> getTransportType() {
+        return transportTypes;
     }
 }

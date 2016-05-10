@@ -39,6 +39,7 @@ import javax.net.ssl.SSLException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.thingsplode.synapse.core.ComponentLifecycle;
+import org.thingsplode.synapse.endpoint.Endpoint;
 import org.thingsplode.synapse.proxy.handlers.HttpResponseToResponseDecoder;
 import org.thingsplode.synapse.proxy.handlers.InboundExceptionHandler;
 import org.thingsplode.synapse.proxy.handlers.HttpResponseIntrospector;
@@ -201,7 +202,7 @@ public class EndpointProxy {
         this.lifecycle = ComponentLifecycle.UNITIALIZED;
     }
 
-    public Dispatcher acquireDispatcher() throws SSLException, InterruptedException {
+    public Dispatcher acquireDispatcher(Endpoint.TransportType transportType) throws SSLException, InterruptedException {
         if (this.lifecycle == ComponentLifecycle.UNITIALIZED) {
             throw new IllegalStateException("Please set this value before starting the " + EndpointProxy.class.getSimpleName());
         }
