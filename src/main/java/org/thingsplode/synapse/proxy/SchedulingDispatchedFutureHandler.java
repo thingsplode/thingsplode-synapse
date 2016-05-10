@@ -1,0 +1,46 @@
+/*
+ * Copyright 2016 Csaba Tamas.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.thingsplode.synapse.proxy;
+
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ *
+ * @author Csaba Tamas
+ */
+public abstract class SchedulingDispatchedFutureHandler implements DispatchedFutureHandler {
+
+    private final Logger logger = LoggerFactory.getLogger(SchedulingDispatchedFutureHandler.class);
+
+    private final ScheduledExecutorService executor;
+
+    public SchedulingDispatchedFutureHandler() {
+        executor = Executors.newSingleThreadScheduledExecutor((Runnable r) -> {
+            Thread t = new Thread(r, "timer-thread");
+            t.setDaemon(true);
+            t.setUncaughtExceptionHandler((Thread t1, Throwable e) -> {
+                logger.error("Ucaught exception while executing timer-task:" + e.getMessage(), e);
+            });
+            return t;
+        });
+        executor.scheduleAtFixedRate(getTimerTask(), 0, SECOND, TimeUnit.MILLISECONDS);
+    }
+
+}
