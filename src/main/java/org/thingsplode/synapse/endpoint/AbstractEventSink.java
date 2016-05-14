@@ -16,7 +16,6 @@
 package org.thingsplode.synapse.endpoint;
 
 import java.io.Serializable;
-import org.thingsplode.synapse.core.annotations.RequestBody;
 import org.thingsplode.synapse.core.Event;
 
 /**
@@ -38,7 +37,7 @@ public abstract class AbstractEventSink<T extends Serializable> implements Event
     }
 
     @Override
-    public void consume(@RequestBody Event<T> event) {
+    public void consume(Event<T> event) {
         eventReceived(event);
     }
 

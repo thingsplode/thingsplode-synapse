@@ -17,6 +17,7 @@ package org.thingsplode.synapse.core;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.util.Optional;
@@ -27,6 +28,7 @@ import org.thingsplode.synapse.core.Request.RequestHeader;
  * @author Csaba Tamas
  * @param <T>
  */
+@JsonPropertyOrder({ "@msg_type", "header", "body"})
 public class Request<T extends Serializable> extends AbstractMessage<T> {
 
     private RequestHeader header;

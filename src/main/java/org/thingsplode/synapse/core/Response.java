@@ -79,6 +79,7 @@ public class Response<T> extends AbstractMessage<T> {
         public ResponseHeader(Request.RequestHeader header, HttpResponseStatus responseCode, MediaType media) {
             this(header, responseCode);
             this.contentType = media;
+            this.keepAlive = header.isKeepalive();
         }
 
         @JsonCreator

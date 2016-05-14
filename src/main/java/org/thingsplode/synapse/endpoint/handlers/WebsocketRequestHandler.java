@@ -17,6 +17,7 @@ package org.thingsplode.synapse.endpoint.handlers;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.ContinuationWebSocketFrame;
@@ -48,7 +49,8 @@ public class WebsocketRequestHandler extends SimpleChannelInboundHandler<WebSock
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, WebSocketFrame frame) throws Exception {
-        System.out.println("websocket frame is received of type --> " + frame.getClass().getCanonicalName());
+        
+
         if (frame instanceof CloseWebSocketFrame) {
             //ctx.channel().writeAndFlush(new TextWebSocketFrame(response));
             handshaker.close(ctx.channel(), (CloseWebSocketFrame) frame.retain());
@@ -89,6 +91,11 @@ public class WebsocketRequestHandler extends SimpleChannelInboundHandler<WebSock
             }
             ctx.fireChannelRead(msg);
         }
+    }
 
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+        logger.error("Error while processing websocket request: " + cause.getMessage(), cause);
+        ResponseEncoder.sendError(ctx, HttpResponseStatus.INTERNAL_SERVER_ERROR, cause.getClass().getSimpleName() + ": " + cause.getMessage());
     }
 }

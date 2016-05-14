@@ -36,9 +36,9 @@ import org.thingsplode.synapse.util.Util;
  */
 @ChannelHandler.Sharable
 public class ResponseIntrospector extends ChannelOutboundHandlerAdapter {
-    
+
     private Logger logger = LoggerFactory.getLogger(HttpRequestIntrospector.class);
-    
+
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
         if (msg == null) {
@@ -67,9 +67,9 @@ public class ResponseIntrospector extends ChannelOutboundHandlerAdapter {
             }
         } else if (logger.isDebugEnabled() && (msg instanceof WebSocketFrame)) {
             if (msg instanceof TextWebSocketFrame) {
-                logger.debug("Message@Endpoint to be sent: \n\n" + ((TextWebSocketFrame) msg).text());
+                logger.debug("Message@Endpoint to be sent: " + msg.getClass().getSimpleName() + " \n\n" + ((TextWebSocketFrame) msg).text());
             } else {
-                logger.debug("Message@Endpoint to be sent: \n\n" + msg.getClass().getSimpleName() + " -> " + msg.toString());
+                logger.debug("Message@Endpoint to be sent: \n\n {" + msg.getClass().getSimpleName() + " -> " + msg.toString() + "}");
             }
         } else {
             logger.debug("Unknown message (" + msg.getClass().getSimpleName() + ") will be dispatched to the client.");

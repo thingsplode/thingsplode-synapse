@@ -82,6 +82,10 @@ public class Endpoint {
     public static final String HTTP_RESPONSE_HANDLER = "http_response_handler";
     public static final String WS_RESPONSE_HANDLER = "ws_response_handler";
     public static final String WS_REQUEST_HANDLER = "ws_request_handler";
+    public static final String RESPONSE_INTROSPECTOR = "RESPONSE_INTROSPECTOR";
+    public static final String HTTP_REQUEST_INTROSPECTOR = "HTTP_REQUEST_INTROSPECTOR";
+    public static final String WS_REQUEST_INTROSPECTOR = "WS_REQUEST_INTROSPECTOR";
+    
     private static int TERMINATION_TIMEOUT = 60;//number of seconds to wait after the worker threads are shutted down and until those are finishing the last bit of the execution.
     private EventLoopGroup masterGroup = null;//the eventloop group used for the server socket
     private EventLoopGroup workerGroup = null;//the event loop group used for the connected clients
@@ -138,8 +142,8 @@ public class Endpoint {
                                 p.addLast(HTTP_DECODER, new HttpRequestDecoder());
                                 p.addLast(HTTP_AGGREGATOR, new HttpObjectAggregator(1048576));
                                 if (introspection) {
-                                    p.addLast(new ResponseIntrospector());
-                                    p.addLast(new HttpRequestIntrospector());
+                                    p.addLast(RESPONSE_INTROSPECTOR, new ResponseIntrospector());
+                                    p.addLast(HTTP_REQUEST_INTROSPECTOR, new HttpRequestIntrospector());
                                 }
                                 p.addLast(HTTP_REQUEST_HANDLER, new HttpRequestHandler(endpointId, pipelining, ws));
                                 //p.addLast(evtExecutorGroup, HTTP_REQUEST_HANDLER, new HttpRequestHandler(endpointId, pipelining, websocketSupport));

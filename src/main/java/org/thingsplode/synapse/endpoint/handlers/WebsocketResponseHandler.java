@@ -20,6 +20,7 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,15 +33,15 @@ import org.thingsplode.synapse.serializers.SerializationService;
  * @author Csaba Tamas
  */
 public class WebsocketResponseHandler extends SimpleChannelInboundHandler<Response> {
-
+    
     private static final Logger logger = LoggerFactory.getLogger(WebsocketResponseHandler.class);
     private final SerializationService serializationService = SerializationService.getInstance();
-
+    
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Response response) throws Exception {
         byte[] content = serializationService.getSerializer(MediaType.APPLICATION_JSON).marshall(response);
         TextWebSocketFrame wsFrame = new TextWebSocketFrame(Unpooled.wrappedBuffer(content));
-        ctx.writeAndFlush(wsFrame).addListener((ChannelFutureListener) new ChannelFutureListener() {
+        ChannelFuture cf = ctx.writeAndFlush(wsFrame).addListener((ChannelFutureListener) new ChannelFutureListener() {
             @Override
             public void operationComplete(ChannelFuture future) throws Exception {
                 if (!future.isSuccess()) {
@@ -49,6 +50,11 @@ public class WebsocketResponseHandler extends SimpleChannelInboundHandler<Respon
                 }
             }
         });
+        if (!response.getHeader().isKeepAlive()) {
+            cf.addListener((ChannelFutureListener) (ChannelFuture future) -> {
+                ctx.writeAndFlush(new CloseWebSocketFrame(true, 0));
+            }).addListener(ChannelFutureListener.CLOSE);
+        }
     }
-
+    
 }

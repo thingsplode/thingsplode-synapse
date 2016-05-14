@@ -22,21 +22,29 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import java.io.IOException;
 import org.thingsplode.synapse.core.MediaType;
+import org.thingsplode.synapse.util.Util;
 
 /**
  *
  * @author Csaba Tamas
  */
 public class MediaTypeDeserializer extends StdDeserializer<MediaType> {
-
+    
     public MediaTypeDeserializer() {
         super(MediaType.class);
     }
-
+    
     @Override
     public MediaType deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
         JsonNode node = p.readValueAsTree();
-        String mediaTypeText = node.get("media_type").asText();
-        return new MediaType(mediaTypeText);
+        JsonNode mTypeNode = node.get("media_type");
+        if (mTypeNode == null) {
+            mTypeNode = node.get("content_type");
+        }
+        if (mTypeNode == null || Util.isEmpty(mTypeNode.asText())) {
+            return null;
+        } else {
+            return new MediaType(mTypeNode.asText());
+        }
     }
 }

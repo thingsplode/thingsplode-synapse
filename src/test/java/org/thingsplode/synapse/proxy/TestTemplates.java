@@ -77,7 +77,7 @@ public class TestTemplates {
         ParameterWrapper pw = new ParameterWrapper();
         pw.add("arg0", Long.TYPE, 999);
         pw.add("arg1", String.class, uuid);
-        DispatchedFuture<Request, Response> f = dispatcher.dispatch(Request.create(serviceMethod, RequestMethod.GET, pw), 10000);
+        DispatchedFuture<Request, Response> f = dispatcher.dispatch(Request.create(serviceMethod, RequestMethod.GET, pw), 100000000);
         int code = f.handle((rsp, ex) -> {
             if (rsp != null) {
                 System.out.println("RESPONSE RECEIVED@Test Case => " + (rsp.getHeader() != null ? rsp.getHeader().getResponseCode() : "NULL RSP CODE") + " //Body: " + rsp.getBody());

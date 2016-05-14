@@ -15,11 +15,14 @@
  */
 package org.thingsplode.synapse.core;
 
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+
 /**
  * Inbound requests (eg. HTTP requests) first are evaluated as service request (requesting a service execution). If that step is failing, the request is converted
  * to a {@link FileRequest} and passed forward on the pipeline (if the file service is enabled on the Endpoint). If the path describes an actual file, the file will be served.
  * @author Csaba Tamas
  */
+@JsonPropertyOrder({ "@msg_type", "header", "body"})
 public class FileRequest extends Request<String> {
 
     public FileRequest() {

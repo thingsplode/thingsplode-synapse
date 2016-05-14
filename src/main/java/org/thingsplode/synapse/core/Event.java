@@ -15,6 +15,9 @@
  */
 package org.thingsplode.synapse.core;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 
@@ -23,9 +26,11 @@ import java.io.UnsupportedEncodingException;
  * @author Csaba Tamas
  * @param <T>
  */
+@JsonPropertyOrder({ "@msg_type", "header", "body"})
 public class Event<T extends Serializable> extends Request<T> {
-    
-    public Event(RequestHeader header) {
+
+    @JsonCreator
+    public Event(@JsonProperty("header") RequestHeader header) {
         super(header);
     }
 

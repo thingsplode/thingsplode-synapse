@@ -54,12 +54,16 @@ public class RequestHandler extends SimpleChannelInboundHandler<Request> {
         if (!fileDownload) {
             try {
                 if (request.getBody() != null && (request.getBody() instanceof ByteBuf)) {
+                    //the body is in unmarshalled
+                    //eg. http case
                     ByteBuf content = (ByteBuf) request.getBody();
                     byte[] dst = new byte[content.capacity()];
                     content.getBytes(0, dst);
-                    String json = new String(dst, Charset.forName("UTF-8"));
-                    response = registry.invokeWithParsable(request.getHeader(), json);
+                    String jsonBody = new String(dst, Charset.forName("UTF-8"));
+                    response = registry.invokeWithParsable(request.getHeader(), jsonBody);
                 } else {
+                    //the complete body is unmarshalled already for an object
+                    //eg. websocket case
                     response = registry.invokeWithObject(request.getHeader(), request.getBody());
                 } 
                 //else {
