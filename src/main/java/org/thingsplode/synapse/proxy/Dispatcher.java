@@ -20,13 +20,14 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandler;
+import io.netty.channel.ChannelPipeline;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.thingsplode.synapse.core.Event;
 import org.thingsplode.synapse.core.Request;
 import org.thingsplode.synapse.core.Response;
-import org.thingsplode.synapse.proxy.handlers.WebSocketClientHandler;
+import org.thingsplode.synapse.proxy.handlers.WSResponse2ResponseDecoder;
 
 /**
  *
@@ -166,14 +167,35 @@ public class Dispatcher {
                 if (!future.isSuccess()) {
                     logger.warn("Connecting to the channel was not successfull.");
                 } else {
-                    ChannelHandler handler = future.channel().pipeline().get(EndpointProxy.WS_REQUEST_ENCODER);
-                    if (handler != null){
-                        //if websocket client handler is added to the mix, the next step is to handshake with it
-                        ((WebSocketClientHandler)handler).getHandshakeFuture().sync();
-                    }
                     logger.debug("Connected Channel@EndpointProxy");
                 }
             }).sync();
+
+            ChannelHandler handler = cf.channel().pipeline().get(EndpointProxy.WS_RESPONSE_DECODER);
+            if (handler != null) {
+                //if websocket client handler is added to the mix, the next step is to handshake with it
+                logger.debug("Initiating websocket handshake ...");
+                ((WSResponse2ResponseDecoder) handler).getHandshakeFuture().sync().addListener((ChannelFutureListener) (ChannelFuture future) -> {
+                    if (!future.isSuccess()) {
+                        //todo: close dispatcher and websocket connection
+                        //((WSResponseToResponseDecoder) handler).
+                    } else {
+                        logger.debug("Handshake@EndpointProxy");
+                        ChannelPipeline pl = future.channel().pipeline();
+                        if (pl.get(EndpointProxy.HTTP_REQUEST_ENCODER) != null) {
+                            pl.remove(EndpointProxy.HTTP_REQUEST_ENCODER);
+                        }
+
+                        if (pl.get(EndpointProxy.HTTP_RESPONSE_DECODER) != null) {
+                            pl.remove(EndpointProxy.HTTP_RESPONSE_DECODER);
+                        }
+
+                        if (pl.get(EndpointProxy.HTTP_RESPONSE_AGGREGATOR) != null) {
+                            pl.remove(EndpointProxy.HTTP_RESPONSE_AGGREGATOR);
+                        }
+                    }
+                });
+            }
 
             while (!cf.isSuccess()) {
                 logger.warn("Connection attempt was not successfull / retrying...");

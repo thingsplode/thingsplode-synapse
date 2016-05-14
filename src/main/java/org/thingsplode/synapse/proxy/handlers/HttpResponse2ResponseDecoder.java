@@ -40,9 +40,9 @@ import org.thingsplode.synapse.util.Util;
  * @author Csaba Tamas
  */
 @ChannelHandler.Sharable
-public class HttpResponseToResponseDecoder extends MessageToMessageDecoder<HttpResponse> {
+public class HttpResponse2ResponseDecoder extends MessageToMessageDecoder<HttpResponse> {
 
-    private static final Logger logger = LoggerFactory.getLogger(HttpResponseToResponseDecoder.class);
+    private static final Logger logger = LoggerFactory.getLogger(HttpResponse2ResponseDecoder.class);
 
     @Override
     protected void decode(ChannelHandlerContext ctx, HttpResponse httpResponse, List<Object> out) throws Exception {

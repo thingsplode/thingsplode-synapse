@@ -91,18 +91,18 @@ public class BlockingWsProxyTest extends AbstractTest {
 
     }
 
-    //todo: timing out non-existent method
-    @Test
-    public void baseBlockingRequestTimeoutTest() throws InterruptedException, UnsupportedEncodingException, ExecutionException {
-        TestTemplates.baseRequestTimeoutTest("BLOCKING REQUEST TIMEOUT TEST", dispatcher);
-    }
-
     //issue: when the first request times out, the second request receives the answer for the first request
     //ping should have a serial number and answer that one
     //the timeout generator should close the connection // but what will happen with non-http protocols
     @Test()
     public void baseBlockingRequestTest() throws InterruptedException, URISyntaxException, SSLException, UnsupportedEncodingException, ExecutionException {
         TestTemplates.normalRequestTest("SEQUENTIAL BLOCKING REQUEST EXECUTION TEST", dispatcher);
+    }
+
+    //todo: timing out non-existent method
+    @Test
+    public void baseBlockingRequestTimeoutTest() throws InterruptedException, UnsupportedEncodingException, ExecutionException {
+        TestTemplates.baseRequestTimeoutTest("BLOCKING REQUEST TIMEOUT TEST", dispatcher);
     }
 
     @Test

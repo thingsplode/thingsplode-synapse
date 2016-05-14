@@ -88,6 +88,7 @@ public class TestTemplates {
             } else {
                 System.out.println("\n\nException ----> " + ex != null ? (ex.getClass().getSimpleName() + " || " + ex.getMessage()) : "{ex null}");
                 System.out.println("\n\nTEST ERROR -> " + ex.getMessage() + "| returning -1.\n\n");
+                ex.printStackTrace();
                 return -1;
             }
         }).get();

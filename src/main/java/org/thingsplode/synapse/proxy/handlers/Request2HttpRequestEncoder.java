@@ -39,7 +39,7 @@ import org.thingsplode.synapse.util.Util;
  * @author Csaba Tamas
  */
 @ChannelHandler.Sharable
-public class RequestToHttpRequestEncoder extends MessageToMessageEncoder<Request> {
+public class Request2HttpRequestEncoder extends MessageToMessageEncoder<Request> {
 
     @Override
     protected void encode(ChannelHandlerContext ctx, Request in, List<Object> out) throws Exception {

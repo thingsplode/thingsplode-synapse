@@ -32,70 +32,74 @@ import io.netty.util.CharsetUtil;
 import java.net.URI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.thingsplode.synapse.core.AbstractMessage;
+import org.thingsplode.synapse.core.MediaType;
+import org.thingsplode.synapse.proxy.EndpointProxy;
 
 /**
  *
  * @author Csaba Tamas
  */
-public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> {
-    
-    private final Logger logger = LoggerFactory.getLogger(WebSocketClientHandler.class);
+public class WSResponse2ResponseDecoder extends SimpleChannelInboundHandler<Object> {
+
+    private final Logger logger = LoggerFactory.getLogger(WSResponse2ResponseDecoder.class);
     private final WebSocketClientHandshaker handshaker;
     private ChannelPromise handshakeFuture;
-    
-    public WebSocketClientHandler(URI uri) {
+
+    public WSResponse2ResponseDecoder(URI uri) {
         this.handshaker = WebSocketClientHandshakerFactory.newHandshaker(uri, WebSocketVersion.V13, null, false, new DefaultHttpHeaders());
     }
-    
+
     public ChannelPromise getHandshakeFuture() {
         return handshakeFuture;
     }
-    
+
     @Override
     public void handlerAdded(ChannelHandlerContext ctx) {
         handshakeFuture = ctx.newPromise();
     }
-    
+
     @Override
     public void channelActive(ChannelHandlerContext ctx) {
         handshaker.handshake(ctx.channel());
     }
-    
+
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
         logger.warn("WebSocket Client disconnected!");
     }
-    
+
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Object msg) throws Exception {
         Channel ch = ctx.channel();
         if (!handshaker.isHandshakeComplete()) {
             handshaker.finishHandshake(ch, (FullHttpResponse) msg);
-            System.out.println("WebSocket Client connected!");
+            logger.debug("Websocket@EndpointProxy: client is conencted.");
             handshakeFuture.setSuccess();
             return;
         }
-        
+
         if (msg instanceof FullHttpResponse) {
             FullHttpResponse response = (FullHttpResponse) msg;
             throw new IllegalStateException(
                     "Unexpected FullHttpResponse (getStatus=" + response.getStatus()
                     + ", content=" + response.content().toString(CharsetUtil.UTF_8) + ')');
         }
-        
+
         WebSocketFrame frame = (WebSocketFrame) msg;
         if (frame instanceof TextWebSocketFrame) {
             TextWebSocketFrame textFrame = (TextWebSocketFrame) frame;
-            System.out.println("WebSocket Client received message: " + textFrame.text());
+            AbstractMessage rcvdMsg = EndpointProxy.SERIALIZATION_SERVICE.getSerializer(MediaType.APPLICATION_JSON).unMarshall(AbstractMessage.class, textFrame.text());
+            ctx.fireChannelRead(rcvdMsg);
         } else if (frame instanceof PongWebSocketFrame) {
             System.out.println("WebSocket Client received pong");
         } else if (frame instanceof CloseWebSocketFrame) {
             System.out.println("WebSocket Client received closing");
             ch.close();
-            
+
         }
     }
-    
+
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         if (!handshakeFuture.isDone()) {
@@ -104,5 +108,5 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
         logger.error("Unhandled exception caught at " + this.getClass().getSimpleName() + " with message: " + cause.getMessage(), cause);
         ctx.close();
     }
-    
+
 }

@@ -41,13 +41,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.thingsplode.synapse.core.ComponentLifecycle;
 import org.thingsplode.synapse.endpoint.Endpoint;
-import org.thingsplode.synapse.proxy.handlers.HttpResponseToResponseDecoder;
+import org.thingsplode.synapse.proxy.handlers.HttpResponse2ResponseDecoder;
 import org.thingsplode.synapse.proxy.handlers.InboundExceptionHandler;
 import org.thingsplode.synapse.proxy.handlers.HttpResponseIntrospector;
 import org.thingsplode.synapse.proxy.handlers.RequestEncoder;
-import org.thingsplode.synapse.proxy.handlers.RequestToHttpRequestEncoder;
+import org.thingsplode.synapse.proxy.handlers.Request2HttpRequestEncoder;
+import org.thingsplode.synapse.proxy.handlers.Request2WsRequestEncoder;
 import org.thingsplode.synapse.proxy.handlers.ResponseHandler;
-import org.thingsplode.synapse.proxy.handlers.WebSocketClientHandler;
+import org.thingsplode.synapse.proxy.handlers.WSResponse2ResponseDecoder;
 import org.thingsplode.synapse.serializers.SerializationService;
 
 /**
@@ -60,8 +61,13 @@ import org.thingsplode.synapse.serializers.SerializationService;
 public class EndpointProxy {
 
     public final static SerializationService SERIALIZATION_SERVICE = SerializationService.getInstance();
-    public final static String HTTP_REQUEST_ENCODER = "httpRequestEncoder";
-    public final static String WS_REQUEST_ENCODER = "wsRequestEncoder";
+    public final static String HTTP_REQUEST_ENCODER = "HTTP_REQUEST_ENCODER";
+    public final static String HTTP_RESPONSE_DECODER = "HTTP_RESPONSE_DECODER";
+    public final static String HTTP_RESPONSE_AGGREGATOR = "HTTP_RESPONSE_AGGREGATOR";
+    public final static String REQUEST2HTTP_REQUEST_ENCODER = "REQUEST2HTTP_REQUEST_ENCODER";
+    public final static String WS_REQUEST_ENCODER = "WS_REQUEST_ENCODER";
+    public final static String HTTP_RSP2RESPONSE_DECODER = "HTTP_RSP2RESPONSE_DECODER";
+    public final static String WS_RESPONSE_DECODER = "WS_RESPONSE_DECODER";
     private final Logger logger = LoggerFactory.getLogger(EndpointProxy.class);
     private final URI connectionUri;
     private final EventLoopGroup group = new NioEventLoopGroup();
@@ -76,7 +82,6 @@ public class EndpointProxy {
     private boolean retryConnection = false;
     private final RequestEncoder requestEncoder;
     private HttpResponseIntrospector httpResponseIntrospector = new HttpResponseIntrospector();
-    private HttpResponseToResponseDecoder httResponseToResponseDecoder = new HttpResponseToResponseDecoder();
     private final ResponseHandler responseHandler;
     private final InboundExceptionHandler inboundExceptionHandler;
     private MessageIdGeneratorStrategy msgIdGeneratorStrategy;
@@ -123,19 +128,19 @@ public class EndpointProxy {
                             //todo: tune the values here
                             //p.addLast(new HttpClientCodec());
                             //p.addLast(new HttpContentDecompressor());
-                            p.addLast(new HttpRequestEncoder());
-                            p.addLast(new HttpResponseDecoder());
-                            p.addLast(new HttpObjectAggregator(1048576));
+                            p.addLast(HTTP_REQUEST_ENCODER, new HttpRequestEncoder());
+                            p.addLast(HTTP_RESPONSE_DECODER, new HttpResponseDecoder());
+                            p.addLast(HTTP_RESPONSE_AGGREGATOR, new HttpObjectAggregator(1048576));
                             if (introspection) {
                                 p.addLast(httpResponseIntrospector);
                             }
                             switch (transport.transportType) {
                                 case HTTP: {
-                                    p.addLast(HTTP_REQUEST_ENCODER, new RequestToHttpRequestEncoder());
+                                    p.addLast(REQUEST2HTTP_REQUEST_ENCODER, new Request2HttpRequestEncoder());
                                     break;
                                 }
                                 case WEBSOCKET: {
-                                    p.addLast(HTTP_REQUEST_ENCODER, new WebSocketClientHandler(connectionUri));
+                                    p.addLast(REQUEST2HTTP_REQUEST_ENCODER, new Request2WsRequestEncoder());
                                     break;
                                 }
                                 default:
@@ -143,7 +148,18 @@ public class EndpointProxy {
                             }
 
                             p.addLast(requestEncoder);
-                            p.addLast(httResponseToResponseDecoder);
+                            switch (transport.transportType) {
+                                case HTTP: {
+                                    p.addLast(HTTP_RSP2RESPONSE_DECODER, new HttpResponse2ResponseDecoder());
+                                    break;
+                                }
+                                case WEBSOCKET: {
+                                    p.addLast(WS_RESPONSE_DECODER, new WSResponse2ResponseDecoder(connectionUri));
+                                    break;
+                                }
+                                default:
+                                    logger.warn("No response handler is supporting yet the following transport: " + transport.transportType);
+                            }
                             p.addLast(responseHandler);
                             p.addLast(inboundExceptionHandler);
                         }
