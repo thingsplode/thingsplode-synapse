@@ -145,7 +145,7 @@ public class Endpoint {
                                     p.addLast(RESPONSE_INTROSPECTOR, new ResponseIntrospector());
                                     p.addLast(HTTP_REQUEST_INTROSPECTOR, new HttpRequestIntrospector());
                                 }
-                                p.addLast(HTTP_REQUEST_HANDLER, new HttpRequestHandler(endpointId, pipelining, ws));
+                                p.addLast(HTTP_REQUEST_HANDLER, new HttpRequestHandler(endpointId, pipelining));
                                 //p.addLast(evtExecutorGroup, HTTP_REQUEST_HANDLER, new HttpRequestHandler(endpointId, pipelining, websocketSupport));
                                 p.addLast(REQUEST_HANDLER, new RequestHandler(serviceRegistry));
                                 if (fileHandler != null) {

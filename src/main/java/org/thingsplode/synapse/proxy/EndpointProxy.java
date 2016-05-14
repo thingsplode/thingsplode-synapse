@@ -65,7 +65,7 @@ public class EndpointProxy {
     public final static String HTTP_RESPONSE_DECODER = "HTTP_RESPONSE_DECODER";
     public final static String HTTP_RESPONSE_AGGREGATOR = "HTTP_RESPONSE_AGGREGATOR";
     public final static String REQUEST2HTTP_REQUEST_ENCODER = "REQUEST2HTTP_REQUEST_ENCODER";
-    public final static String WS_REQUEST_ENCODER = "WS_REQUEST_ENCODER";
+    public final static String REQUEST2WS_REQUEST_ENCODER = "REQUEST2WS_REQUEST_ENCODER";
     public final static String HTTP_RSP2RESPONSE_DECODER = "HTTP_RSP2RESPONSE_DECODER";
     public final static String WS_RESPONSE_DECODER = "WS_RESPONSE_DECODER";
     private final Logger logger = LoggerFactory.getLogger(EndpointProxy.class);
@@ -140,7 +140,7 @@ public class EndpointProxy {
                                     break;
                                 }
                                 case WEBSOCKET: {
-                                    p.addLast(REQUEST2HTTP_REQUEST_ENCODER, new Request2WsRequestEncoder());
+                                    p.addLast(REQUEST2WS_REQUEST_ENCODER, new Request2WsRequestEncoder());
                                     break;
                                 }
                                 default:

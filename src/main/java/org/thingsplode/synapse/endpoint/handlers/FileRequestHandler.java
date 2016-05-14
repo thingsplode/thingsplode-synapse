@@ -125,7 +125,6 @@ public final class FileRequestHandler extends SimpleChannelInboundHandler<FileRe
         if (!this.redirects.isEmpty()){
             for (Entry<Pattern,String> e : this.redirects.entrySet()){
                 if (e.getKey().matcher(uri.get()).matches()){
-                    System.out.println("Matched for redirect: " + uri.get());
                     HttpResponseHandler.sendRedirect(ctx, createRedirectUrl(req.getHeader(), e.getValue()), req.getHeader());
                     break;
                 }
@@ -233,7 +232,6 @@ public final class FileRequestHandler extends SimpleChannelInboundHandler<FileRe
     
     private String createRedirectUrl(Request.RequestHeader header, String originalPath){
         Matcher m = urlParamPattern.matcher(originalPath);
-        System.out.println("orig path: " + originalPath);
         if (m.find()){
             for (int i = 0; i < m.groupCount(); i++){
                 String matchedValue = m.group(i);

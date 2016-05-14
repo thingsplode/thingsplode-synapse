@@ -65,7 +65,7 @@ Some architectural choices are supporting the performance of the library:
 
 ## Event
 
-- [ ] The Endpoint Proxy can signal events towards the Endpoint service (Server) in a fire and forget manner (also with activated reliable messaging).
+- [x] The Endpoint Proxy can signal events towards the Endpoint service (Server) in a fire and forget manner (also with activated reliable messaging).
 
 ## Command/Result
 

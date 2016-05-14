@@ -131,7 +131,7 @@ public class Request<T extends Serializable> extends AbstractMessage<T> {
 
         @Override
         public String toString() {
-            return "RequestHeader{" + "uri=" + uri + ", method=" + method + '}';
+            return "RequestHeader{" + "id=" + msgId + ", uri=" + uri + ", method=" + method + '}';
         }
     }
 }

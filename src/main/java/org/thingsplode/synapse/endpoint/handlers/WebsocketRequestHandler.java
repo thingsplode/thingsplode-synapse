@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.thingsplode.synapse.core.AbstractMessage;
 import org.thingsplode.synapse.core.Request;
+import org.thingsplode.synapse.core.exceptions.SerializationException;
 import org.thingsplode.synapse.serializers.SerializationService;
 
 /**
@@ -49,53 +50,52 @@ public class WebsocketRequestHandler extends SimpleChannelInboundHandler<WebSock
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, WebSocketFrame frame) throws Exception {
-        
+        try {
+            if (frame instanceof CloseWebSocketFrame) {
+                handshaker.close(ctx.channel(), (CloseWebSocketFrame) frame.retain());
+                return;
+            }
 
-        if (frame instanceof CloseWebSocketFrame) {
-            //ctx.channel().writeAndFlush(new TextWebSocketFrame(response));
-            handshaker.close(ctx.channel(), (CloseWebSocketFrame) frame.retain());
-            return;
-        }
+            if (frame instanceof PingWebSocketFrame) {
+                ctx.channel().writeAndFlush(new PongWebSocketFrame(frame.content().retain()));
+                return;
+            }
 
-        if (frame instanceof PingWebSocketFrame) {
-            ctx.channel().writeAndFlush(new PongWebSocketFrame(frame.content().retain()));
-            return;
-        }
+            if (frame instanceof PongWebSocketFrame) {
+                return;
+            }
 
-        if (frame instanceof PongWebSocketFrame) {
-            logger.info("Pong frame received");
-            return;
-        }
-
-        if (frame instanceof TextWebSocketFrame) {
-            contentBuilder = new StringBuilder(((TextWebSocketFrame) frame).text());
-        } else if (frame instanceof ContinuationWebSocketFrame) {
-            if (contentBuilder != null) {
-                contentBuilder.append(((ContinuationWebSocketFrame) frame).text());
+            if (frame instanceof TextWebSocketFrame) {
+                contentBuilder = new StringBuilder(((TextWebSocketFrame) frame).text());
+            } else if (frame instanceof ContinuationWebSocketFrame) {
+                if (contentBuilder != null) {
+                    contentBuilder.append(((ContinuationWebSocketFrame) frame).text());
+                } else {
+                    logger.warn("Continuation frame received without initial frame.");
+                }
+            } else if (frame instanceof BinaryWebSocketFrame) {
+                throw new UnsupportedOperationException(String.format("%s frame types not supported", frame.getClass().getName()));
             } else {
-                logger.warn("Continuation frame received without initial frame.");
+                throw new UnsupportedOperationException(String.format("%s frame types not supported", frame.getClass().getName()));
             }
-        } else if (frame instanceof BinaryWebSocketFrame) {
-            //todo: extend with support for it;
-            throw new UnsupportedOperationException(String.format("%s frame types not supported", frame.getClass().getName()));
-        } else {
-            throw new UnsupportedOperationException(String.format("%s frame types not supported", frame.getClass().getName()));
-        }
 
-        // Check if Text or Continuation Frame is final fragment and handle if needed.
-        if (frame.isFinalFragment()) {
-            AbstractMessage msg = serializationService.getPreferredSerializer(null).unMarshall(AbstractMessage.class, contentBuilder.toString());
-            contentBuilder = null;
-            if (msg instanceof Request) {
-                ((Request) msg).getHeader().setKeepalive(true);
+            // Check if Text or Continuation Frame is final fragment and handle if needed.
+            if (frame.isFinalFragment()) {
+                AbstractMessage synapseMessage = serializationService.getPreferredSerializer(null).unMarshall(AbstractMessage.class, contentBuilder.toString());
+                contentBuilder = null;
+                if (synapseMessage instanceof Request) {
+                    ((Request) synapseMessage).getHeader().setKeepalive(true);
+                }
+                ctx.fireChannelRead(synapseMessage);
             }
-            ctx.fireChannelRead(msg);
+        } catch (UnsupportedOperationException | SerializationException th) {
+            logger.error(th.getClass().getSimpleName() + "error processing ws frame: " + th.getMessage(), th);
         }
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        logger.error("Error while processing websocket request: " + cause.getMessage(), cause);
+        logger.error(cause.getClass().getSimpleName() + " -> Unhandled Error while processing websocket request: " + cause.getMessage(), cause);
         ResponseEncoder.sendError(ctx, HttpResponseStatus.INTERNAL_SERVER_ERROR, cause.getClass().getSimpleName() + ": " + cause.getMessage());
     }
 }

@@ -138,7 +138,7 @@ public class MsgIdRspCorrelator extends SchedulingDispatchedFutureHandler {
     public void evictActiveRequests() {
         requestMsgRegistry.keySet().stream().forEach((String msgId) -> {
             DispatchedFuture<Request, Response> d = requestMsgRegistry.remove(msgId);
-            d.completeExceptionally(new SynapseException("Pending responses are evicted", HttpStatus.BAD_GATEWAY));
+            d.completeExceptionally(new SynapseException("Pending responses are evicted: " + d.getRequest().toString(), HttpStatus.BAD_GATEWAY));
         });
     }
 

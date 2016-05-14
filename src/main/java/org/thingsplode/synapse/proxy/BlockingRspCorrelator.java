@@ -80,8 +80,8 @@ public class BlockingRspCorrelator implements DispatchedFutureHandler {
     @Override
     public void evictActiveRequests() {
         DispatchedFuture f = requestQueue.poll();
-        if (f != null){
-            f.completeExceptionally(new SynapseException("Pending responses are evicted", HttpStatus.BAD_GATEWAY));
+        if (f != null) {
+            f.completeExceptionally(new SynapseException("Pending requests are evicted: " + f.getRequest().toString(), HttpStatus.BAD_GATEWAY));
         }
     }
 

@@ -19,6 +19,9 @@ import com.acme.synapse.testdata.services.core.Address;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutionException;
@@ -59,8 +62,8 @@ public class TestTemplates {
                 return 1;
             } else {
                 System.out.println("WATCHME -> rsp null and ex instanceof " + ex.getClass().getSimpleName() + "with message " + ex.getMessage());
-                ex.printStackTrace();
-                Thread.dumpStack();
+                //ex.printStackTrace();
+                //Thread.dumpStack();
                 Assert.assertTrue("Execution should time out", ex instanceof RequestTimeoutException);
                 return -1;
             }
@@ -97,6 +100,7 @@ public class TestTemplates {
     }
 
     public static void sequentialTest(String header, Dispatcher dispatcher) throws InterruptedException, UnsupportedEncodingException, ExecutionException {
+        List<Throwable> errorQueue = new ArrayList<>();
         int msgCnt = 10;
         System.out.println("\n\n*** " + header + " > Thread: " + Thread.currentThread().getName());
         Assert.assertNotNull("the dispacther must not be null", dispatcher);
@@ -118,8 +122,9 @@ public class TestTemplates {
                     return 1;
                 } else {
                     if (ex != null && !(ex instanceof RequestTimeoutException)) {
-                        System.out.println("WATCH HERE --> " + ex.getMessage());
-                        ex.printStackTrace();
+                        System.out.println("WATCH HERE -- THIS IS NOT TIMEOUT --> " + ex.getClass().getSimpleName() + ": " + ex.getMessage());
+                        //ex.printStackTrace();
+                        errorQueue.add(ex);
                     }
                     System.out.println("\n\nTEST Exception -> " + ex.getMessage() + "| returning -1\n\n");
                     return -1;
@@ -133,6 +138,12 @@ public class TestTemplates {
             }
             timeout = !timeout;
         }
+        if (errorQueue.size() > 0) {
+            for (Throwable th : errorQueue) {
+                System.out.println("TEST ERROR > " + th.getClass().getSimpleName() + ": " + th.getMessage());
+            }
+        }
+        Assert.assertTrue("The error queue must be emtpy", errorQueue.isEmpty());
         System.out.println("-------- EOF " + header + " --------\n\n");
     }
 

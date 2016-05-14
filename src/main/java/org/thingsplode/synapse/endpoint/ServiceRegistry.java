@@ -120,14 +120,14 @@ public class ServiceRegistry {
      * {@link RequestMethod}.
      *
      * @param header
-     * @param requestBody the
+     * @param unmarshalledReqBody the
      * @return an {@link Optional<Method>} filled with the method if one was
      * found. Otherwise the mcOpt.isPresent() is false;
      * @throws org.thingsplode.synapse.core.exceptions.ExecutionException
      * @throws org.thingsplode.synapse.core.exceptions.MissingParameterException
      * @throws org.thingsplode.synapse.core.exceptions.SerializationException
      */
-    public Response invokeWithParsable(Request.RequestHeader header, Object requestBody) throws ExecutionException, MissingParameterException, SerializationException {
+    public Response invokeWithParsable(Request.RequestHeader header, Object unmarshalledReqBody) throws ExecutionException, MissingParameterException, SerializationException {
 
         Optional<MethodContext> mcOpt = getMethodContext(header);
         if (!mcOpt.isPresent()) {
@@ -135,44 +135,52 @@ public class ServiceRegistry {
         }
 
         Object requestBodyObject = null;
-        if ((requestBody instanceof String) && !Util.isEmpty((String) requestBody)) {
+        if ((unmarshalledReqBody instanceof String) && !Util.isEmpty((String) unmarshalledReqBody)) {
             Optional<MethodParam> mpo = mcOpt.get().getMethodParamForRequestBody();
-            WrapFlag wrapBodyFlag = WrapFlag.NONE;
             if (mpo.isPresent()) {
                 MethodParam mp = mpo.get();
-                //if endpoint marker is used, we expect a parameter wrapper
-                Class clazz = mp.source == MethodParam.ParameterSource.PARAMETER_WRAPPER ? ParameterWrapper.class : mp.parameter.getType();
-                if (mcOpt.get().serviceInstance instanceof AbstractEventSink) {
-                    wrapBodyFlag = WrapFlag.EVENT;
-                    clazz = ((AbstractEventSink) mcOpt.get().serviceInstance).getClazz();
-                } else if (Request.class.isAssignableFrom(clazz)) {
-                    //if the parameter is a Request object (eg. Request<Tuple<Integer, Integer>> req), we need to construct it
-                    wrapBodyFlag = WrapFlag.REQUEST;
-                    if (mp.parameter.getParameterizedType() instanceof ParameterizedType) {
-                        Type t = (((ParameterizedType) mp.parameter.getParameterizedType()).getActualTypeArguments()[0]);
-                        if (t instanceof ParameterizedType) {
-                            //the parameter is something like: Request<Tuple<Integer, Integer>> req
-                            clazz = (Class<?>) ((ParameterizedType) t).getRawType();
-                        } else if (t instanceof Class) {
-                            //the parameter is something like: Request<Address> req
-                            clazz = (Class<?>) t;
-                        }
-                    }
-                }
-
+                Class clazz = null;
                 Optional<String> bodyTypeOpt = header.getProperty(AbstractMessage.PROP_BODY_TYPE);
+                boolean failed = false;
                 if (bodyTypeOpt.isPresent()) {
                     try {
                         clazz = Class.forName(bodyTypeOpt.get());
                     } catch (ClassNotFoundException ex) {
+                        failed = true;
                         logger.warn("Body type header was value provided with value [" + bodyTypeOpt.get() + "], but the class is not found. Falling back to parameter based determination of the body type.");
                     }
+                } else {
+                    failed = true;
                 }
-                requestBodyObject = serializationService.getPreferredSerializer(null).unMarshall(clazz, (String) requestBody);
-                if (wrapBodyFlag == WrapFlag.REQUEST) {
-                    requestBodyObject = new Request(header, (Serializable) requestBodyObject);
-                } else if (wrapBodyFlag == WrapFlag.EVENT) {
+
+                if (failed) {
+                    //if endpoint marker is used, we expect a parameter wrapper
+                    clazz = mp.parameter.getType();
+                    if (mp.source == MethodParam.ParameterSource.PARAMETER_WRAPPER) {
+                        clazz = ParameterWrapper.class;
+                    } else if (mcOpt.get().serviceInstance instanceof AbstractEventSink) {
+                        clazz = ((AbstractEventSink) mcOpt.get().serviceInstance).getClazz();
+                    } else if (Request.class.isAssignableFrom(clazz)) {
+                        //if the parameter is a Request object (eg. Request<Tuple<Integer, Integer>> req), we need to construct it
+                        if (mp.parameter.getParameterizedType() instanceof ParameterizedType) {
+                            Type t = (((ParameterizedType) mp.parameter.getParameterizedType()).getActualTypeArguments()[0]);
+                            if (t instanceof ParameterizedType) {
+                                //the parameter is something like: Request<Tuple<Integer, Integer>> req
+                                clazz = (Class<?>) ((ParameterizedType) t).getRawType();
+                            } else if (t instanceof Class) {
+                                //the parameter is something like: Request<Address> req
+                                clazz = (Class<?>) t;
+                            }
+                        }
+                    }
+                }
+                requestBodyObject = serializationService.getPreferredSerializer(null).unMarshall(clazz != null ? clazz : Object.class, (String) unmarshalledReqBody);
+
+                if (Event.class.isAssignableFrom(clazz)) {
                     requestBodyObject = new Event(header, (Serializable) requestBodyObject);
+                } else if (Request.class.isAssignableFrom(clazz)) {
+                    //the parameter is something like: Request<Tuple<Integer, Integer>> req
+                    requestBodyObject = new Request(header, (Serializable) requestBodyObject);
                 }
             }
         }
@@ -183,9 +191,20 @@ public class ServiceRegistry {
         return invoke(header, getMethodContextOrThrowException(header), requestBody);
     }
 
-    Response invoke(Request.RequestHeader header, MethodContext mc, Object requestBodyObject) throws MissingParameterException, ExecutionException {
+    Response invoke(Request.RequestHeader header, MethodContext mc, Object requestBody) throws MissingParameterException, ExecutionException {
         try {
-            Object result = mc.method.invoke(mc.serviceInstance, mc.extractInvocationArguments(header, requestBodyObject));
+
+            ///***** Worakround *************
+            ///The problem is that sometimes the Event (in case of Abstract Event Sink) and the Request is the parameter;
+            // the logic to decide when we hand over only the body of the Event and the Request must be unified between the 
+            // invokeWithObject and invokeWithParsable methods
+            //todo: remove it
+            if (mc.serviceInstance instanceof AbstractEventSink) {
+                requestBody = new Event(header, (Serializable) requestBody);
+            }
+            ///****** End of Workaround *****
+            
+            Object result = mc.method.invoke(mc.serviceInstance, mc.extractInvocationArguments(header, requestBody));
             if (result == null && !(mc.serviceInstance instanceof AbstractEventSink)) {
                 return new Response(new Response.ResponseHeader(header, HttpResponseStatus.OK));
             } else if (result == null && mc.serviceInstance instanceof AbstractEventSink) {

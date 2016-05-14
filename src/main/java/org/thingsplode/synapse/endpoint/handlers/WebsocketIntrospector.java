@@ -17,9 +17,6 @@ package org.thingsplode.synapse.endpoint.handlers;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame;
-import io.netty.handler.codec.http.websocketx.PingWebSocketFrame;
-import io.netty.handler.codec.http.websocketx.PongWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketFrame;
 import org.slf4j.Logger;
@@ -40,13 +37,16 @@ public class WebsocketIntrospector extends SimpleChannelInboundHandler<WebSocket
                 logger.warn("Message@Endpoint received: NULL");
             } else if (logger.isDebugEnabled()) {
                 if (msg instanceof TextWebSocketFrame) {
-                    logger.debug("WebsocketFrame@Endpoint received: \n\n" + ((TextWebSocketFrame) msg.retain()).text());
+                    logger.debug("WebsocketFrame@Endpoint received: \n\n" + ((TextWebSocketFrame) msg).text());
                 } else {
                     logger.debug("WebsocketFrame@Endpoint of type [" + msg.getClass().getCanonicalName() + "] received.");
                 }
             }
         } catch (Throwable th) {
             logger.error(th.getClass().getSimpleName() + " caught while introspecting request, with message: " + th.getMessage(), th);
+        }
+        if (msg != null) {
+            msg.retain();
         }
         ctx.fireChannelRead(msg);
     }

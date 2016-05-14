@@ -57,12 +57,10 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
     private final String endpointId;
     private boolean pipelining = false;
     private final AtomicLong sequence = new AtomicLong(0);
-    private boolean websocketSupport = false;
 
-    public HttpRequestHandler(String endpointId, boolean pipelining, boolean websocketSupport) {
+    public HttpRequestHandler(String endpointId, boolean pipelining) {
         this.endpointId = endpointId;
         this.pipelining = pipelining;
-        this.websocketSupport = websocketSupport;
     }
 
     @Override
@@ -72,7 +70,7 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
         try {
             // Handle a bad request.
             if (!httpRequest.decoderResult().isSuccess()) {
-                HttpResponseHandler.sendError(ctx, HttpResponseStatus.BAD_REQUEST, "Could not decode request.");
+                HttpResponseHandler.sendError(ctx, HttpResponseStatus.BAD_REQUEST, "Could not decode request.", httpRequest);
                 return;
             }
 
@@ -122,7 +120,7 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
                         logger.debug("Switching to websocket. Replacing the " + Endpoint.HTTP_RESPONSE_HANDLER + " with " + Endpoint.WS_RESPONSE_HANDLER);
                         ctx.pipeline().replace(Endpoint.HTTP_REQUEST_HANDLER, Endpoint.WS_REQUEST_HANDLER, new WebsocketRequestHandler(handshaker));
                         ctx.pipeline().replace(Endpoint.HTTP_RESPONSE_HANDLER, Endpoint.WS_RESPONSE_HANDLER, new WebsocketResponseHandler());
-                        if (ctx.pipeline().get(Endpoint.RESPONSE_INTROSPECTOR) != null){
+                        if (ctx.pipeline().get(Endpoint.RESPONSE_INTROSPECTOR) != null) {
                             ctx.pipeline().addAfter(Endpoint.RESPONSE_INTROSPECTOR, Endpoint.WS_REQUEST_INTROSPECTOR, new WebsocketIntrospector());
                         }
                     } else {

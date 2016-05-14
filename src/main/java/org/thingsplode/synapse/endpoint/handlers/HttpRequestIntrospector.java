@@ -32,8 +32,9 @@ import org.thingsplode.synapse.util.Util;
  */
 @ChannelHandler.Sharable
 public class HttpRequestIntrospector extends SimpleChannelInboundHandler<HttpRequest> {
+
     private Logger logger = LoggerFactory.getLogger(HttpRequestIntrospector.class);
-    
+
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, HttpRequest msg) throws Exception {
         try {
@@ -56,11 +57,12 @@ public class HttpRequestIntrospector extends SimpleChannelInboundHandler<HttpReq
                         + "Uri: " + msg.uri() + "\n"
                         + "Method: " + msg.method() + "\n"
                         + hb.toString() + "\n" + "Payload -> " + (!Util.isEmpty(payloadAsSring) ? payloadAsSring + "\n" : "EMPTY\n"));
-            } else if (msg instanceof FullHttpRequest) {
-                ((FullHttpRequest) msg).content().retain();
             }
         } catch (Throwable th) {
             logger.error(th.getClass().getSimpleName() + " caught while introspecting request, with message: " + th.getMessage(), th);
+        }
+        if (msg != null && msg instanceof FullHttpRequest) {
+            ((FullHttpRequest) msg).content().retain();
         }
         ctx.fireChannelRead(msg);
     }
