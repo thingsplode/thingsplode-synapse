@@ -151,7 +151,7 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
             if (pipelining) {
                 header.addProperty(Request.RequestHeader.MSG_SEQ, String.valueOf(sequence.getAndIncrement()));
             }
-            header.addProperty(AbstractMessage.PROP_RCV_CHANNEL, AbstractMessage.PROP_KEY_HTTP);
+            header.addProperty(AbstractMessage.PROP_RCV_TRANSPORT, AbstractMessage.PROP_HTTP_TRANSPORT);
         } catch (UnsupportedEncodingException ex) {
             logger.error(ex.getMessage(), ex);
             HttpResponseHandler.sendError(ctx, HttpResponseStatus.BAD_REQUEST, ex.getClass().getSimpleName() + ": " + ex.getMessage(), httpRequest);

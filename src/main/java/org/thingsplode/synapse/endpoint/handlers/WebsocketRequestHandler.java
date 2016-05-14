@@ -29,9 +29,12 @@ import io.netty.handler.codec.http.websocketx.WebSocketServerHandshaker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.thingsplode.synapse.core.AbstractMessage;
+import org.thingsplode.synapse.core.ConnectionContext;
 import org.thingsplode.synapse.core.Request;
 import org.thingsplode.synapse.core.exceptions.SerializationException;
+import static org.thingsplode.synapse.endpoint.handlers.RequestHandler.CONNECTION_CTX_ATTR;
 import org.thingsplode.synapse.serializers.SerializationService;
+import org.thingsplode.synapse.util.Util;
 
 /**
  *
@@ -57,6 +60,7 @@ public class WebsocketRequestHandler extends SimpleChannelInboundHandler<WebSock
             }
 
             if (frame instanceof PingWebSocketFrame) {
+                updateLastSeen(ctx);
                 ctx.channel().writeAndFlush(new PongWebSocketFrame(frame.content().retain()));
                 return;
             }
@@ -82,6 +86,7 @@ public class WebsocketRequestHandler extends SimpleChannelInboundHandler<WebSock
             // Check if Text or Continuation Frame is final fragment and handle if needed.
             if (frame.isFinalFragment()) {
                 AbstractMessage synapseMessage = serializationService.getPreferredSerializer(null).unMarshall(AbstractMessage.class, contentBuilder.toString());
+                Util.addContextProperty(ctx, AbstractMessage.PROP_RCV_TRANSPORT, AbstractMessage.PROP_HTTP_TRANSPORT);
                 contentBuilder = null;
                 if (synapseMessage instanceof Request) {
                     ((Request) synapseMessage).getHeader().setKeepalive(true);
@@ -97,5 +102,12 @@ public class WebsocketRequestHandler extends SimpleChannelInboundHandler<WebSock
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         logger.error(cause.getClass().getSimpleName() + " -> Unhandled Error while processing websocket request: " + cause.getMessage(), cause);
         ResponseEncoder.sendError(ctx, HttpResponseStatus.INTERNAL_SERVER_ERROR, cause.getClass().getSimpleName() + ": " + cause.getMessage());
+    }
+
+    private void updateLastSeen(ChannelHandlerContext ctx) {
+        ConnectionContext cctx = ctx.channel().attr(CONNECTION_CTX_ATTR).get();
+        if (cctx != null) {
+            cctx.updateLastSeen();
+        }
     }
 }

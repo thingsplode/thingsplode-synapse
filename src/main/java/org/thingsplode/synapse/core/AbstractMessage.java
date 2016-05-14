@@ -26,12 +26,52 @@ import org.thingsplode.synapse.core.exceptions.MarshallerException;
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@msg_type", visible = true)
 public abstract class AbstractMessage<T> implements Serializable {
-    public final static String PROP_RCV_CHANNEL = "Receive-Channel";
+
+    /**
+     * Describes the transport on which the current requests was received. The
+     * possible transports are HTTP, WEB SOCKET, etc.
+     */
+    public final static String PROP_RCV_TRANSPORT = "Receive-Channel";
+
+    /**
+     * The unique message ID property which will be placed in the response's
+     * correlation ID field;
+     */
     public final static String PROP_MESSAGE_ID = "Message-ID";
+
+    /**
+     * The correlation ID field is used by response messages to tell the client
+     * which request is answered by the current response;
+     */
     public final static String PROP_CORRELATION_ID = "Correlation-ID";
+
+    /**
+     * The protocol version may help the unmarshalling processes to choose the
+     * right strategy;
+     */
     public final static String PROP_PROTOCOL_VERSION = "Protocol-Version";
+
+    /**
+     * Describes the body object type (usually full classpath);
+     */
     public final static String PROP_BODY_TYPE = "Body-Type";
-    public final static String PROP_KEY_HTTP = "HTTP";
+
+    /**
+     * One possible value for the {@link PROP_RCV_TRANSPORT}, representing the
+     * HTTP channel;
+     */
+    public final static String PROP_HTTP_TRANSPORT = "HTTP";
+
+    /**
+     * One possible value for the {@link PROP_RCV_TRANSPORT}, representing the
+     * Web Socket channel;
+     */
+    public final static String PROP_WS_TRANSPORT = "";
+
+    /**
+     * A unique value, which is used to identify a connecting client;
+     */
+    public final static String PROP_CLIENT_ID = "Client-ID";
     @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@body_type", visible = true)
     private T body;
 

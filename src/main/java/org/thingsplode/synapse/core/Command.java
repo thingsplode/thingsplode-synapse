@@ -24,4 +24,44 @@ import java.io.Serializable;
  */
 public class Command<T extends Serializable> extends AbstractMessage<T> {
     
+    private CommandHeader header;
+
+    public Command(CommandHeader header) {
+        this.header = header;
+    }
+
+    public Command(CommandHeader header, T body) {
+        super(body);
+        this.header = header;
+    }
+    
+    public CommandHeader getHeader() {
+        return header;
+    }
+
+    public void setHeader(CommandHeader header) {
+        this.header = header;
+    }
+    
+    public static class CommandHeader extends MessageHeader {
+        private long timeToLive;
+        
+        public long getTimeToLive() {
+            return timeToLive;
+        }
+
+        public void setTimeToLive(long timeToLive) {
+            this.timeToLive = timeToLive;
+        }
+        
+        public CommandHeader(long timeToLive) {
+            this.timeToLive = timeToLive;
+        }
+        
+        public CommandHeader(long timeToLive, String msgId) {
+            super(msgId);
+            this.timeToLive = timeToLive;
+        }
+        
+    }
 }

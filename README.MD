@@ -1,3 +1,4 @@
+![Logo](./src/main/resources/synapse_logo.png)
 *Thingsplode Synapse - blazingly fast, super-light communication library for anti-fragile cloud architecture.*
 
 *_Work in progress_* - version 1.0.0-snapshot

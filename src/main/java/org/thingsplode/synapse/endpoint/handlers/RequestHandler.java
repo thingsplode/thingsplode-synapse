@@ -18,13 +18,16 @@ package org.thingsplode.synapse.endpoint.handlers;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.channel.group.ChannelGroup;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.util.AttributeKey;
 import java.nio.charset.Charset;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.thingsplode.synapse.core.AbstractMessage;
+import org.thingsplode.synapse.core.ConnectionContext;
 import org.thingsplode.synapse.core.FileRequest;
 import org.thingsplode.synapse.core.MediaType;
 import org.thingsplode.synapse.core.Request;
@@ -32,6 +35,7 @@ import org.thingsplode.synapse.core.Response;
 import org.thingsplode.synapse.core.exceptions.MethodNotFoundException;
 import org.thingsplode.synapse.core.exceptions.SynapseException;
 import org.thingsplode.synapse.endpoint.ServiceRegistry;
+import org.thingsplode.synapse.util.Util;
 
 /**
  *
@@ -39,12 +43,16 @@ import org.thingsplode.synapse.endpoint.ServiceRegistry;
  */
 public class RequestHandler extends SimpleChannelInboundHandler<Request> {
 
-    private final ServiceRegistry registry;
-    private final Pattern filePattern = Pattern.compile("\\/(.*)(.\\/)(.*)\\.[a-z]{3}");
     private static final Logger logger = LoggerFactory.getLogger(RequestHandler.class);
+    public static final AttributeKey<ConnectionContext> CONNECTION_CTX_ATTR = AttributeKey.valueOf("connection");
+    private final ServiceRegistry registry;
+    private final ChannelGroup channelRegistry;
+    private final Pattern filePattern = Pattern.compile("\\/(.*)(.\\/)(.*)\\.[a-z]{3}");
 
-    public RequestHandler(ServiceRegistry registry) {
+    public RequestHandler(ServiceRegistry registry, ChannelGroup channelRegistry) {
         this.registry = registry;
+        this.channelRegistry = channelRegistry;
+        //ctx.channel().attr(ServerRouterHandler.CONNECTION_CTX_ATTR).get();
     }
 
     @Override
@@ -65,7 +73,7 @@ public class RequestHandler extends SimpleChannelInboundHandler<Request> {
                     //the complete body is unmarshalled already for an object
                     //eg. websocket case
                     response = registry.invokeWithObject(request.getHeader(), request.getBody());
-                } 
+                }
                 //else {
                 //    response = new Response(new Response.ResponseHeader(request.getHeader(), HttpResponseStatus.valueOf(HttpStatus.BAD_REQUEST.value()), new MediaType("text/plain; charset=UTF-8")), RequestHandler.class.getSimpleName() + ": Body type not supported.");
                 //}
@@ -80,7 +88,7 @@ public class RequestHandler extends SimpleChannelInboundHandler<Request> {
             }
         }
 
-        if (fileDownload || response == null || isFileDownloadRetriable(request, response)) {
+        if (fileDownload || response == null || isFileDownloadRetriable(ctx, response)) {
             FileRequest fr = new FileRequest(request.getHeader());
             ctx.fireChannelRead(fr);
         } else {
@@ -88,9 +96,16 @@ public class RequestHandler extends SimpleChannelInboundHandler<Request> {
         }
     }
 
-    private boolean isFileDownloadRetriable(Request request, Response response) {
-        Optional<String> rcvChOpt = request.getHeader().getProperty(AbstractMessage.PROP_RCV_CHANNEL);
-        return response.getHeader().getResponseCode().equals(HttpResponseStatus.NOT_FOUND) && rcvChOpt.isPresent() && rcvChOpt.get().equalsIgnoreCase(AbstractMessage.PROP_KEY_HTTP);
+    @Override
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        //a client is connected
+        channelRegistry.add(ctx.channel());
+        ctx.channel().attr(CONNECTION_CTX_ATTR).set(new ConnectionContext(ctx));
+    }
+
+    private boolean isFileDownloadRetriable(ChannelHandlerContext ctx, Response response) {
+        Optional<String> rcvChOpt = Util.getContextProperty(ctx, AbstractMessage.PROP_RCV_TRANSPORT);
+        return response.getHeader().getResponseCode().equals(HttpResponseStatus.NOT_FOUND) && rcvChOpt.isPresent() && rcvChOpt.get().equalsIgnoreCase(AbstractMessage.PROP_HTTP_TRANSPORT);
     }
 
 }

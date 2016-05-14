@@ -50,10 +50,16 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.thingsplode.synapse.core.Command;
+import org.thingsplode.synapse.core.CommandResult;
+import org.thingsplode.synapse.core.ConnectionContext;
+import org.thingsplode.synapse.core.Request;
+import org.thingsplode.synapse.core.Response;
 import org.thingsplode.synapse.endpoint.handlers.FileRequestHandler;
 import org.thingsplode.synapse.endpoint.handlers.HttpRequestIntrospector;
 import org.thingsplode.synapse.endpoint.handlers.HttpRequestHandler;
@@ -61,6 +67,7 @@ import org.thingsplode.synapse.endpoint.handlers.HttpResponseHandler;
 import org.thingsplode.synapse.endpoint.handlers.ResponseIntrospector;
 import org.thingsplode.synapse.endpoint.handlers.RequestHandler;
 import org.thingsplode.synapse.endpoint.swagger.EndpointApiGenerator;
+import org.thingsplode.synapse.proxy.DispatchedFuture;
 import org.thingsplode.synapse.util.NetworkUtil;
 
 /**
@@ -85,8 +92,8 @@ public class Endpoint {
     public static final String RESPONSE_INTROSPECTOR = "RESPONSE_INTROSPECTOR";
     public static final String HTTP_REQUEST_INTROSPECTOR = "HTTP_REQUEST_INTROSPECTOR";
     public static final String WS_REQUEST_INTROSPECTOR = "WS_REQUEST_INTROSPECTOR";
-    
     private static int TERMINATION_TIMEOUT = 60;//number of seconds to wait after the worker threads are shutted down and until those are finishing the last bit of the execution.
+
     private EventLoopGroup masterGroup = null;//the eventloop group used for the server socket
     private EventLoopGroup workerGroup = null;//the event loop group used for the connected clients
     private final ChannelGroup channelRegistry = new DefaultChannelGroup(ALL_CHANNEL_GROUP_NAME, GlobalEventExecutor.INSTANCE);//all active channels are listed here
@@ -103,6 +110,7 @@ public class Endpoint {
     private EndpointApiGenerator apiGenerator = null;
     private boolean introspection = false;
     private boolean pipelining = false;
+    private final LinkedBlockingQueue<DispatchedFuture<Command, CommandResult>> dispatchQueue = new LinkedBlockingQueue<>(20);//todo: will 20 be enough
 
     private Endpoint() {
     }
@@ -147,7 +155,7 @@ public class Endpoint {
                                 }
                                 p.addLast(HTTP_REQUEST_HANDLER, new HttpRequestHandler(endpointId, pipelining));
                                 //p.addLast(evtExecutorGroup, HTTP_REQUEST_HANDLER, new HttpRequestHandler(endpointId, pipelining, websocketSupport));
-                                p.addLast(REQUEST_HANDLER, new RequestHandler(serviceRegistry));
+                                p.addLast(REQUEST_HANDLER, new RequestHandler(serviceRegistry, channelRegistry));
                                 if (fileHandler != null) {
                                     p.addLast(evtExecutorGroup, HTTP_FILE_HANDLER, fileHandler);
                                 }
@@ -212,6 +220,7 @@ public class Endpoint {
             workerGroup.shutdownGracefully(5, TERMINATION_TIMEOUT, TimeUnit.SECONDS);
         }
         logger.info("Endpoint [" + endpointId + "] stopped.");
+        lifecycle = ComponentLifecycle.UNITIALIZED;
     }
 
     private void initGroups() throws InterruptedException {
@@ -266,15 +275,6 @@ public class Endpoint {
     }
 
     public enum TransportType {
-
-        /**
-         * Default
-         */
-        /**
-         * Default
-         *//**
-         * Default
-         */
         /**
          * Default
          */
@@ -291,6 +291,19 @@ public class Endpoint {
          * Unix Domain Socket - useful for host only IPC style communication
          */
         DOMAIN_SOCKET;
+    }
+
+    public DispatchedFuture<Command, CommandResult> dispatchCommand(ConnectionContext connection, Command command, long timeout) {
+        DispatchedFuture<Command, CommandResult> dispatcherFuture = new DispatchedFuture<>(command, connection.getCtx().channel(), timeout);
+        
+        if (lifecycle == ComponentLifecycle.UNITIALIZED) {
+            dispatcherFuture.completeExceptionally(new IllegalStateException("The endpoing is not initialized."));
+            return dispatcherFuture;
+        } else {
+            
+            //dispatch(entry);
+            return null;
+        }
     }
 
     public static class ConnectionProvider {

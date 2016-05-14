@@ -21,7 +21,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.util.Optional;
-import org.thingsplode.synapse.core.Request.RequestHeader;
 
 /**
  *
@@ -96,7 +95,7 @@ public class Request<T extends Serializable> extends AbstractMessage<T> {
 
         public RequestHeader(Uri uri, RequestMethod method) {
             this(null, uri, method);
-        }
+}
 
         @JsonCreator
         public RequestHeader(@JsonProperty("msgId") String msgId, @JsonProperty("uri") Uri uri, @JsonProperty("method") RequestMethod method) {
