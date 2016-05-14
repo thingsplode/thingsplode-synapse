@@ -19,12 +19,14 @@ import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelHandler;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.thingsplode.synapse.core.Event;
 import org.thingsplode.synapse.core.Request;
 import org.thingsplode.synapse.core.Response;
+import org.thingsplode.synapse.proxy.handlers.WebSocketClientHandler;
 
 /**
  *
@@ -164,6 +166,11 @@ public class Dispatcher {
                 if (!future.isSuccess()) {
                     logger.warn("Connecting to the channel was not successfull.");
                 } else {
+                    ChannelHandler handler = future.channel().pipeline().get(EndpointProxy.WS_REQUEST_ENCODER);
+                    if (handler != null){
+                        //if websocket client handler is added to the mix, the next step is to handshake with it
+                        ((WebSocketClientHandler)handler).getHandshakeFuture().sync();
+                    }
                     logger.debug("Connected Channel@EndpointProxy");
                 }
             }).sync();

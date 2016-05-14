@@ -34,7 +34,7 @@ import org.thingsplode.synapse.TestEventProcessor;
  *
  * @author Csaba Tamas
  */
-public class BlockingProxyTest extends AbstractTest {
+public class BlockingWsProxyTest extends AbstractTest {
 
     @ClassRule
     public static ExternalResource clientProxy = new ExternalResource() {
@@ -44,7 +44,7 @@ public class BlockingProxyTest extends AbstractTest {
         @Override
         protected void before() {
             try {
-                epx = EndpointProxy.create("http://localhost:8080/", Dispatcher.DispatcherPattern.BLOCKING_REQUEST).
+                epx = EndpointProxy.create("ws://localhost:8080/", Dispatcher.DispatcherPattern.BLOCKING_REQUEST).
                         enableIntrospection().
                         setRetryConnection(true).initialize();
                 dispatcher = epx.acquireDispatcher();
@@ -68,7 +68,7 @@ public class BlockingProxyTest extends AbstractTest {
         }
     };
 
-    public BlockingProxyTest() {
+    public BlockingWsProxyTest() {
         super();
     }
 

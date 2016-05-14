@@ -125,8 +125,8 @@ public class Endpoint {
             logger.debug("Starting endpoint [" + endpointId + "].");
             this.initGroups();
             this.bootstrap.group(this.masterGroup, this.workerGroup);
-            boolean ws = transportTypes.contains(TransportType.WEBSOCKET_REST);
-            if (transportTypes.contains(TransportType.HTTP_REST) || ws) {
+            boolean ws = transportTypes.contains(TransportType.WEBSOCKET);
+            if (transportTypes.contains(TransportType.HTTP) || ws) {
                 this.bootstrap.
                         channel(NioServerSocketChannel.class)
                         .childOption(ChannelOption.SO_KEEPALIVE, true)
@@ -268,12 +268,17 @@ public class Endpoint {
          */
         /**
          * Default
+         *//**
+         * Default
          */
-        HTTP_REST,
+        /**
+         * Default
+         */
+        HTTP,
         /**
          *
          */
-        WEBSOCKET_REST,
+        WEBSOCKET,
         /**
          *
          */

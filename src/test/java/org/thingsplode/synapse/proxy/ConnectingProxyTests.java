@@ -19,12 +19,11 @@ import java.net.URISyntaxException;
 import javax.net.ssl.SSLException;
 import org.thingsplode.synapse.AbstractTest;
 
-
 /**
  *
  * @author Csaba Tamas
  */
-public class ConnectingProxyTests extends AbstractTest{
+public class ConnectingProxyTests extends AbstractTest {
 
     public void testConnectionRetry() {
         try {
@@ -35,10 +34,8 @@ public class ConnectingProxyTests extends AbstractTest{
             th.printStackTrace();
         }
     }
-    
+
     //todo: connecting disconnecting with idle
     //todo: reconnect while connecting for the first time
     //todo: reconnect when unilaterally disconnected
-    
-
 }

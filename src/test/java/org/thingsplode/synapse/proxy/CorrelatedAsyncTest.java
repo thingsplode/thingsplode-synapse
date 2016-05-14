@@ -19,14 +19,48 @@ import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.util.concurrent.ExecutionException;
 import javax.net.ssl.SSLException;
+import org.junit.ClassRule;
 import org.junit.Test;
-import org.thingsplode.synapse.AbstractCorrelatedClientTest;
+import org.junit.rules.ExternalResource;
+import org.thingsplode.synapse.AbstractTest;
 
 /**
  *
  * @author Csaba Tamas
  */
-public class CorrelatedAsyncTest extends AbstractCorrelatedClientTest {
+public class CorrelatedAsyncTest extends AbstractTest {
+
+    @ClassRule
+    public static ExternalResource clientProxy = new ExternalResource() {
+
+        private EndpointProxy epx;
+
+        @Override
+        protected void before() {
+            try {
+                epx = EndpointProxy.create("http://localhost:8080/", Dispatcher.DispatcherPattern.CORRELATED_ASYNC).
+                        enableIntrospection().
+                        setRetryConnection(true).initialize();
+                dispatcher = epx.acquireDispatcher();
+            } catch (URISyntaxException | SSLException | InterruptedException th) {
+                System.out.println("\n\n\nERROR while setting up: " + BlockingProxyTest.class.getSimpleName() + ". Dumping stack trace: ");
+                th.printStackTrace();
+            }
+        }
+
+        @Override
+        protected void after() {
+            epx.stop();
+        }
+
+        public Dispatcher getDispatcher() {
+            return dispatcher;
+        }
+
+        public EndpointProxy getEpx() {
+            return epx;
+        }
+    };
 
     public CorrelatedAsyncTest() {
         super();
@@ -72,11 +106,11 @@ public class CorrelatedAsyncTest extends AbstractCorrelatedClientTest {
     }
 
     @Test
-    public void combinedErrorTest() throws InterruptedException, UnsupportedEncodingException, ExecutionException{
+    public void combinedErrorTest() throws InterruptedException, UnsupportedEncodingException, ExecutionException {
         TestTemplates.eventTestWithWrongAddress("CORRELATED EVENT WITH WRONG TARGET", dispatcher);
         // a redirect utan a csatornat lezarja a server, de meg elotte egy pillanattal ki lesz dispatcholva 
         // a kov. keres.
         TestTemplates.normalRequestTest("BASE CORRELATED REQUEST EXECUTION TEST", dispatcher);
     }
-    
+
 }

@@ -33,7 +33,7 @@ public class EndpointBootstrap {
         this.ep = Endpoint.create("test", new Endpoint.ConnectionProvider(new InetSocketAddress("0.0.0.0", 8080)))
                 .logLevel(LogLevel.TRACE)
                 .protocol(Endpoint.Protocol.JSON)
-                .addTransportType(Endpoint.TransportType.HTTP_REST)
+                .addTransportType(Endpoint.TransportType.HTTP)
                 .enableFileHandler(System.getProperty("java.io.tmpdir"))
                 .enableSwagger("1.0", null);
 //                        .publish(new RpcEndpointImpl())

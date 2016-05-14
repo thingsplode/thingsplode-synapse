@@ -31,6 +31,7 @@ import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.channels.UnsupportedAddressTypeException;
 import java.util.HashSet;
 import java.util.UUID;
 import java.util.concurrent.ForkJoinPool;
@@ -46,6 +47,7 @@ import org.thingsplode.synapse.proxy.handlers.HttpResponseIntrospector;
 import org.thingsplode.synapse.proxy.handlers.RequestEncoder;
 import org.thingsplode.synapse.proxy.handlers.RequestToHttpRequestEncoder;
 import org.thingsplode.synapse.proxy.handlers.ResponseHandler;
+import org.thingsplode.synapse.proxy.handlers.WebSocketClientHandler;
 import org.thingsplode.synapse.serializers.SerializationService;
 
 /**
@@ -58,7 +60,8 @@ import org.thingsplode.synapse.serializers.SerializationService;
 public class EndpointProxy {
 
     public final static SerializationService SERIALIZATION_SERVICE = SerializationService.getInstance();
-
+    public final static String HTTP_REQUEST_ENCODER = "httpRequestEncoder";
+    public final static String WS_REQUEST_ENCODER = "wsRequestEncoder";
     private final Logger logger = LoggerFactory.getLogger(EndpointProxy.class);
     private final URI connectionUri;
     private final EventLoopGroup group = new NioEventLoopGroup();
@@ -71,18 +74,18 @@ public class EndpointProxy {
     private final Dispatcher.DispatcherPattern dispatchPattern;
     private DispatchedFutureHandler dfh;
     private boolean retryConnection = false;
-
-    private RequestToHttpRequestEncoder requestToHttpRequestEncoder = new RequestToHttpRequestEncoder();
     private final RequestEncoder requestEncoder;
     private HttpResponseIntrospector httpResponseIntrospector = new HttpResponseIntrospector();
     private HttpResponseToResponseDecoder httResponseToResponseDecoder = new HttpResponseToResponseDecoder();
     private final ResponseHandler responseHandler;
     private final InboundExceptionHandler inboundExceptionHandler;
     private MessageIdGeneratorStrategy msgIdGeneratorStrategy;
+    private Transport transport;
 //todo: place connection uri to the aqcuire dispatcher, so one client instance can work with many servers
 
     private EndpointProxy(String baseUrl, Dispatcher.DispatcherPattern dispatchPattern) throws URISyntaxException {
         this.connectionUri = new URI(baseUrl);
+        this.transport = getTransport(this.connectionUri);
         this.dispatchPattern = dispatchPattern;
         switch (this.dispatchPattern) {
             case BLOCKING_REQUEST:
@@ -126,7 +129,19 @@ public class EndpointProxy {
                             if (introspection) {
                                 p.addLast(httpResponseIntrospector);
                             }
-                            p.addLast(requestToHttpRequestEncoder);
+                            switch (transport.transportType) {
+                                case HTTP: {
+                                    p.addLast(HTTP_REQUEST_ENCODER, new RequestToHttpRequestEncoder());
+                                    break;
+                                }
+                                case WEBSOCKET: {
+                                    p.addLast(HTTP_REQUEST_ENCODER, new WebSocketClientHandler(connectionUri));
+                                    break;
+                                }
+                                default:
+                                    logger.warn("No handler is supporting yet the following transport: " + transport.transportType);
+                            }
+
                             p.addLast(requestEncoder);
                             p.addLast(httResponseToResponseDecoder);
                             p.addLast(responseHandler);
@@ -202,32 +217,14 @@ public class EndpointProxy {
         this.lifecycle = ComponentLifecycle.UNITIALIZED;
     }
 
-    public Dispatcher acquireDispatcher(Endpoint.TransportType transportType) throws SSLException, InterruptedException {
+    public Dispatcher acquireDispatcher() throws SSLException, InterruptedException {
         if (this.lifecycle == ComponentLifecycle.UNITIALIZED) {
             throw new IllegalStateException("Please set this value before starting the " + EndpointProxy.class.getSimpleName());
         }
-        boolean ssl = false;
-        int port = 0;
-        if (this.connectionUri.getPort() == -1) {
-            if (this.connectionUri.getScheme() != null) {
-                if ("http".equalsIgnoreCase(this.connectionUri.getScheme()) || "ws".equalsIgnoreCase(this.connectionUri.getScheme())) {
-                    port = 80;
-                } else if ("https".equalsIgnoreCase(this.connectionUri.getScheme()) || "wss".equalsIgnoreCase(this.connectionUri.getScheme())) {
-                    port = 443;
-                    ssl = true;
-                } else {
-                    port = 8000;
-                    ssl = false;
-                }
-            }
-        } else {
-            port = this.connectionUri.getPort();
-        }
 
-        if ("https".equalsIgnoreCase(this.connectionUri.getScheme()) || "wss".equalsIgnoreCase(this.connectionUri.getScheme())) {
-            ssl = true;
-        }
-        if (ssl) {
+        int port = this.connectionUri.getPort() == -1 ? this.transport.getSchemaDefaultPort() : this.connectionUri.getPort();
+
+        if (transport.ssl) {
             //todo: extends beyond prototype quality
             sslContext = SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build();
         }
@@ -239,6 +236,60 @@ public class EndpointProxy {
         dispatcher.connect();
         dispatchers.add(dispatcher);
         return dispatcher;
+    }
+
+    private class Transport {
+
+        Endpoint.TransportType transportType;
+        boolean ssl;
+
+        public Transport(Endpoint.TransportType transportType, boolean ssl) {
+            this.transportType = transportType;
+            this.ssl = ssl;
+        }
+
+        int getSchemaDefaultPort() {
+            switch (transportType) {
+                case HTTP:
+                    return ssl ? 443 : 80;
+                case WEBSOCKET:
+                    return ssl ? 443 : 80;
+                case MQTT:
+                    return ssl ? 8883 : 1883;
+                default:
+                    return 8000;
+            }
+        }
+    }
+
+    private Transport getTransport(URI uri) {
+        switch (uri.getScheme()) {
+            case "http": {
+                return new Transport(Endpoint.TransportType.HTTP, false);
+            }
+            case "https": {
+                return new Transport(Endpoint.TransportType.HTTP, true);
+            }
+            case "ws": {
+                return new Transport(Endpoint.TransportType.WEBSOCKET, false);
+            }
+            case "wss": {
+                return new Transport(Endpoint.TransportType.WEBSOCKET, true);
+            }
+            case "mqtt": {
+                return new Transport(Endpoint.TransportType.MQTT, false);
+            }
+            case "mqtts": {
+                return new Transport(Endpoint.TransportType.MQTT, true);
+            }
+            case "file": {
+                return new Transport(Endpoint.TransportType.DOMAIN_SOCKET, false);
+            }
+            default: {
+                throw new UnsupportedAddressTypeException();
+            }
+
+        }
     }
 
 }

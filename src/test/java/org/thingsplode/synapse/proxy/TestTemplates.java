@@ -22,7 +22,6 @@ import java.io.UnsupportedEncodingException;
 import java.util.UUID;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -139,9 +138,11 @@ public class TestTemplates {
     public static void burstTest(String header, Dispatcher dispatcher) throws UnsupportedEncodingException, InterruptedException {
         int msgCnt = 1000;
         ArrayBlockingQueue requestQueue = new ArrayBlockingQueue(msgCnt);
+        ArrayBlockingQueue failQueue = new ArrayBlockingQueue(msgCnt);
         System.out.println("\n\n*** " + header + " > Thread: " + Thread.currentThread().getName());
         Assert.assertNotNull("the dispacther must not be null", dispatcher);
         String serviceMethod = "/com/acme/synapse/testdata/services/RpcEndpointImpl/echoWithTimeout";
+        boolean failed = false;
         for (int i = 0; i < msgCnt; i++) {
             System.out.println("\n\n============== MSG COUNTER [" + i + "] ==============");
             String uuid = UUID.randomUUID().toString();
@@ -158,6 +159,7 @@ public class TestTemplates {
                     Assert.assertTrue("The response type should be string, but is: " + (rsp.getBody() != null ? rsp.getBody().getClass() : "null"), rsp.getBody() instanceof String);
                     Assert.assertTrue("the response uuid should match the request uuid", ((String) rsp.getBody()).equals(uuid));
                 } else {
+                    failQueue.offer(true);
                     if (ex != null && !(ex instanceof RequestTimeoutException)) {
                         System.out.println("WATCH HERE --> " + ex.getMessage());
                         ex.printStackTrace();
@@ -175,20 +177,24 @@ public class TestTemplates {
         }, 0, 60, TimeUnit.SECONDS);
         while (!requestQueue.isEmpty()) {
         }
+        if (failQueue.size() > 0) {
+            Assert.fail("There were multiple (" + failQueue.size() + ") failures;");
+        }
     }
 
     public static void eventTestWithWrongAddress(String header, Dispatcher dispatcher) throws UnsupportedEncodingException, InterruptedException, ExecutionException {
         System.out.println("\n\n*** " + header + " > Thread: " + Thread.currentThread().getName());
-        dispatcher.dispatch(Event.create("/default/"), 500).handle((rsp, ex) -> {
+        boolean success = dispatcher.dispatch(Event.create("/default/"), 500).handle((rsp, ex) -> {
             if (rsp != null) {
                 System.out.println("\n\nResponse@Test received with status: [" + rsp.getHeader().getResponseCode().toString() + "]");
                 Assert.assertTrue("it must not accept the message", !rsp.getHeader().getResponseCode().equals(HttpResponseStatus.ACCEPTED));
-                return rsp.getHeader().getResponseCode().equals(HttpResponseStatus.ACCEPTED);
+                return !rsp.getHeader().getResponseCode().equals(HttpResponseStatus.ACCEPTED);
             } else {
-                //ex.printStackTrace();
+                ex.printStackTrace();
                 return false;
             }
-        });
+        }).get();
+        Assert.assertTrue("Execution should be successfull", success);
         //attention: without synchronous get() on the CompletableFuture (DispatchedFuture) the assertions are not working
     }
 
@@ -213,6 +219,7 @@ public class TestTemplates {
         System.out.println("\n\n*** " + header + " > Thread: " + Thread.currentThread().getName());
         int msgCnt = 999;
         ArrayBlockingQueue<Integer> requestQueue = new ArrayBlockingQueue(msgCnt);
+        ArrayBlockingQueue failQueue = new ArrayBlockingQueue(msgCnt);
         for (int i = 0; i < msgCnt; i++) {
             requestQueue.add(0);
             Event evt = Event.create("/default/consume");
@@ -225,11 +232,13 @@ public class TestTemplates {
                     Assert.assertTrue("All events should be processed.", status);
                     return status;
                 } else if (ex != null) {
+                    System.out.println("--> TEST FAILURE" + ex.getClass().getSimpleName() + ": " + ex.getMessage());
                     ex.printStackTrace();
-                    Assert.fail();
+                    failQueue.add(true);
                     return false;
                 } else {
-                    Assert.fail();
+                    System.out.println("\n\n --> TEST FAILURE: response is null & exception is null.");
+                    failQueue.add(true);
                     return false;
                 }
             });
@@ -245,6 +254,9 @@ public class TestTemplates {
             TestEventProcessor.eventQueue.poll();
         }
         while (!requestQueue.isEmpty()) {
+        }
+        if (failQueue.size() > 0) {
+            Assert.fail("There were multiple (" + failQueue.size() + ") failures;");
         }
     }
 }
