@@ -1,4 +1,4 @@
-![logo](./src/main/resources/synapse_logo_sm.png) "thingsplode synapse logo"
+![logo](./src/main/resources/synapse_logo_sm.png)
 
 *Thingsplode Synapse - blazingly fast, super-light communication library for anti-fragile cloud architecture.*
 
