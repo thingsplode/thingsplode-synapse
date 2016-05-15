@@ -15,6 +15,7 @@
  */
 package org.thingsplode.synapse;
 
+import java.util.Set;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
@@ -34,12 +35,12 @@ public class MsgIdRspCorrelator extends SchedulingDispatchedFutureHandler {
 
     private final Logger logger = LoggerFactory.getLogger(MsgIdRspCorrelator.class);
     private long defaultResponseTimeout = finalDefaultTimeout;
-    private final ConcurrentHashMap<String, DispatchedFuture<?, ?>> requestMsgRegistry;//msg id/msg correlation entry map
+
+    private final MessageRegistry requestMsgRegistry;//msg id/msg correlation entry map
 
     public MsgIdRspCorrelator() {
         super();
-        this.requestMsgRegistry = new ConcurrentHashMap<>();//ConcurrentHashMap
-
+        this.requestMsgRegistry = new DefaultMessageRegistry();
     }
 
     /**
@@ -169,6 +170,36 @@ public class MsgIdRspCorrelator extends SchedulingDispatchedFutureHandler {
             }
 
         }
+    }
+
+    class DefaultMessageRegistry implements MessageRegistry {
+
+        private final ConcurrentHashMap<String, DispatchedFuture<?, ?>> backend;
+
+        public DefaultMessageRegistry() {
+            this.backend = new ConcurrentHashMap<>();
+        }
+
+        @Override
+        public DispatchedFuture<?, ?> put(String msgId, DispatchedFuture<?, ?> msgEntry) {
+            return this.backend.put(msgId, msgEntry);
+        }
+
+        @Override
+        public DispatchedFuture<?, ?> remove(String msgId) {
+            return this.backend.remove(msgId);
+        }
+
+        @Override
+        public DispatchedFuture<?, ?> get(String msgId) {
+            return this.backend.get(msgId);
+        }
+
+        @Override
+        public Set<String> keySet() {
+            return this.backend.keySet();
+        }
+
     }
 
 }

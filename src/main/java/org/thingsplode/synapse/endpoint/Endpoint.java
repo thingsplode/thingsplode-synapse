@@ -51,7 +51,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import org.slf4j.Logger;
@@ -67,6 +66,7 @@ import org.thingsplode.synapse.endpoint.handlers.ResponseIntrospector;
 import org.thingsplode.synapse.endpoint.handlers.RequestHandler;
 import org.thingsplode.synapse.endpoint.swagger.EndpointApiGenerator;
 import org.thingsplode.synapse.DispatchedFuture;
+import org.thingsplode.synapse.MsgIdRspCorrelator;
 import org.thingsplode.synapse.util.NetworkUtil;
 
 /**
@@ -109,6 +109,7 @@ public class Endpoint {
     private EndpointApiGenerator apiGenerator = null;
     private boolean introspection = false;
     private boolean pipelining = false;
+    //private MsgIdRspCorrelator
     //private final LinkedBlockingQueue<DispatchedFuture<Command, CommandResult>> dispatchQueue = new LinkedBlockingQueue<>(20);//todo: will 20 be enough
 
     private Endpoint() {

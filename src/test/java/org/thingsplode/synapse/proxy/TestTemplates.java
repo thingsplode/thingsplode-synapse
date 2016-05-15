@@ -29,8 +29,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.junit.Assert;
 import org.thingsplode.synapse.TestEventProcessor;
 import org.thingsplode.synapse.core.ParameterWrapper;
@@ -189,7 +187,7 @@ public class TestTemplates {
         ScheduledExecutorService es = Executors.newScheduledThreadPool(1);
         es.scheduleAtFixedRate(() -> {
             System.out.println("\n\n\n\n\nRequest queue size at burst test: " + requestQueue.size());
-            System.out.println("[Content of the request queue: ]" + requestQueue);
+            //System.out.println("[Content of the request queue: ]" + requestQueue);
             System.out.println("Incremented counter: " + cnt.counter.incrementAndGet());
         }, 0, 60, TimeUnit.SECONDS);
         while (!requestQueue.isEmpty() && cnt.counter.get() < 3) {
