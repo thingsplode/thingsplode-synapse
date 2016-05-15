@@ -50,6 +50,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
@@ -66,8 +67,12 @@ import org.thingsplode.synapse.endpoint.handlers.ResponseIntrospector;
 import org.thingsplode.synapse.endpoint.handlers.RequestHandler;
 import org.thingsplode.synapse.endpoint.swagger.EndpointApiGenerator;
 import org.thingsplode.synapse.DispatchedFuture;
+import org.thingsplode.synapse.MessageIdGeneratorStrategy;
+import org.thingsplode.synapse.MessageRegistry;
 import org.thingsplode.synapse.MsgIdRspCorrelator;
+import static org.thingsplode.synapse.endpoint.handlers.RequestHandler.CONNECTION_CTX_ATTR;
 import org.thingsplode.synapse.util.NetworkUtil;
+import org.thingsplode.synapse.util.Util;
 
 /**
  *
@@ -87,6 +92,7 @@ public class Endpoint {
     public static final String RESPONSE_SEQUENCER = "response_sequencer";
     public static final String HTTP_RESPONSE_HANDLER = "http_response_handler";
     public static final String WS_RESPONSE_HANDLER = "ws_response_handler";
+    public static final String WS_COMMAND_HANDLER = "WS_COMMAND_HANDLER";
     public static final String WS_REQUEST_HANDLER = "ws_request_handler";
     public static final String RESPONSE_INTROSPECTOR = "RESPONSE_INTROSPECTOR";
     public static final String HTTP_REQUEST_INTROSPECTOR = "HTTP_REQUEST_INTROSPECTOR";
@@ -100,8 +106,8 @@ public class Endpoint {
     private ConnectionProvider connections;
     private LogLevel logLevel;
     private final ServerBootstrap bootstrap = new ServerBootstrap();
-    private List<TransportType> transportTypes = new ArrayList<>();
-    private Protocol protocol = Protocol.JSON;
+    private List<Transport> transportTypes = new ArrayList<>();
+    private DataFormat protocol = DataFormat.JSON;
     private ComponentLifecycle lifecycle = ComponentLifecycle.UNITIALIZED;
     private FileRequestHandler fileHandler = null;
     private EventExecutorGroup evtExecutorGroup = new DefaultEventExecutorGroup(10);
@@ -109,7 +115,9 @@ public class Endpoint {
     private EndpointApiGenerator apiGenerator = null;
     private boolean introspection = false;
     private boolean pipelining = false;
-    //private MsgIdRspCorrelator
+    private MsgIdRspCorrelator messageStore = null;
+    private MessageIdGeneratorStrategy msgIdGeneratorStrategy = null;
+    private boolean bidirectionalCommsEnabled = false;
     //private final LinkedBlockingQueue<DispatchedFuture<Command, CommandResult>> dispatchQueue = new LinkedBlockingQueue<>(20);//todo: will 20 be enough
 
     private Endpoint() {
@@ -132,13 +140,24 @@ public class Endpoint {
         return ep;
     }
 
-    public void start() throws InterruptedException {
+    public Endpoint start() throws InterruptedException {
         try {
             logger.debug("Starting endpoint [" + endpointId + "].");
+
             this.initGroups();
             this.bootstrap.group(this.masterGroup, this.workerGroup);
-            boolean ws = transportTypes.contains(TransportType.WEBSOCKET);
-            if (transportTypes.contains(TransportType.HTTP) || ws) {
+            boolean ws = transportTypes.contains(Transport.WEBSOCKET);
+            //if bidirectional communication is permitted /add more protocols here later
+            bidirectionalCommsEnabled = ws;
+            if (bidirectionalCommsEnabled) {
+                if (this.messageStore == null) {
+                    this.messageStore = new MsgIdRspCorrelator();
+                }
+                if (this.msgIdGeneratorStrategy == null) {
+                    this.msgIdGeneratorStrategy = () -> UUID.randomUUID().toString();
+                }
+            }
+            if (transportTypes.contains(Transport.HTTP) || ws) {
                 this.bootstrap.
                         channel(NioServerSocketChannel.class)
                         .childOption(ChannelOption.SO_KEEPALIVE, true)
@@ -186,6 +205,7 @@ public class Endpoint {
             }));
         }
         this.startInternal();
+        return this;
     }
 
     /**
@@ -270,11 +290,11 @@ public class Endpoint {
         return this;
     }
 
-    public enum Protocol {
+    public enum DataFormat {
         JSON
     }
 
-    public enum TransportType {
+    public enum Transport {
         /**
          * Default
          */
@@ -293,28 +313,57 @@ public class Endpoint {
         DOMAIN_SOCKET;
     }
 
-//    public DispatchedFuture<Command, CommandResult> dispatchCommand(ConnectionContext connection, Command command, long timeout) {
-//        DispatchedFuture<Command, CommandResult> dispatcherFuture = new DispatchedFuture<>(command, connection.getCtx().channel(), timeout);
-//
-//        if (lifecycle == ComponentLifecycle.UNITIALIZED) {
-//            dispatcherFuture.completeExceptionally(new IllegalStateException("The endpoing is not initialized."));
-//            return dispatcherFuture;
-//        } else {
-//            ChannelFuture cf = connection.getCtx().channel().writeAndFlush(command);
-//            cf.addListener((ChannelFutureListener) (ChannelFuture future) -> {
-//                if (!future.isSuccess()) {
-//                //the message could not be sent
-//                //todo: build a retry mechanism?
-//                dispatchedFutureHandler.responseReceived(request.getHeader().getMsgId());
-//                dispatcherFuture.completeExceptionally(future.cause());
-//                future.channel().close();
-//            } else if (logger.isTraceEnabled()) {
-//                logger.trace("Request message is succesfully dispatched with Msg. Id.: " + command.getHeader().getMsgId());
-//            }
-//            });
-//        }
-//        return null;
-//    }
+    public List<DispatchedFuture> broadcast(Command command, long timeToLive) {
+        ArrayList<DispatchedFuture> dispatches = new ArrayList<>();
+        this.channelRegistry.stream().forEach((Channel ch) -> {
+            if (ch != null) {
+                ConnectionContext connCtx = ch.attr(CONNECTION_CTX_ATTR).get();
+                if (connCtx != null) {
+                    dispatches.add(dispatchCommand(connCtx, command, timeToLive));
+                }
+            }
+        });
+        return dispatches;
+    }
+
+    public List<DispatchedFuture> broadcast(List<String> clientIds, Command command, long timeToLive) {
+        HashSet<String> clientIdList = new HashSet<>(clientIds);
+        ArrayList<DispatchedFuture> dispatches = new ArrayList<>();
+        this.channelRegistry.parallelStream().forEach((Channel ch) -> {
+            ConnectionContext connCtx = ch.attr(CONNECTION_CTX_ATTR).get();
+            if (connCtx != null && !Util.isEmpty(connCtx.getClientID()) && clientIdList.remove(connCtx.getClientID())) {
+                dispatches.add(dispatchCommand(connCtx, command, timeToLive));
+            }
+        });
+        return dispatches;
+    }
+
+    public DispatchedFuture<Command, CommandResult> dispatchCommand(ConnectionContext connection, Command command, long timeToLive) {
+        if (!bidirectionalCommsEnabled) {
+            throw new UnsupportedOperationException("Dispatching from the endpoint is only supported with protocols which are supporting bidirectional communication (eg. websocket, mqtt). Please enable such protocol if you need dispatching throug them.");
+        }
+        command.getHeader().setMsgId(msgIdGeneratorStrategy.getNextId());
+        DispatchedFuture<Command, CommandResult> dispatcherFuture = new DispatchedFuture<>(command, connection.getCtx().channel(), timeToLive);
+        if (lifecycle == ComponentLifecycle.UNITIALIZED) {
+            dispatcherFuture.completeExceptionally(new IllegalStateException("The endpoing is not initialized."));
+            return dispatcherFuture;
+        } else {
+            messageStore.beforeDispatch(dispatcherFuture);
+            ChannelFuture cf = connection.getCtx().channel().writeAndFlush(command);
+            cf.addListener((ChannelFutureListener) (ChannelFuture future) -> {
+                if (!future.isSuccess()) {
+                    //the message could not be sent
+                    //todo: build a retry mechanism?
+                    messageStore.responseReceived(command.getHeader().getMsgId());
+                    dispatcherFuture.completeExceptionally(future.cause());
+                    future.channel().close();
+                } else if (logger.isTraceEnabled()) {
+                    logger.trace(command.getClass().getSimpleName() + " message is succesfully dispatched with Msg. Id.: " + command.getHeader().getMsgId());
+                }
+            });
+        }
+        return dispatcherFuture;
+    }
 
     public static class ConnectionProvider {
 
@@ -359,6 +408,16 @@ public class Endpoint {
         this.pipelining = true;
         throw new UnsupportedOperationException("Not implemented yet");
         //return this;
+    }
+
+    public Endpoint setMessageResgistry(MessageRegistry msgRegistry) {
+        this.messageStore = new MsgIdRspCorrelator(msgRegistry);
+        return this;
+    }
+
+    public Endpoint setMsgIdGeneratorStrategy(MessageIdGeneratorStrategy messageIdGeneratorStrategy) {
+        this.msgIdGeneratorStrategy = messageIdGeneratorStrategy;
+        return this;
     }
 
     /**
@@ -406,26 +465,26 @@ public class Endpoint {
         return this;
     }
 
-    public Endpoint addTransportType(TransportType transportType) {
+    public Endpoint addTransport(Transport transportType) {
         this.transportTypes.add(transportType);
         return this;
     }
 
-    public Endpoint protocol(Protocol protocol) {
+    public Endpoint dataFormat(DataFormat protocol) {
         this.protocol = protocol;
         return this;
     }
 
-    public Protocol getProtocol() {
+    public DataFormat getProtocol() {
         return protocol;
     }
 
-    public boolean containsTransportType(TransportType transportType) {
-        Optional<TransportType> ttOpt = this.transportTypes.stream().filter(tt -> tt == transportType).findFirst();
+    public boolean containsTransportType(Transport transportType) {
+        Optional<Transport> ttOpt = this.transportTypes.stream().filter(tt -> tt == transportType).findFirst();
         return ttOpt.isPresent();
     }
 
-    public List<TransportType> getTransportType() {
+    public List<Transport> getTransportType() {
         return transportTypes;
     }
 }

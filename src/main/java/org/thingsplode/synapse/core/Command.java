@@ -15,6 +15,9 @@
  */
 package org.thingsplode.synapse.core;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.io.Serializable;
 
 /**
@@ -25,8 +28,9 @@ import java.io.Serializable;
 public class Command<T extends Serializable> extends AbstractMessage<T> {
 
     private CommandHeader header;
-    private transient Status status = Status.PENDING;
-    
+    @JsonIgnore
+    private Status status = Status.PENDING;
+
     public enum Status {
         PENDING,
         POSTED,
@@ -44,7 +48,8 @@ public class Command<T extends Serializable> extends AbstractMessage<T> {
         this.status = status;
     }
 
-    public Command(CommandHeader header) {
+    @JsonCreator
+    public Command(@JsonProperty("header") CommandHeader header) {
         this.header = header;
     }
 
@@ -66,6 +71,16 @@ public class Command<T extends Serializable> extends AbstractMessage<T> {
 
         private long timeToLive;
 
+        public CommandHeader(long timeToLive) {
+            this.timeToLive = timeToLive;
+        }
+
+        @JsonCreator
+        public CommandHeader(@JsonProperty("msg_id") String msgId, @JsonProperty("time_to_live") long timeToLive) {
+            super(msgId);
+            this.timeToLive = timeToLive;
+        }
+
         public long getTimeToLive() {
             return timeToLive;
         }
@@ -73,15 +88,5 @@ public class Command<T extends Serializable> extends AbstractMessage<T> {
         public void setTimeToLive(long timeToLive) {
             this.timeToLive = timeToLive;
         }
-
-        public CommandHeader(long timeToLive) {
-            this.timeToLive = timeToLive;
-        }
-
-        public CommandHeader(long timeToLive, String msgId) {
-            super(msgId);
-            this.timeToLive = timeToLive;
-        }
-
     }
 }

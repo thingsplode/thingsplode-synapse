@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 import org.thingsplode.synapse.core.Event;
 import org.thingsplode.synapse.core.Request;
 import org.thingsplode.synapse.core.Response;
-import org.thingsplode.synapse.proxy.handlers.WSResponse2ResponseDecoder;
+import org.thingsplode.synapse.proxy.handlers.WSMessageDecoder;
 
 /**
  *
@@ -171,11 +171,11 @@ public class Dispatcher {
                 }
             }).sync();
 
-            ChannelHandler handler = cf.channel().pipeline().get(EndpointProxy.WS_RESPONSE_DECODER);
+            ChannelHandler handler = cf.channel().pipeline().get(EndpointProxy.WS_MESSAGE_DECODER);
             if (handler != null) {
                 //if websocket client handler is added to the mix, the next step is to handshake with it
                 logger.debug("Initiating websocket handshake ...");
-                ((WSResponse2ResponseDecoder) handler).getHandshakeFuture().sync().addListener((ChannelFutureListener) (ChannelFuture future) -> {
+                ((WSMessageDecoder) handler).getHandshakeFuture().sync().addListener((ChannelFutureListener) (ChannelFuture future) -> {
                     if (!future.isSuccess()) {
                         //todo: close dispatcher and websocket connection
                         //((WSResponseToResponseDecoder) handler).

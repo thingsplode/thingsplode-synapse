@@ -29,6 +29,8 @@ import org.junit.Test;
 import org.junit.rules.ExternalResource;
 import org.thingsplode.synapse.AbstractTest;
 import org.thingsplode.synapse.TestEventProcessor;
+import org.thingsplode.synapse.core.Command;
+import org.thingsplode.synapse.core.PushNotification;
 
 /**
  *
@@ -131,8 +133,9 @@ public class BlockingWsProxyTest extends AbstractTest {
         TestTemplates.burstEventTest("BLOCKING WS BURST EVENT TEST", dispatcher);
     }
 
-    //@Test
+    @Test
     public void blockingTest() throws InterruptedException {
+        ep.broadcast(new PushNotification(new PushNotification.NotificationHeader(2000)), 5000);
         TestEventProcessor.eventQueue.poll(10, TimeUnit.MINUTES);
     }
 

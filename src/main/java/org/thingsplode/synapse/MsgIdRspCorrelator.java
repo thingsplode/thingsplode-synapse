@@ -43,6 +43,10 @@ public class MsgIdRspCorrelator extends SchedulingDispatchedFutureHandler {
         this.requestMsgRegistry = new DefaultMessageRegistry();
     }
 
+    public MsgIdRspCorrelator(MessageRegistry messageRegistry) {
+        this.requestMsgRegistry = messageRegistry;
+    }
+    
     /**
      * Called by the dispatch listener upon successful dispatch operation,
      * registers one request with its ID in order to be able to correlate a
@@ -52,7 +56,7 @@ public class MsgIdRspCorrelator extends SchedulingDispatchedFutureHandler {
      * @see DispatchListener
      */
     @Override
-    public void beforeDispatch(DispatchedFuture<Request, Response> msgEntry) {
+    public void beforeDispatch(DispatchedFuture msgEntry) {
         if (msgEntry == null) {
             logger.warn(String.format("Did not registered Message Entry because is NULL"));
             return;

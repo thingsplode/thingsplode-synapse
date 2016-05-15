@@ -15,8 +15,12 @@
  */
 package org.thingsplode.synapse.util;
 
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.group.ChannelGroup;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import org.thingsplode.synapse.core.ConnectionContext;
@@ -46,6 +50,18 @@ public class Util {
         } else {
             return false;
         }
+    }
+
+    public static List<ConnectionContext> getAllConnections(ChannelGroup channelRegistry) {
+        List<ConnectionContext> connections = new ArrayList<>();
+        if (channelRegistry != null && !channelRegistry.isEmpty()) {
+            channelRegistry.stream().map((thisChannel) -> thisChannel.attr(CONNECTION_CTX_ATTR).get())
+                    .filter((connection) -> (connection != null))
+                    .forEach((connection) -> {
+                        connections.add(connection);
+                    });
+        }
+        return connections;
     }
 
     public static Optional<String> getContextProperty(ChannelHandlerContext ctx, String key) {

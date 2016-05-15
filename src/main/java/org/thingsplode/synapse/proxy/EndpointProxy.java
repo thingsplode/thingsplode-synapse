@@ -52,7 +52,7 @@ import org.thingsplode.synapse.proxy.handlers.RequestEncoder;
 import org.thingsplode.synapse.proxy.handlers.Request2HttpRequestEncoder;
 import org.thingsplode.synapse.proxy.handlers.Request2WsRequestEncoder;
 import org.thingsplode.synapse.proxy.handlers.ResponseHandler;
-import org.thingsplode.synapse.proxy.handlers.WSResponse2ResponseDecoder;
+import org.thingsplode.synapse.proxy.handlers.WSMessageDecoder;
 import org.thingsplode.synapse.serializers.SerializationService;
 
 /**
@@ -71,7 +71,7 @@ public class EndpointProxy {
     public final static String REQUEST2HTTP_REQUEST_ENCODER = "REQUEST2HTTP_REQUEST_ENCODER";
     public final static String REQUEST2WS_REQUEST_ENCODER = "REQUEST2WS_REQUEST_ENCODER";
     public final static String HTTP_RSP2RESPONSE_DECODER = "HTTP_RSP2RESPONSE_DECODER";
-    public final static String WS_RESPONSE_DECODER = "WS_RESPONSE_DECODER";
+    public final static String WS_MESSAGE_DECODER = "WS_MESSAGE_DECODER";
     private final Logger logger = LoggerFactory.getLogger(EndpointProxy.class);
     private final URI connectionUri;
     private final EventLoopGroup group = new NioEventLoopGroup();
@@ -158,7 +158,7 @@ public class EndpointProxy {
                                     break;
                                 }
                                 case WEBSOCKET: {
-                                    p.addLast(WS_RESPONSE_DECODER, new WSResponse2ResponseDecoder(connectionUri));
+                                    p.addLast(WS_MESSAGE_DECODER, new WSMessageDecoder(connectionUri));
                                     break;
                                 }
                                 default:
@@ -260,10 +260,10 @@ public class EndpointProxy {
 
     private class Transport {
 
-        Endpoint.TransportType transportType;
+        Endpoint.Transport transportType;
         boolean ssl;
 
-        public Transport(Endpoint.TransportType transportType, boolean ssl) {
+        public Transport(Endpoint.Transport transportType, boolean ssl) {
             this.transportType = transportType;
             this.ssl = ssl;
         }
@@ -285,25 +285,25 @@ public class EndpointProxy {
     private Transport getTransport(URI uri) {
         switch (uri.getScheme()) {
             case "http": {
-                return new Transport(Endpoint.TransportType.HTTP, false);
+                return new Transport(Endpoint.Transport.HTTP, false);
             }
             case "https": {
-                return new Transport(Endpoint.TransportType.HTTP, true);
+                return new Transport(Endpoint.Transport.HTTP, true);
             }
             case "ws": {
-                return new Transport(Endpoint.TransportType.WEBSOCKET, false);
+                return new Transport(Endpoint.Transport.WEBSOCKET, false);
             }
             case "wss": {
-                return new Transport(Endpoint.TransportType.WEBSOCKET, true);
+                return new Transport(Endpoint.Transport.WEBSOCKET, true);
             }
             case "mqtt": {
-                return new Transport(Endpoint.TransportType.MQTT, false);
+                return new Transport(Endpoint.Transport.MQTT, false);
             }
             case "mqtts": {
-                return new Transport(Endpoint.TransportType.MQTT, true);
+                return new Transport(Endpoint.Transport.MQTT, true);
             }
             case "file": {
-                return new Transport(Endpoint.TransportType.DOMAIN_SOCKET, false);
+                return new Transport(Endpoint.Transport.DOMAIN_SOCKET, false);
             }
             default: {
                 throw new UnsupportedAddressTypeException();

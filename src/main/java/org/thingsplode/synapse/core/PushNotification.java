@@ -15,6 +15,8 @@
  */
 package org.thingsplode.synapse.core;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.io.Serializable;
 
 /**
@@ -24,9 +26,36 @@ import java.io.Serializable;
  */
 public class PushNotification<T extends Serializable> extends Command<T> {
 
-    public PushNotification(CommandHeader header) {
+    @JsonCreator
+    public PushNotification(@JsonProperty("header") NotificationHeader header) {
         super(header);
     }
 
-    
+    public static class NotificationHeader extends Command.CommandHeader {
+
+        private String topic;
+
+        @JsonCreator
+        public NotificationHeader(@JsonProperty("time_to_live") long timeToLive) {
+            super(timeToLive);
+        }
+
+        public String getTopic() {
+            return topic;
+        }
+
+        public void setTopic(String topic) {
+            this.topic = topic;
+        }
+    }
+
+    public void setHeader(NotificationHeader header) {
+        super.setHeader(header);
+    }
+
+    @Override
+    public NotificationHeader getHeader() {
+        return (NotificationHeader) super.getHeader();
+    }
+
 }

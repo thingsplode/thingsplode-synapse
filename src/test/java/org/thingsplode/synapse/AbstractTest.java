@@ -38,9 +38,10 @@ public abstract class AbstractTest {
 
     private static Logger logger = LoggerFactory.getLogger(AbstractTest.class);
     protected static Dispatcher dispatcher;
+    protected static Endpoint ep;
     @ClassRule
     public static ExternalResource synapticEndpoint = new ExternalResource() {
-        private Endpoint ep;
+        
 
         @Override
         protected void before() throws InterruptedException, FileNotFoundException {
@@ -48,11 +49,11 @@ public abstract class AbstractTest {
 
             Thread t = new Thread(() -> {
                 try {
-                    ep = Endpoint.create("test", new ConnectionProvider(new InetSocketAddress("0.0.0.0", 8080)))
+                    ep = Endpoint.create("TEST_ENDPOINT", new ConnectionProvider(new InetSocketAddress("0.0.0.0", 8080)))
                             .logLevel(LogLevel.TRACE)
-                            .protocol(Endpoint.Protocol.JSON)
-                            .addTransportType(Endpoint.TransportType.HTTP)
-                            .addTransportType(Endpoint.TransportType.WEBSOCKET)
+                            .dataFormat(Endpoint.DataFormat.JSON)
+                            .addTransport(Endpoint.Transport.HTTP)
+                            .addTransport(Endpoint.Transport.WEBSOCKET)
                             .enableFileHandler(System.getProperty("java.io.tmpdir"))
                             .enableSwagger("1.0", null)
                             .enableIntrospection()
@@ -60,8 +61,9 @@ public abstract class AbstractTest {
                             .publish(new EndpointTesterService())
                             .publish(new CrudTestEndpointService())
                             .publish(new DummyMarkedEndpoint())
-                            .publish("/default/", new TestEventProcessor());
-                    ep.start();
+                            .publish("/default/", new TestEventProcessor())
+                            .start();
+                    
                 } catch (InterruptedException | FileNotFoundException ex) {
                     logger.error("Error while initializing test: " + ex.getMessage(), ex);
                 }
@@ -75,10 +77,6 @@ public abstract class AbstractTest {
             if (ep != null) {
                 ep.stop();
             }
-        }
-
-        public Endpoint getEp() {
-            return ep;
         }
     };
 }

@@ -40,20 +40,6 @@ import org.thingsplode.synapse.endpoint.Endpoint;
 import org.thingsplode.synapse.util.Util;
 import static org.thingsplode.synapse.endpoint.handlers.HttpResponseHandler.sendError;
 import static org.thingsplode.synapse.endpoint.handlers.HttpResponseHandler.sendError;
-import static org.thingsplode.synapse.endpoint.handlers.HttpResponseHandler.sendError;
-import static org.thingsplode.synapse.endpoint.handlers.HttpResponseHandler.sendError;
-import static org.thingsplode.synapse.endpoint.handlers.HttpResponseHandler.sendError;
-import static org.thingsplode.synapse.endpoint.handlers.HttpResponseHandler.sendError;
-import static org.thingsplode.synapse.endpoint.handlers.HttpResponseHandler.sendError;
-import static org.thingsplode.synapse.endpoint.handlers.HttpResponseHandler.sendError;
-import static org.thingsplode.synapse.endpoint.handlers.HttpResponseHandler.sendError;
-import static org.thingsplode.synapse.endpoint.handlers.HttpResponseHandler.sendError;
-import static org.thingsplode.synapse.endpoint.handlers.HttpResponseHandler.sendError;
-import static org.thingsplode.synapse.endpoint.handlers.HttpResponseHandler.sendError;
-import static org.thingsplode.synapse.endpoint.handlers.HttpResponseHandler.sendError;
-import static org.thingsplode.synapse.endpoint.handlers.HttpResponseHandler.sendError;
-import static org.thingsplode.synapse.endpoint.handlers.HttpResponseHandler.sendError;
-import static org.thingsplode.synapse.endpoint.handlers.HttpResponseHandler.sendError;
 
 /**
  *
@@ -135,6 +121,7 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
                         logger.debug("Switching to websocket. Replacing the " + Endpoint.HTTP_RESPONSE_HANDLER + " with " + Endpoint.WS_RESPONSE_HANDLER);
                         ctx.pipeline().replace(Endpoint.HTTP_REQUEST_HANDLER, Endpoint.WS_REQUEST_HANDLER, new WebsocketRequestHandler(handshaker));
                         ctx.pipeline().replace(Endpoint.HTTP_RESPONSE_HANDLER, Endpoint.WS_RESPONSE_HANDLER, new WebsocketResponseHandler());
+                        ctx.pipeline().addAfter(Endpoint.WS_RESPONSE_HANDLER, Endpoint.WS_COMMAND_HANDLER, new Command2WsEncoder());
                         if (ctx.pipeline().get(Endpoint.RESPONSE_INTROSPECTOR) != null) {
                             ctx.pipeline().addAfter(Endpoint.RESPONSE_INTROSPECTOR, Endpoint.WS_REQUEST_INTROSPECTOR, new WebsocketIntrospector());
                         }

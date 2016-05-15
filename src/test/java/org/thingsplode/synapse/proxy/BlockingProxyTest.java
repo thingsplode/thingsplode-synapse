@@ -131,10 +131,6 @@ public class BlockingProxyTest extends AbstractTest {
         TestTemplates.burstEventTest("BLOCKING BURST EVENT TEST", dispatcher);
     }
 
-    //@Test
-    public void blockingTest() throws InterruptedException {
-        TestEventProcessor.eventQueue.poll(10, TimeUnit.MINUTES);
-    }
 
     //todo: dispatching on multiple threads....
     //todo: error 400 Body type not supported -> message is missing

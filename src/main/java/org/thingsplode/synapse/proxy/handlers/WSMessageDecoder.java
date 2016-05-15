@@ -45,14 +45,14 @@ import org.thingsplode.synapse.proxy.EndpointProxy;
  *
  * @author Csaba Tamas
  */
-public class WSResponse2ResponseDecoder extends SimpleChannelInboundHandler<Object> {
+public class WSMessageDecoder extends SimpleChannelInboundHandler<Object> {
     
-    private final Logger logger = LoggerFactory.getLogger(WSResponse2ResponseDecoder.class);
+    private final Logger logger = LoggerFactory.getLogger(WSMessageDecoder.class);
     private final WebSocketClientHandshaker handshaker;
     private ChannelPromise handshakeFuture;
     private ScheduledFuture pingScheduledFuture;
     
-    public WSResponse2ResponseDecoder(URI uri) {
+    public WSMessageDecoder(URI uri) {
         this.handshaker = WebSocketClientHandshakerFactory.newHandshaker(uri, WebSocketVersion.V13, null, false, new DefaultHttpHeaders());
     }
     
