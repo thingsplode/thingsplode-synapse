@@ -61,15 +61,15 @@ public class ResponseIntrospector extends ChannelOutboundHandlerAdapter {
                     payloadAsSring = new String(dst, Charset.forName("UTF-8"));
                 }
                 String msgStatus = (((HttpResponse) msg).status() != null ? ((HttpResponse) msg).status().toString() : "NULL");
-                logger.debug("Message@Endpoint to be sent: \n\n"
+                logger.debug("Message@Endpoint [" + msg.getClass().getSimpleName() + "] to be sent: \n\n"
                         + "Status: " + msgStatus + "\n"
                         + hb.toString() + "\n" + "Payload: [" + (!Util.isEmpty(payloadAsSring) ? payloadAsSring : "EMPTY") + "]\n");
             }
         } else if (logger.isDebugEnabled() && (msg instanceof WebSocketFrame)) {
             if (msg instanceof TextWebSocketFrame) {
-                logger.debug("Message@Endpoint to be sent: " + msg.getClass().getSimpleName() + " \n\n" + ((TextWebSocketFrame) msg).text());
+                logger.debug("Message@Endpoint [" + msg.getClass().getSimpleName() + "] to be sent: " + msg.getClass().getSimpleName() + " \n\n" + ((TextWebSocketFrame) msg).text());
             } else {
-                logger.debug("Message@Endpoint to be sent: \n\n {" + msg.getClass().getSimpleName() + " -> " + msg.toString() + "}");
+                logger.debug("Message@Endpoint [" + msg.getClass().getSimpleName() + "] to be sent: \n\n {" + msg.getClass().getSimpleName() + " -> " + msg.toString() + "}");
             }
         } else {
             logger.debug("Unknown message (" + msg.getClass().getSimpleName() + ") will be dispatched to the client.");

@@ -35,7 +35,6 @@ import org.thingsplode.synapse.core.Response;
 import org.thingsplode.synapse.core.exceptions.MethodNotFoundException;
 import org.thingsplode.synapse.core.exceptions.SynapseException;
 import org.thingsplode.synapse.endpoint.ServiceRegistry;
-import org.thingsplode.synapse.util.Util;
 
 /**
  *
@@ -88,7 +87,7 @@ public class RequestHandler extends SimpleChannelInboundHandler<Request> {
             }
         }
 
-        if (fileDownload || response == null || isFileDownloadRetriable(ctx, response)) {
+        if (fileDownload || response == null || isFileDownloadRetriable(response)) {
             FileRequest fr = new FileRequest(request.getHeader());
             ctx.fireChannelRead(fr);
         } else {
@@ -103,8 +102,8 @@ public class RequestHandler extends SimpleChannelInboundHandler<Request> {
         ctx.channel().attr(CONNECTION_CTX_ATTR).set(new ConnectionContext(ctx));
     }
 
-    private boolean isFileDownloadRetriable(ChannelHandlerContext ctx, Response response) {
-        Optional<String> rcvChOpt = Util.getContextProperty(ctx, AbstractMessage.PROP_RCV_TRANSPORT);
+    private boolean isFileDownloadRetriable(Response response) {
+        Optional<String> rcvChOpt = response.getHeaderProperty(AbstractMessage.PROP_RCV_TRANSPORT);
         return response.getHeader().getResponseCode().equals(HttpResponseStatus.NOT_FOUND) && rcvChOpt.isPresent() && rcvChOpt.get().equalsIgnoreCase(AbstractMessage.PROP_HTTP_TRANSPORT);
     }
 

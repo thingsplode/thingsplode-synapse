@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsplode.synapse.proxy;
+package org.thingsplode.synapse;
 
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
@@ -34,7 +34,7 @@ public class MsgIdRspCorrelator extends SchedulingDispatchedFutureHandler {
 
     private final Logger logger = LoggerFactory.getLogger(MsgIdRspCorrelator.class);
     private long defaultResponseTimeout = finalDefaultTimeout;
-    private final ConcurrentHashMap<String, DispatchedFuture<Request, Response>> requestMsgRegistry;//msg id/msg correlation entry map
+    private final ConcurrentHashMap<String, DispatchedFuture<?, ?>> requestMsgRegistry;//msg id/msg correlation entry map
 
     public MsgIdRspCorrelator() {
         super();
@@ -137,7 +137,7 @@ public class MsgIdRspCorrelator extends SchedulingDispatchedFutureHandler {
     @Override
     public void evictActiveRequests() {
         requestMsgRegistry.keySet().stream().forEach((String msgId) -> {
-            DispatchedFuture<Request, Response> d = requestMsgRegistry.remove(msgId);
+            DispatchedFuture<?, ?> d = requestMsgRegistry.remove(msgId);
             d.completeExceptionally(new SynapseException("Pending responses are evicted: " + d.getRequest().toString(), HttpStatus.BAD_GATEWAY));
         });
     }

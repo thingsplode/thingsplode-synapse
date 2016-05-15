@@ -15,10 +15,18 @@
  */
 package org.thingsplode.synapse.core;
 
+import java.io.Serializable;
+
 /**
  *
  * @author Csaba Tamas
+ * @param <T>
  */
-public class PushNotification extends AbstractMessage {
+public class PushNotification<T extends Serializable> extends Command<T> {
+
+    public PushNotification(CommandHeader header) {
+        super(header);
+    }
+
     
 }

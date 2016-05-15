@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsplode.synapse.proxy;
+package org.thingsplode.synapse;
 
 import io.netty.channel.Channel;
 import java.util.concurrent.CompletableFuture;
+import org.thingsplode.synapse.core.AbstractMessage;
 
 /**
  *
@@ -24,7 +25,7 @@ import java.util.concurrent.CompletableFuture;
  * @param <REQ>
  * @param <RSP>
  */
-public class DispatchedFuture<REQ, RSP> extends CompletableFuture<RSP> {
+public class DispatchedFuture<REQ extends AbstractMessage, RSP> extends CompletableFuture<RSP> {
 
     private final REQ request;
     private final Channel channel;
@@ -76,7 +77,16 @@ public class DispatchedFuture<REQ, RSP> extends CompletableFuture<RSP> {
 
     @Override
     public String toString() {
-        return "{" + super.toString() + " -> " + "channel.active=" + channel.isActive() + ", timeout=" + timeout + ", requestFiredTime=" + requestFiredTime + '}';
+        return "{" + super.toString() + " REQ {" + describeRequest() + "} -> " + "channel.active=" + channel.isActive() + ", timeout=" + timeout + ", requestFiredTime=" + requestFiredTime + "}\n";
     }
-    
+
+    private String describeRequest() {
+        if (request == null) {
+            return "null";
+        } else {
+            return request.getClass().getSimpleName() + ":" + (request.getHeader() != null ? request.getHeader().getMsgId() : "null");
+        }
+
+    }
+
 }

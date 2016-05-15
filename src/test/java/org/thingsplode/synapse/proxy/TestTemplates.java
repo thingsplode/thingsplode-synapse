@@ -15,11 +15,11 @@
  */
 package org.thingsplode.synapse.proxy;
 
+import org.thingsplode.synapse.DispatchedFuture;
 import com.acme.synapse.testdata.services.core.Address;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -28,6 +28,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.junit.Assert;
 import org.thingsplode.synapse.TestEventProcessor;
 import org.thingsplode.synapse.core.ParameterWrapper;
@@ -80,7 +83,7 @@ public class TestTemplates {
         ParameterWrapper pw = new ParameterWrapper();
         pw.add("arg0", Long.TYPE, 999);
         pw.add("arg1", String.class, uuid);
-        DispatchedFuture<Request, Response> f = dispatcher.dispatch(Request.create(serviceMethod, RequestMethod.GET, pw), 100000000);
+        DispatchedFuture<Request, Response> f = dispatcher.dispatch(Request.create(serviceMethod, RequestMethod.GET, pw), 10000);
         int code = f.handle((rsp, ex) -> {
             if (rsp != null) {
                 System.out.println("RESPONSE RECEIVED@Test Case => " + (rsp.getHeader() != null ? rsp.getHeader().getResponseCode() : "NULL RSP CODE") + " //Body: " + rsp.getBody());
@@ -154,7 +157,7 @@ public class TestTemplates {
         System.out.println("\n\n*** " + header + " > Thread: " + Thread.currentThread().getName());
         Assert.assertNotNull("the dispacther must not be null", dispatcher);
         String serviceMethod = "/com/acme/synapse/testdata/services/RpcEndpointImpl/echoWithTimeout";
-        boolean failed = false;
+        Counter cnt = new Counter();
         for (int i = 0; i < msgCnt; i++) {
             System.out.println("\n\n============== MSG COUNTER [" + i + "] ==============");
             String uuid = UUID.randomUUID().toString();
@@ -185,9 +188,11 @@ public class TestTemplates {
         }
         ScheduledExecutorService es = Executors.newScheduledThreadPool(1);
         es.scheduleAtFixedRate(() -> {
-            System.out.println("\n\n\n\n\nRequest queue size: " + requestQueue);
+            System.out.println("\n\n\n\n\nRequest queue size at burst test: " + requestQueue.size());
+            System.out.println("[Content of the request queue: ]" + requestQueue);
+            System.out.println("Incremented counter: " + cnt.counter.incrementAndGet());
         }, 0, 60, TimeUnit.SECONDS);
-        while (!requestQueue.isEmpty()) {
+        while (!requestQueue.isEmpty() && cnt.counter.get() < 3) {
         }
         if (failQueue.size() > 0) {
             Assert.fail("There were multiple (" + failQueue.size() + ") failures;");
@@ -230,22 +235,30 @@ public class TestTemplates {
     public static void burstEventTest(String header, Dispatcher dispatcher) throws UnsupportedEncodingException, InterruptedException {
         System.out.println("\n\n*** " + header + " > Thread: " + Thread.currentThread().getName());
         int msgCnt = 999;
-        ArrayBlockingQueue<Integer> requestQueue = new ArrayBlockingQueue(msgCnt);
+        ArrayBlockingQueue<DispatchedFuture> requestQueue = new ArrayBlockingQueue(msgCnt, true);
         ArrayBlockingQueue failQueue = new ArrayBlockingQueue(msgCnt);
+        Counter cnt = new Counter();
         for (int i = 0; i < msgCnt; i++) {
-            requestQueue.add(0);
             Event evt = Event.create("/default/consume");
             evt.setBody(new Address("some street", "soem country", msgCnt));
-            dispatcher.dispatch(evt, 5000).handle((rsp, ex) -> {
-                requestQueue.remove();
+            DispatchedFuture<Request, Response> df = dispatcher.dispatch(evt, 5000);
+            requestQueue.add(df);
+            System.out.println("REQUEST COUNTER AFTER ADD: " + requestQueue.size());
+            df.handle((rsp, ex) -> {
+                try {
+                    requestQueue.take();
+                    System.out.println("REQUEST COUNTER AFTER TAKE: " + requestQueue.size());
+                } catch (InterruptedException ex1) {
+                    System.out.println("TEST CASE IMPLEMENTATION ERROR ===> " + ex.getMessage());
+                }
                 if (rsp != null) {
                     System.out.println("\n\nResponse@Test received with status: [" + rsp.getHeader().getResponseCode().toString() + "]");
                     boolean status = rsp.getHeader().getResponseCode().equals(HttpResponseStatus.ACCEPTED);
                     Assert.assertTrue("All events should be processed.", status);
                     return status;
                 } else if (ex != null) {
-                    System.out.println("--> TEST FAILURE" + ex.getClass().getSimpleName() + ": " + ex.getMessage());
-                    ex.printStackTrace();
+                    System.out.println("--> TEST FAILURE: " + ex.getClass().getSimpleName() + ": " + ex.getMessage());
+                    //ex.printStackTrace();
                     failQueue.add(true);
                     return false;
                 } else {
@@ -258,17 +271,24 @@ public class TestTemplates {
 
         ScheduledExecutorService es = Executors.newScheduledThreadPool(1);
         es.scheduleAtFixedRate(() -> {
-            System.out.println("\n\n\n\n\nRequest queue size: " + requestQueue);
+            System.out.println("\n\n\n\n\nRequest queue size at burst event test: " + requestQueue.size());
+            System.out.println("[Content of the request queue: ]" + requestQueue);
             System.out.println("TestEventProcessor.eventQueue size: " + TestEventProcessor.eventQueue.size());
+            System.out.println("Incremented counter: " + cnt.counter.incrementAndGet());
         }, 0, 60, TimeUnit.SECONDS);
 
         while (!TestEventProcessor.eventQueue.isEmpty()) {
             TestEventProcessor.eventQueue.poll();
         }
-        while (!requestQueue.isEmpty()) {
+        while (!requestQueue.isEmpty() && cnt.counter.get() < 3) {
         }
         if (failQueue.size() > 0) {
             Assert.fail("There were multiple (" + failQueue.size() + ") failures;");
         }
+    }
+
+    static class Counter {
+
+        AtomicInteger counter = new AtomicInteger(0);
     }
 }

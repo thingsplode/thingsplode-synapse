@@ -15,6 +15,9 @@
  */
 package org.thingsplode.synapse.proxy;
 
+import org.thingsplode.synapse.MessageIdGeneratorStrategy;
+import org.thingsplode.synapse.DispatchedFutureHandler;
+import org.thingsplode.synapse.DispatchedFuture;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -121,18 +124,15 @@ public class Dispatcher {
         }
 
         ChannelFuture cf = channel.writeAndFlush(request);
-        cf.addListener((ChannelFutureListener) new ChannelFutureListener() {
-            @Override
-            public void operationComplete(ChannelFuture future) throws Exception {
-                if (!future.isSuccess()) {
-                    //the message could not be sent
-                    //todo: build a retry mechanism?
-                    dispatchedFutureHandler.responseReceived(request.getHeader().getMsgId());
-                    dispatcherFuture.completeExceptionally(future.cause());
-                    future.channel().close();
-                } else if (logger.isTraceEnabled()) {
-                    logger.trace("Request message is succesfully dispatched with Msg. Id.: " + request.getHeader().getMsgId());
-                }
+        cf.addListener((ChannelFutureListener) (ChannelFuture future) -> {
+            if (!future.isSuccess()) {
+                //the message could not be sent
+                //todo: build a retry mechanism?
+                dispatchedFutureHandler.responseReceived(request.getHeader().getMsgId());
+                dispatcherFuture.completeExceptionally(future.cause());
+                future.channel().close();
+            } else if (logger.isTraceEnabled()) {
+                logger.trace("Request message is succesfully dispatched with Msg. Id.: " + request.getHeader().getMsgId());
             }
         });
         return dispatcherFuture;

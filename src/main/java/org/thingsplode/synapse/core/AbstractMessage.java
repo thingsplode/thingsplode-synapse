@@ -15,8 +15,12 @@
  */
 package org.thingsplode.synapse.core;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 import org.thingsplode.synapse.core.exceptions.MarshallerException;
 
 /**
@@ -90,6 +94,32 @@ public abstract class AbstractMessage<T> implements Serializable {
     public void setBody(T body) {
         this.body = body;
     }
+
+    public void addAllProperties(Iterable<Map.Entry<String, String>> iterable) {
+        if (this.getHeader() != null) {
+            this.getHeader().addAllProperties(iterable);
+        }
+    }
+
+    @JsonIgnore
+    public HashMap<String, String> getHeaderProperties() {
+        //returning null instead of empty optional when there's no header, because a missing header should be found during early in the development phase
+        return this.getHeader() != null ? this.getHeader().getProperties() : null;
+    }
+
+    @JsonIgnore
+    public Optional<String> getHeaderProperty(String propertyKey) {
+        //returning null instead of empty optional when there's no header, because a missing header should be found during early in the development phase
+        return this.getHeader() != null ? this.getHeader().getProperty(propertyKey) : null;
+    }
+
+    public void addProperty(String key, String value) {
+        if (this.getHeader() != null) {
+            this.getHeader().addProperty(key, value);
+        }
+    }
+
+    public abstract MessageHeader getHeader();
 
     public <E> E expectBody(Class<E> type) throws MarshallerException {
         //todo: review if it makes sense

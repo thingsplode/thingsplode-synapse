@@ -21,8 +21,8 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.thingsplode.synapse.core.Response;
-import org.thingsplode.synapse.proxy.DispatchedFuture;
-import org.thingsplode.synapse.proxy.DispatchedFutureHandler;
+import org.thingsplode.synapse.DispatchedFuture;
+import org.thingsplode.synapse.DispatchedFutureHandler;
 
 /**
  *
@@ -57,7 +57,10 @@ public class ResponseHandler extends SimpleChannelInboundHandler<Response> {
         if (logger.isDebugEnabled()) {
             logger.error(cause.getClass().getSimpleName() + "Exception caught while expecting response: " + cause.getMessage(), cause);
         }
-        dfh.responseReceived(null).completeExceptionally(cause);
+        DispatchedFuture df = dfh.responseReceived(null);
+        if (df != null) {
+            df.completeExceptionally(cause);
+        }
 
     }
 

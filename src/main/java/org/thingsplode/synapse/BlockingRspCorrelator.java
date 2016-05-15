@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsplode.synapse.proxy;
+package org.thingsplode.synapse;
 
+import org.thingsplode.synapse.DispatchedFuture;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.util.concurrent.ScheduledFuture;

@@ -19,6 +19,7 @@ import org.thingsplode.synapse.core.ComponentLifecycle;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.ChannelPipeline;
@@ -58,8 +59,6 @@ import org.slf4j.LoggerFactory;
 import org.thingsplode.synapse.core.Command;
 import org.thingsplode.synapse.core.CommandResult;
 import org.thingsplode.synapse.core.ConnectionContext;
-import org.thingsplode.synapse.core.Request;
-import org.thingsplode.synapse.core.Response;
 import org.thingsplode.synapse.endpoint.handlers.FileRequestHandler;
 import org.thingsplode.synapse.endpoint.handlers.HttpRequestIntrospector;
 import org.thingsplode.synapse.endpoint.handlers.HttpRequestHandler;
@@ -67,7 +66,7 @@ import org.thingsplode.synapse.endpoint.handlers.HttpResponseHandler;
 import org.thingsplode.synapse.endpoint.handlers.ResponseIntrospector;
 import org.thingsplode.synapse.endpoint.handlers.RequestHandler;
 import org.thingsplode.synapse.endpoint.swagger.EndpointApiGenerator;
-import org.thingsplode.synapse.proxy.DispatchedFuture;
+import org.thingsplode.synapse.DispatchedFuture;
 import org.thingsplode.synapse.util.NetworkUtil;
 
 /**
@@ -110,7 +109,7 @@ public class Endpoint {
     private EndpointApiGenerator apiGenerator = null;
     private boolean introspection = false;
     private boolean pipelining = false;
-    private final LinkedBlockingQueue<DispatchedFuture<Command, CommandResult>> dispatchQueue = new LinkedBlockingQueue<>(20);//todo: will 20 be enough
+    //private final LinkedBlockingQueue<DispatchedFuture<Command, CommandResult>> dispatchQueue = new LinkedBlockingQueue<>(20);//todo: will 20 be enough
 
     private Endpoint() {
     }
@@ -293,18 +292,28 @@ public class Endpoint {
         DOMAIN_SOCKET;
     }
 
-    public DispatchedFuture<Command, CommandResult> dispatchCommand(ConnectionContext connection, Command command, long timeout) {
-        DispatchedFuture<Command, CommandResult> dispatcherFuture = new DispatchedFuture<>(command, connection.getCtx().channel(), timeout);
-        
-        if (lifecycle == ComponentLifecycle.UNITIALIZED) {
-            dispatcherFuture.completeExceptionally(new IllegalStateException("The endpoing is not initialized."));
-            return dispatcherFuture;
-        } else {
-            
-            //dispatch(entry);
-            return null;
-        }
-    }
+//    public DispatchedFuture<Command, CommandResult> dispatchCommand(ConnectionContext connection, Command command, long timeout) {
+//        DispatchedFuture<Command, CommandResult> dispatcherFuture = new DispatchedFuture<>(command, connection.getCtx().channel(), timeout);
+//
+//        if (lifecycle == ComponentLifecycle.UNITIALIZED) {
+//            dispatcherFuture.completeExceptionally(new IllegalStateException("The endpoing is not initialized."));
+//            return dispatcherFuture;
+//        } else {
+//            ChannelFuture cf = connection.getCtx().channel().writeAndFlush(command);
+//            cf.addListener((ChannelFutureListener) (ChannelFuture future) -> {
+//                if (!future.isSuccess()) {
+//                //the message could not be sent
+//                //todo: build a retry mechanism?
+//                dispatchedFutureHandler.responseReceived(request.getHeader().getMsgId());
+//                dispatcherFuture.completeExceptionally(future.cause());
+//                future.channel().close();
+//            } else if (logger.isTraceEnabled()) {
+//                logger.trace("Request message is succesfully dispatched with Msg. Id.: " + command.getHeader().getMsgId());
+//            }
+//            });
+//        }
+//        return null;
+//    }
 
     public static class ConnectionProvider {
 

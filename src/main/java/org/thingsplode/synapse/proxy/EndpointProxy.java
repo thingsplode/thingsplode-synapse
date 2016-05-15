@@ -15,6 +15,10 @@
  */
 package org.thingsplode.synapse.proxy;
 
+import org.thingsplode.synapse.MessageIdGeneratorStrategy;
+import org.thingsplode.synapse.DispatchedFutureHandler;
+import org.thingsplode.synapse.MsgIdRspCorrelator;
+import org.thingsplode.synapse.BlockingRspCorrelator;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;

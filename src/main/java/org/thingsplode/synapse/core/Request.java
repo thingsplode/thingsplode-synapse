@@ -28,7 +28,7 @@ import java.util.Optional;
  * @param <T>
  */
 @JsonPropertyOrder({ "@msg_type", "header", "body"})
-public class Request<T extends Serializable> extends AbstractMessage<T> {
+public class Request<T extends Serializable> extends AbstractMessage<T>  {
 
     private RequestHeader header;
 
@@ -65,6 +65,7 @@ public class Request<T extends Serializable> extends AbstractMessage<T> {
         return new Request(new RequestHeader(new Uri(uri), method), body);
     }
 
+    @Override
     public RequestHeader getHeader() {
         return header;
     }

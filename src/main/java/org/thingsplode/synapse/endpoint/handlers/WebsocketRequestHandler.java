@@ -86,7 +86,7 @@ public class WebsocketRequestHandler extends SimpleChannelInboundHandler<WebSock
             // Check if Text or Continuation Frame is final fragment and handle if needed.
             if (frame.isFinalFragment()) {
                 AbstractMessage synapseMessage = serializationService.getPreferredSerializer(null).unMarshall(AbstractMessage.class, contentBuilder.toString());
-                Util.addContextProperty(ctx, AbstractMessage.PROP_RCV_TRANSPORT, AbstractMessage.PROP_HTTP_TRANSPORT);
+                synapseMessage.addProperty(AbstractMessage.PROP_RCV_TRANSPORT, AbstractMessage.PROP_WS_TRANSPORT);
                 contentBuilder = null;
                 if (synapseMessage instanceof Request) {
                     ((Request) synapseMessage).getHeader().setKeepalive(true);

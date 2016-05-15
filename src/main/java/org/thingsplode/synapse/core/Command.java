@@ -23,8 +23,26 @@ import java.io.Serializable;
  * @param <T>
  */
 public class Command<T extends Serializable> extends AbstractMessage<T> {
-    
+
     private CommandHeader header;
+    private transient Status status = Status.PENDING;
+    
+    public enum Status {
+        PENDING,
+        POSTED,
+        EXECUTED,
+        REJECTED,
+        FAILED;
+
+    }
+
+    public Status getStatus() {
+        return status;
+    }
+
+    public void setStatus(Status status) {
+        this.status = status;
+    }
 
     public Command(CommandHeader header) {
         this.header = header;
@@ -34,7 +52,8 @@ public class Command<T extends Serializable> extends AbstractMessage<T> {
         super(body);
         this.header = header;
     }
-    
+
+    @Override
     public CommandHeader getHeader() {
         return header;
     }
@@ -42,10 +61,11 @@ public class Command<T extends Serializable> extends AbstractMessage<T> {
     public void setHeader(CommandHeader header) {
         this.header = header;
     }
-    
+
     public static class CommandHeader extends MessageHeader {
+
         private long timeToLive;
-        
+
         public long getTimeToLive() {
             return timeToLive;
         }
@@ -53,15 +73,15 @@ public class Command<T extends Serializable> extends AbstractMessage<T> {
         public void setTimeToLive(long timeToLive) {
             this.timeToLive = timeToLive;
         }
-        
+
         public CommandHeader(long timeToLive) {
             this.timeToLive = timeToLive;
         }
-        
+
         public CommandHeader(long timeToLive, String msgId) {
             super(msgId);
             this.timeToLive = timeToLive;
         }
-        
+
     }
 }

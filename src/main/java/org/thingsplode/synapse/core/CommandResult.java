@@ -32,6 +32,7 @@ public class CommandResult extends AbstractMessage {
         this.header = header;
     }
 
+    @Override
     public CommandResultHeader getHeader() {
         return header;
     }

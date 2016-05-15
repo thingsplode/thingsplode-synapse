@@ -96,39 +96,39 @@ public class BlockingWsProxyTest extends AbstractTest {
     //the timeout generator should close the connection // but what will happen with non-http protocols
     @Test()
     public void baseBlockingRequestTest() throws InterruptedException, URISyntaxException, SSLException, UnsupportedEncodingException, ExecutionException {
-        TestTemplates.normalRequestTest("SEQUENTIAL BLOCKING REQUEST EXECUTION TEST", dispatcher);
+        TestTemplates.normalRequestTest("SEQUENTIAL BLOCKING WS REQUEST EXECUTION TEST", dispatcher);
     }
 
     //todo: timing out non-existent method
     @Test
     public void baseBlockingRequestTimeoutTest() throws InterruptedException, UnsupportedEncodingException, ExecutionException {
-        TestTemplates.baseRequestTimeoutTest("BLOCKING REQUEST TIMEOUT TEST", dispatcher);
+        TestTemplates.baseRequestTimeoutTest("BLOCKING WS REQUEST TIMEOUT TEST", dispatcher);
     }
 
     @Test
     public void sequentialMessageTest() throws InterruptedException, UnsupportedEncodingException, ExecutionException {
-        TestTemplates.sequentialTest("SEQUENTIAL BLOCKING REQUEST EXECUTION TEST", dispatcher);
+        TestTemplates.sequentialTest("SEQUENTIAL BLOCKING WS REQUEST EXECUTION TEST", dispatcher);
     }
 
     @Test
     public void burstTest() throws UnsupportedEncodingException, InterruptedException {
-        TestTemplates.burstTest("BURST BLOCKING REQUEST EXECUTION TEST", dispatcher);
+        TestTemplates.burstTest("BURST BLOCKING WS REQUEST EXECUTION TEST", dispatcher);
     }
 
     @Test
     public void eventTestWithWrongAddress() throws UnsupportedEncodingException, InterruptedException, ExecutionException {
-        TestTemplates.eventTestWithWrongAddress("BLOCKING EVENT WITH WRONG TARGET", dispatcher);
+        TestTemplates.eventTestWithWrongAddress("BLOCKING WS EVENT WITH WRONG TARGET", dispatcher);
 
     }
 
     @Test
     public void eventTest() throws UnsupportedEncodingException, InterruptedException, ExecutionException {
-        TestTemplates.eventTest("BLOCKING EVENT", dispatcher);
+        TestTemplates.eventTest("BLOCKING WS EVENT", dispatcher);
     }
 
     @Test
     public void burstEventTest() throws UnsupportedEncodingException, InterruptedException {
-        TestTemplates.burstEventTest("BLOCKING BURST EVENT TEST", dispatcher);
+        TestTemplates.burstEventTest("BLOCKING WS BURST EVENT TEST", dispatcher);
     }
 
     //@Test

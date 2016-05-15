@@ -122,7 +122,8 @@ public class WSResponse2ResponseDecoder extends SimpleChannelInboundHandler<Obje
             handshakeFuture.setFailure(cause);
         }
         logger.error("Unhandled exception caught at " + this.getClass().getSimpleName() + " with message: " + cause.getMessage(), cause);
-        ctx.close();
+        //ctx.close();
+        ctx.fireExceptionCaught(cause);
     }
     
 }
