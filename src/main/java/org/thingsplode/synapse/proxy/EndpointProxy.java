@@ -36,6 +36,7 @@ import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.channels.UnsupportedAddressTypeException;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.UUID;
 import java.util.concurrent.ForkJoinPool;
@@ -45,6 +46,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.thingsplode.synapse.core.ComponentLifecycle;
 import org.thingsplode.synapse.endpoint.Endpoint;
+import org.thingsplode.synapse.proxy.handlers.CommandAndNotificationHandler;
+import org.thingsplode.synapse.proxy.handlers.CommandResult2WsEncoder;
 import org.thingsplode.synapse.proxy.handlers.HttpResponse2ResponseDecoder;
 import org.thingsplode.synapse.proxy.handlers.InboundExceptionHandler;
 import org.thingsplode.synapse.proxy.handlers.HttpResponseIntrospector;
@@ -70,8 +73,11 @@ public class EndpointProxy {
     public final static String HTTP_RESPONSE_AGGREGATOR = "HTTP_RESPONSE_AGGREGATOR";
     public final static String REQUEST2HTTP_REQUEST_ENCODER = "REQUEST2HTTP_REQUEST_ENCODER";
     public final static String REQUEST2WS_REQUEST_ENCODER = "REQUEST2WS_REQUEST_ENCODER";
+    public final static String COMMANDRESULT2WS_ENCODER = "COMMANDRESULT2WS_ENCODER";
     public final static String HTTP_RSP2RESPONSE_DECODER = "HTTP_RSP2RESPONSE_DECODER";
     public final static String WS_MESSAGE_DECODER = "WS_MESSAGE_DECODER";
+    public final static String CMD_AND_NOTIFICATION_HANDLER = "CMD_AND_NOTIFICATION_HANDLER";
+    public final static String DEFAULT_NOTIFICATION_TOPIC = "DEFAULT_TOPIC";
     private final Logger logger = LoggerFactory.getLogger(EndpointProxy.class);
     private final URI connectionUri;
     private final EventLoopGroup group = new NioEventLoopGroup();
@@ -90,6 +96,8 @@ public class EndpointProxy {
     private final InboundExceptionHandler inboundExceptionHandler;
     private MessageIdGeneratorStrategy msgIdGeneratorStrategy;
     private Transport transport;
+    private HashMap<String, AbstractNotificationSink> subscriptions = null;
+    private AbstractCommandSink commandSink = null;
 //todo: place connection uri to the aqcuire dispatcher, so one client instance can work with many servers
 
     private EndpointProxy(String baseUrl, Dispatcher.DispatcherPattern dispatchPattern) throws URISyntaxException {
@@ -145,6 +153,7 @@ public class EndpointProxy {
                                 }
                                 case WEBSOCKET: {
                                     p.addLast(REQUEST2WS_REQUEST_ENCODER, new Request2WsRequestEncoder());
+                                    p.addLast(COMMANDRESULT2WS_ENCODER, new CommandResult2WsEncoder(msgIdGeneratorStrategy));
                                     break;
                                 }
                                 default:
@@ -159,6 +168,7 @@ public class EndpointProxy {
                                 }
                                 case WEBSOCKET: {
                                     p.addLast(WS_MESSAGE_DECODER, new WSMessageDecoder(connectionUri));
+                                    p.addLast(CMD_AND_NOTIFICATION_HANDLER, new CommandAndNotificationHandler(commandSink, subscriptions));
                                     break;
                                 }
                                 default:
@@ -256,6 +266,27 @@ public class EndpointProxy {
         dispatcher.connect();
         dispatchers.add(dispatcher);
         return dispatcher;
+    }
+
+    public EndpointProxy addCommandSink(AbstractCommandSink commandSink) {
+        this.commandSink = commandSink;
+        return this;
+    }
+
+    public EndpointProxy addDefaultNotificationSink(AbstractNotificationSink defaultNotificationSink) {
+        if (this.subscriptions == null) {
+            this.subscriptions = new HashMap<>();
+        }
+        this.subscriptions.put(DEFAULT_NOTIFICATION_TOPIC, defaultNotificationSink);
+        return this;
+    }
+
+    public EndpointProxy subscribeToNotificationTopic(String someTopic, AbstractNotificationSink notificationScript) {
+        if (this.subscriptions == null) {
+            this.subscriptions = new HashMap<>();
+        }
+        this.subscriptions.put(someTopic, notificationScript);
+        return this;
     }
 
     private class Transport {

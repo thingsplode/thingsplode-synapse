@@ -19,30 +19,29 @@ import java.io.Serializable;
 import java.util.concurrent.ArrayBlockingQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.thingsplode.synapse.core.Event;
-import org.thingsplode.synapse.endpoint.AbstractEventSink;
+import org.thingsplode.synapse.core.Command;
+import org.thingsplode.synapse.core.CommandResult;
+import org.thingsplode.synapse.proxy.AbstractCommandSink;
 
 /**
  *
  * @author Csaba Tamas
  */
-public class TestEventProcessor extends AbstractEventSink<Serializable> {
+public class TestCommandSink extends AbstractCommandSink {
 
-    private final Logger logger = LoggerFactory.getLogger(TestEventProcessor.class);
-    public static ArrayBlockingQueue<Event<Serializable>> eventQueue = new ArrayBlockingQueue<>(1000);
-
-    public TestEventProcessor() {
-        super(Serializable.class);
-    }
+    private final Logger logger = LoggerFactory.getLogger(TestCommandSink.class);
+    public static ArrayBlockingQueue<Command<Serializable>> commandQueue = new ArrayBlockingQueue<>(1000);
 
     @Override
-    protected void eventReceived(Event<Serializable> event) {
+    public CommandResult execute(Command command) {
+        logger.debug("COMMAND@TestCommandSink RECEIVED --> " + command.toString());
         try {
-            logger.debug("Event@TestEventProcessor at received: " + event.toString());
-            TestEventProcessor.eventQueue.put(event);
+            commandQueue.put(command);
         } catch (InterruptedException ex) {
-            logger.error("INTERRUPTED WHILE TRYING TO PUT IN THE EVENT QUEUE");
+            logger.error("EXCEPTION WHILE ADDING TO THE QUEUE --> " + ex.getMessage());
         }
+        CommandResult cr = new CommandResult(command, CommandResult.ResultCode.EXECUTED);
+        return cr;
     }
 
 }

@@ -18,7 +18,6 @@ package org.thingsplode.synapse.proxy;
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import javax.net.ssl.SSLException;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -28,7 +27,6 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.rules.ExternalResource;
 import org.thingsplode.synapse.AbstractTest;
-import org.thingsplode.synapse.TestEventProcessor;
 
 /**
  *

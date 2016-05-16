@@ -17,6 +17,7 @@ package org.thingsplode.synapse.core;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -29,6 +30,7 @@ import org.thingsplode.synapse.serializers.jackson.adapters.HttpResponseStatusSe
  * @author Csaba Tamas
  * @param <T>
  */
+@JsonPropertyOrder({ "@msg_type", "header", "body"})
 public class Response<T> extends AbstractMessage<T> {
 
     private ResponseHeader header;
@@ -53,10 +55,12 @@ public class Response<T> extends AbstractMessage<T> {
         this.header = header;
     }
 
+    @Override
     public Optional<String> getHeaderProperty(String propertyKey) {
         return header != null ? header.getProperty(propertyKey) : Optional.empty();
     }
 
+    @JsonPropertyOrder({ "protocolVersion", "contentType", "msgId", "correlationId","response_code","keepAlive","properties"})
     public static class ResponseHeader extends MessageHeader {
 
         @JsonSerialize(using = HttpResponseStatusSerializer.class)
@@ -121,6 +125,16 @@ public class Response<T> extends AbstractMessage<T> {
         public void setKeepAlive(boolean keepAlive) {
             this.keepAlive = keepAlive;
         }
+
+        @Override
+        public String toString() {
+            return "ResponseHeader{" + super.toString() + "responseCode=" + responseCode + ", correlationId=" + correlationId + ", keepAlive=" + keepAlive + '}';
+        }
+    }
+
+    @Override
+    public String toString() {
+        return "Response{" + "header=" + header + super.toString() + '}';
     }
 
 }

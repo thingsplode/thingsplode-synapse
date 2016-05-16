@@ -21,6 +21,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageEncoder;
 import io.netty.handler.codec.http.DefaultFullHttpRequest;
 import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpVersion;
@@ -72,6 +73,10 @@ public class Request2HttpRequestEncoder extends MessageToMessageEncoder<Request>
         } else {
             out = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, m, request.getHeader().getUri().getPath());
         }
+        if (request.getHeader().isKeepalive()) {
+            out.headers().add(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE);
+        }
+
         if (request.getHeader() != null && request.getHeader().getProperties() != null) {
             request.getHeader().getProperties().forEach((k, v) -> {
                 out.headers().set(new AsciiString(k), new AsciiString(v != null ? v : ""));

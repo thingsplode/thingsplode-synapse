@@ -17,35 +17,56 @@ package org.thingsplode.synapse.core;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import java.io.Serializable;
+import org.thingsplode.synapse.util.Util;
 
 /**
  *
  * @author Csaba Tamas
  * @param <T>
  */
+@JsonPropertyOrder({ "@msg_type", "header", "body"})
 public class PushNotification<T extends Serializable> extends Command<T> {
+
+    public final static String DEFAULT_NOTIFICATION_TOPIC = "/default";
 
     @JsonCreator
     public PushNotification(@JsonProperty("header") NotificationHeader header) {
         super(header);
     }
 
+    public void setDefaultTopicIfNone() {
+        if (super.getHeader() == null) {
+            this.setHeader(new NotificationHeader(0));
+        }
+        if (Util.isEmpty(this.getHeader().getSourceTopic())) {
+            this.getHeader().setSourceTopic(DEFAULT_NOTIFICATION_TOPIC);
+        }
+    }
+
+    @JsonPropertyOrder({"protocolVersion", "msgId", "src_topic", "properties"})
     public static class NotificationHeader extends Command.CommandHeader {
 
-        private String topic;
+        @JsonProperty("src_topic")
+        private String sourceTopic;
 
         @JsonCreator
         public NotificationHeader(@JsonProperty("time_to_live") long timeToLive) {
             super(timeToLive);
         }
 
-        public String getTopic() {
-            return topic;
+        public String getSourceTopic() {
+            return sourceTopic;
         }
 
-        public void setTopic(String topic) {
-            this.topic = topic;
+        public void setSourceTopic(String topic) {
+            this.sourceTopic = topic;
+        }
+
+        @Override
+        public String toString() {
+            return "NotificationHeader{" + "sourceTopic=" + sourceTopic + super.toString() + '}';
         }
     }
 
@@ -58,4 +79,9 @@ public class PushNotification<T extends Serializable> extends Command<T> {
         return (NotificationHeader) super.getHeader();
     }
 
+    @Override
+    public String toString() {
+        return "PushNotification{" + super.toString() + '}';
+    }
+    
 }

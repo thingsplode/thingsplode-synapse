@@ -15,24 +15,13 @@
  */
 package org.thingsplode.synapse.proxy;
 
-import org.thingsplode.synapse.core.Command;
-import org.thingsplode.synapse.core.CommandResult;
+import org.thingsplode.synapse.core.PushNotification;
 
 /**
  *
  * @author Csaba Tamas
  */
-public abstract class AbstractCommandSink {
+public abstract class AbstractNotificationSink {
 
-    public CommandResult processCommand(Command command) {
-        try {
-            return execute(command);
-        } catch (Throwable th) {
-            CommandResult cr = new CommandResult(command, CommandResult.ResultCode.FAILED);
-            cr.setBody(th.getMessage());
-            return cr;
-        }
-    }
-
-    public abstract CommandResult execute(Command command);
+    public abstract void onMessage(PushNotification notification);    
 }

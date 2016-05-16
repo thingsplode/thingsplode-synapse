@@ -70,6 +70,7 @@ import org.thingsplode.synapse.DispatchedFuture;
 import org.thingsplode.synapse.MessageIdGeneratorStrategy;
 import org.thingsplode.synapse.MessageRegistry;
 import org.thingsplode.synapse.MsgIdRspCorrelator;
+import org.thingsplode.synapse.endpoint.handlers.CommandResultHandler;
 import static org.thingsplode.synapse.endpoint.handlers.RequestHandler.CONNECTION_CTX_ATTR;
 import org.thingsplode.synapse.util.NetworkUtil;
 import org.thingsplode.synapse.util.Util;
@@ -97,6 +98,7 @@ public class Endpoint {
     public static final String RESPONSE_INTROSPECTOR = "RESPONSE_INTROSPECTOR";
     public static final String HTTP_REQUEST_INTROSPECTOR = "HTTP_REQUEST_INTROSPECTOR";
     public static final String WS_REQUEST_INTROSPECTOR = "WS_REQUEST_INTROSPECTOR";
+    public static final String CMD_RESULT_HANDLER = "CMD_RESULT_HANDLER";
     private static int TERMINATION_TIMEOUT = 60;//number of seconds to wait after the worker threads are shutted down and until those are finishing the last bit of the execution.
 
     private EventLoopGroup masterGroup = null;//the eventloop group used for the server socket
@@ -183,6 +185,9 @@ public class Endpoint {
 //                                    p.addLast(RESPONSE_SEQUENCER, new ResponseSequencer());
 //                                }
                                 p.addLast(HTTP_RESPONSE_HANDLER, new HttpResponseHandler());
+                                if (bidirectionalCommsEnabled) {
+                                    p.addLast(CMD_RESULT_HANDLER, new CommandResultHandler(messageStore));
+                                }
                             }
                         });
             } else {

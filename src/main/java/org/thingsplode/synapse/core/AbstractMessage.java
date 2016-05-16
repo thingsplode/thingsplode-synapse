@@ -135,7 +135,7 @@ public abstract class AbstractMessage<T> implements Serializable {
 
     @Override
     public String toString() {
-        return "AbstractMessage{" + "body=" + body != null ? body.getClass().getSimpleName() : "null" + '}';
+        return "body=" + (body != null ? body.getClass().getSimpleName() : "null");
     }
 
 }

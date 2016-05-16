@@ -80,4 +80,8 @@ public class MessageHeader {
         }
     }
 
+    @Override
+    public String toString() {
+        return "msgId=" + msgId;
+    }
 }

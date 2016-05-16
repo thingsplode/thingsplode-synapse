@@ -36,7 +36,7 @@ import org.thingsplode.synapse.proxy.Dispatcher;
  */
 public abstract class AbstractTest {
 
-    private static Logger logger = LoggerFactory.getLogger(AbstractTest.class);
+    protected static Logger logger = LoggerFactory.getLogger(AbstractTest.class);
     protected static Dispatcher dispatcher;
     protected static Endpoint ep;
     @ClassRule

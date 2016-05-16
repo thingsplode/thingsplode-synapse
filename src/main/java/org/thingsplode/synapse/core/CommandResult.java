@@ -15,21 +15,31 @@
  */
 package org.thingsplode.synapse.core;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+
 /**
  *
  * @author Csaba Tamas
  */
+@JsonPropertyOrder({"@msg_type", "header", "body"})
 public class CommandResult extends AbstractMessage {
 
     private CommandResultHeader header;
 
-    public CommandResult(CommandResultHeader header) {
+    @JsonCreator
+    public CommandResult(@JsonProperty("header") CommandResultHeader header) {
         this.header = header;
     }
 
     public CommandResult(CommandResultHeader header, Object body) {
         super(body);
         this.header = header;
+    }
+
+    public CommandResult(Command command, ResultCode resultCode) {
+        this.header = new CommandResultHeader(resultCode, command.getHeader().getMsgId());
     }
 
     @Override
@@ -48,13 +58,17 @@ public class CommandResult extends AbstractMessage {
         POSTED;
     }
 
+    @JsonPropertyOrder({"protocolVersion", "contentType", "msgId", "correlationId", "result", "errorReason", "properties"})
     public static class CommandResultHeader extends MessageHeader {
 
         private ResultCode result;
         private String correlationId;
+        @JsonProperty("error")
+        private String errorReason;
         MediaType contentType;
 
-        public CommandResultHeader(ResultCode result, String correlationId) {
+        @JsonCreator
+        public CommandResultHeader(@JsonProperty("result") ResultCode result, @JsonProperty("correlation_id") String correlationId) {
             this.result = result;
             this.correlationId = correlationId;
         }
@@ -90,6 +104,23 @@ public class CommandResult extends AbstractMessage {
             this.contentType = contentType;
         }
 
+        public String getErrorReason() {
+            return errorReason;
+        }
+
+        public void setErrorReason(String errorReason) {
+            this.errorReason = errorReason;
+        }
+
+        @Override
+        public String toString() {
+            return "CommandResultHeader{" + super.toString() + ", result=" + result + ", correlationId=" + correlationId + ", errorReason=" + errorReason + '}';
+        }
+    }
+
+    @Override
+    public String toString() {
+        return "CommandResult{" + "header=" + header + super.toString() + '}';
     }
 
 }

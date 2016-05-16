@@ -16,8 +16,6 @@
 package org.thingsplode.synapse;
 
 import java.util.TimerTask;
-import org.thingsplode.synapse.core.Request;
-import org.thingsplode.synapse.core.Response;
 
 /**
  *
@@ -55,9 +53,9 @@ public interface DispatchedFutureHandler {
      * @throws java.lang.InterruptedException
      * @see DispatchListener
      */
-    public abstract void beforeDispatch(DispatchedFuture<Request, Response> dispactherFuture) throws InterruptedException;
+    public abstract void beforeDispatch(DispatchedFuture<?, ?> dispactherFuture) throws InterruptedException;
 
-    public abstract DispatchedFuture<Request, Response> responseReceived(String msgId);
+    public abstract DispatchedFuture<?, ?> responseReceived(String msgId);
 
     abstract TimerTask getTimerTask();
     

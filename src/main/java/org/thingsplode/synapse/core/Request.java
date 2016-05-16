@@ -27,8 +27,8 @@ import java.util.Optional;
  * @author Csaba Tamas
  * @param <T>
  */
-@JsonPropertyOrder({ "@msg_type", "header", "body"})
-public class Request<T extends Serializable> extends AbstractMessage<T>  {
+@JsonPropertyOrder({"@msg_type", "header", "body"})
+public class Request<T extends Serializable> extends AbstractMessage<T> {
 
     private RequestHeader header;
 
@@ -83,6 +83,7 @@ public class Request<T extends Serializable> extends AbstractMessage<T>  {
         return "Request{" + "header=" + header + super.toString() + '}';
     }
 
+    @JsonPropertyOrder({"protocolVersion", "msgId", "method", "uri", "keepAlive", "properties"})
     public static class RequestHeader extends MessageHeader {
 
         /**
@@ -92,11 +93,11 @@ public class Request<T extends Serializable> extends AbstractMessage<T>  {
         public static final String MSG_SEQ = "MSG_SEQ";
         Uri uri;
         RequestMethod method;
-        boolean keepalive = false;
+        boolean keepalive = true;
 
         public RequestHeader(Uri uri, RequestMethod method) {
             this(null, uri, method);
-}
+        }
 
         @JsonCreator
         public RequestHeader(@JsonProperty("msgId") String msgId, @JsonProperty("uri") Uri uri, @JsonProperty("method") RequestMethod method) {
@@ -131,7 +132,7 @@ public class Request<T extends Serializable> extends AbstractMessage<T>  {
 
         @Override
         public String toString() {
-            return "RequestHeader{" + "id=" + msgId + ", uri=" + uri + ", method=" + method + '}';
+            return "RequestHeader{" + super.toString() + ", uri=" + uri + ", method=" + method + '}';
         }
     }
 }

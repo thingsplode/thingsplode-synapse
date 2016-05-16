@@ -21,8 +21,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.thingsplode.synapse.core.HttpStatus;
-import org.thingsplode.synapse.core.Request;
-import org.thingsplode.synapse.core.Response;
 import org.thingsplode.synapse.core.exceptions.RequestTimeoutException;
 import org.thingsplode.synapse.core.exceptions.SynapseException;
 import org.thingsplode.synapse.util.Util;
@@ -63,7 +61,7 @@ public class MsgIdRspCorrelator extends SchedulingDispatchedFutureHandler {
         }
 
         if (msgEntry.getRequest() == null || msgEntry.getRequest().getHeader() == null) {
-            throw new IllegalArgumentException("At this stage the " + Request.class.getSimpleName() + " and its header should have been already set.");
+            throw new IllegalArgumentException("At this stage the Request/Command and its header should have been already set.");
         } else if (Util.isEmpty(msgEntry.getRequest().getHeader().getMsgId())) {
             throw new IllegalArgumentException("The " + MsgIdRspCorrelator.class.getSimpleName() + "requires a unique message id");
         }
@@ -95,7 +93,7 @@ public class MsgIdRspCorrelator extends SchedulingDispatchedFutureHandler {
      * @see ReceiverListener
      */
     @Override
-    public DispatchedFuture<Request, Response> responseReceived(String msgId) {
+    public DispatchedFuture<?, ?> responseReceived(String msgId) {
         if (msgId != null) {
             DispatchedFuture deleted = requestMsgRegistry.remove(msgId);
             if (deleted == null) {

@@ -19,30 +19,25 @@ import java.io.Serializable;
 import java.util.concurrent.ArrayBlockingQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.thingsplode.synapse.core.Event;
-import org.thingsplode.synapse.endpoint.AbstractEventSink;
+import org.thingsplode.synapse.core.PushNotification;
+import org.thingsplode.synapse.proxy.AbstractNotificationSink;
 
 /**
  *
  * @author Csaba Tamas
  */
-public class TestEventProcessor extends AbstractEventSink<Serializable> {
+public class TestNotificationSink extends AbstractNotificationSink {
 
-    private final Logger logger = LoggerFactory.getLogger(TestEventProcessor.class);
-    public static ArrayBlockingQueue<Event<Serializable>> eventQueue = new ArrayBlockingQueue<>(1000);
-
-    public TestEventProcessor() {
-        super(Serializable.class);
-    }
+    private final Logger logger = LoggerFactory.getLogger(TestNotificationSink.class);
+    public static ArrayBlockingQueue<PushNotification<Serializable>> notificationQueue = new ArrayBlockingQueue<>(1000);
 
     @Override
-    protected void eventReceived(Event<Serializable> event) {
+    public void onMessage(PushNotification notification) {
+        logger.debug("NOTIFICATION RECEIVED --> " + notification.toString());
         try {
-            logger.debug("Event@TestEventProcessor at received: " + event.toString());
-            TestEventProcessor.eventQueue.put(event);
+            notificationQueue.put(notification);
         } catch (InterruptedException ex) {
-            logger.error("INTERRUPTED WHILE TRYING TO PUT IN THE EVENT QUEUE");
+            logger.error("EXCEPTION WHILE ADDING TO THE QUEUE --> " + ex.getMessage());
         }
     }
-
 }

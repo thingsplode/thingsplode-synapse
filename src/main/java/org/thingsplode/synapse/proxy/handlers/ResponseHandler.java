@@ -61,7 +61,5 @@ public class ResponseHandler extends SimpleChannelInboundHandler<Response> {
         if (df != null) {
             df.completeExceptionally(cause);
         }
-
     }
-
 }

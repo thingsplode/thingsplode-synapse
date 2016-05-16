@@ -25,7 +25,7 @@ import org.thingsplode.synapse.core.AbstractMessage;
  * @param <REQ>
  * @param <RSP>
  */
-public class DispatchedFuture<REQ extends AbstractMessage, RSP> extends CompletableFuture<RSP> {
+public class DispatchedFuture<REQ extends AbstractMessage, RSP extends AbstractMessage> extends CompletableFuture<RSP> {
 
     private final REQ request;
     private final Channel channel;

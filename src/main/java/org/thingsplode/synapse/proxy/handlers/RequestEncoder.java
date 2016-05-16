@@ -45,7 +45,6 @@ public class RequestEncoder extends MessageToMessageEncoder<Request> {
         this.decorators.add((RequestDecorator) (Request request) -> {
             //basic data decorator
             request.getHeader().addProperty(HttpHeaderNames.HOST.toString(), hostExpression);
-            request.getHeader().addProperty(HttpHeaderNames.CONNECTION.toString(), HttpHeaderValues.KEEP_ALIVE.toString());
             request.getHeader().addProperty(HttpHeaderNames.ACCEPT_ENCODING.toString(), HttpHeaderValues.GZIP.toString());
             request.getHeader().addProperty(HttpHeaderNames.ACCEPT.toString(), "*/*");
             request.getHeader().addProperty(HttpHeaderNames.USER_AGENT.toString(), "synapse");

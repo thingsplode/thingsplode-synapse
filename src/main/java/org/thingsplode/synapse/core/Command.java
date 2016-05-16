@@ -18,6 +18,7 @@ package org.thingsplode.synapse.core;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import java.io.Serializable;
 
 /**
@@ -25,6 +26,7 @@ import java.io.Serializable;
  * @author Csaba Tamas
  * @param <T>
  */
+@JsonPropertyOrder({ "@msg_type", "header", "body"})
 public class Command<T extends Serializable> extends AbstractMessage<T> {
 
     private CommandHeader header;
@@ -67,8 +69,10 @@ public class Command<T extends Serializable> extends AbstractMessage<T> {
         this.header = header;
     }
 
+    @JsonPropertyOrder({"protocolVersion", "msgId", "ttl", "properties"})
     public static class CommandHeader extends MessageHeader {
 
+        @JsonProperty("ttl")
         private long timeToLive;
 
         public CommandHeader(long timeToLive) {
@@ -76,7 +80,7 @@ public class Command<T extends Serializable> extends AbstractMessage<T> {
         }
 
         @JsonCreator
-        public CommandHeader(@JsonProperty("msg_id") String msgId, @JsonProperty("time_to_live") long timeToLive) {
+        public CommandHeader(@JsonProperty("msg_id") String msgId, @JsonProperty("ttl") long timeToLive) {
             super(msgId);
             this.timeToLive = timeToLive;
         }
@@ -88,5 +92,15 @@ public class Command<T extends Serializable> extends AbstractMessage<T> {
         public void setTimeToLive(long timeToLive) {
             this.timeToLive = timeToLive;
         }
+
+        @Override
+        public String toString() {
+            return "CommandHeader{" + super.toString() + ", timeToLive=" + timeToLive + '}';
+        }
+    }
+
+    @Override
+    public String toString() {
+        return "Command{" + "header=" + header + ", status=" + status + super.toString() + '}';
     }
 }

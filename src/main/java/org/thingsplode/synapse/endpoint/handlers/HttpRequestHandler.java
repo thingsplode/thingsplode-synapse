@@ -39,7 +39,6 @@ import org.thingsplode.synapse.core.Uri;
 import org.thingsplode.synapse.endpoint.Endpoint;
 import org.thingsplode.synapse.util.Util;
 import static org.thingsplode.synapse.endpoint.handlers.HttpResponseHandler.sendError;
-import static org.thingsplode.synapse.endpoint.handlers.HttpResponseHandler.sendError;
 
 /**
  *

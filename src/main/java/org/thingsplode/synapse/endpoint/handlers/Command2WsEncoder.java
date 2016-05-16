@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.thingsplode.synapse.core.Command;
 import org.thingsplode.synapse.core.MediaType;
+import org.thingsplode.synapse.core.PushNotification;
 import org.thingsplode.synapse.serializers.SerializationService;
 
 /**
@@ -37,6 +38,9 @@ public class Command2WsEncoder extends MessageToMessageEncoder<Command> {
 
     @Override
     protected void encode(ChannelHandlerContext ctx, Command command, List<Object> out) throws Exception {
+        if (command instanceof PushNotification){
+            ((PushNotification)command).setDefaultTopicIfNone();
+        }
         byte[] content = serializationService.getSerializer(MediaType.APPLICATION_JSON).marshall(command);
         TextWebSocketFrame wsFrame = new TextWebSocketFrame(Unpooled.wrappedBuffer(content));
         out.add(wsFrame);

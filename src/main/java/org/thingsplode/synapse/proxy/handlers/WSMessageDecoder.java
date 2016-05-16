@@ -82,7 +82,7 @@ public class WSMessageDecoder extends SimpleChannelInboundHandler<Object> {
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
         pingScheduledFuture.cancel(true);
-        logger.warn("WebSocket Client disconnected!");
+        logger.warn("WebSocket Client channel become inactive (disconnecting from Endpoint)!");
     }
     
     @Override

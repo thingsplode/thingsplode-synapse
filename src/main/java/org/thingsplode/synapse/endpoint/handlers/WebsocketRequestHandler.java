@@ -34,7 +34,6 @@ import org.thingsplode.synapse.core.Request;
 import org.thingsplode.synapse.core.exceptions.SerializationException;
 import static org.thingsplode.synapse.endpoint.handlers.RequestHandler.CONNECTION_CTX_ATTR;
 import org.thingsplode.synapse.serializers.SerializationService;
-import org.thingsplode.synapse.util.Util;
 
 /**
  *

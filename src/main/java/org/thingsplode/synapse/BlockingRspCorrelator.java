@@ -15,7 +15,6 @@
  */
 package org.thingsplode.synapse;
 
-import org.thingsplode.synapse.DispatchedFuture;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.util.concurrent.ScheduledFuture;
@@ -43,7 +42,7 @@ public class BlockingRspCorrelator implements DispatchedFutureHandler {
     private long defaultResponseTimeout = finalDefaultTimeout;
 
     @Override
-    public void beforeDispatch(DispatchedFuture<Request, Response> df) throws InterruptedException {
+    public void beforeDispatch(DispatchedFuture<?, ?> df) throws InterruptedException {
         //todo: prepare for message timeout and close connection upon timeout
         df.setRequestFiredTime(System.currentTimeMillis());
         long timeout = df.getTimeout() != -1 ? df.getTimeout() : defaultResponseTimeout;

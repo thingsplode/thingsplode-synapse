@@ -29,14 +29,15 @@ import org.thingsplode.synapse.core.Response;
 import org.thingsplode.synapse.serializers.SerializationService;
 
 /**
+ * Synapse Response to TextWebSocketFrame (websocket frame) encoder
  *
  * @author Csaba Tamas
  */
 public class WebsocketResponseHandler extends SimpleChannelInboundHandler<Response> {
-    
+
     private static final Logger logger = LoggerFactory.getLogger(WebsocketResponseHandler.class);
     private final SerializationService serializationService = SerializationService.getInstance();
-    
+
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Response response) throws Exception {
         byte[] content = serializationService.getSerializer(MediaType.APPLICATION_JSON).marshall(response);
@@ -56,5 +57,9 @@ public class WebsocketResponseHandler extends SimpleChannelInboundHandler<Respon
             }).addListener(ChannelFutureListener.CLOSE);
         }
     }
-    
+
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) {
+        logger.debug("WebSocket response handler channel become inactive (disconnecting from Client)!");
+    }
 }
